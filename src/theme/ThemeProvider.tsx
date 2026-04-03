@@ -1,33 +1,44 @@
 import React, { createContext, useContext, useState } from "react";
 
+type ThemeType = "light" | "dark" | "custom";
+
 const lightTheme = {
-  background: "#F5F7FB",
-  primary: "#6C63FF",
-  text: "#111",
-  subText: "#666",
-  card: "#FFF",
+  background: "#F4F6F6",
+  primary: "#2A9D8F",
+  secondary: "#1F7A70",
+  text: "#0F172A",
+  subText: "#6B7280",
+  card: "#EDEFF0",
+  border: "#D1D5DB",
+  white: "#FFFFFF",
 };
 
 const darkTheme = {
-  background: "#0F172A",
-  primary: "#8B5CF6",
-  text: "#FFF",
-  subText: "#AAA",
-  card: "#1E293B",
+  background: "#0B1F1A",
+  primary: "#2A9D8F",
+  secondary: "#1F7A70",
+  text: "#FFFFFF",
+  subText: "#9CA3AF",
+  card: "#132E2A",
+  border: "#1F3D38",
+  white: "#FFFFFF",
 };
 
 const customTheme = {
-  background: "#FFF7ED",
-  primary: "#F97316",
-  text: "#111",
-  subText: "#777",
-  card: "#FFF",
+  background: "#F4F6F6",
+  primary: "#2A9D8F",   // you can change later
+  secondary: "#1F7A70",
+  text: "#0F172A",
+  subText: "#6B7280",
+  card: "#EDEFF0",
+  border: "#D1D5DB",
+  white: "#FFFFFF",
 };
 
 const ThemeContext = createContext<any>(null);
 
 export const ThemeProvider = ({ children }: any) => {
-  const [mode, setMode] = useState<"light" | "dark" | "custom">("light");
+  const [mode, setMode] = useState<ThemeType>("light");
 
   const theme =
     mode === "dark"
