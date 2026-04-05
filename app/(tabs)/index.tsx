@@ -5,15 +5,20 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  
 } from "react-native";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const { theme } = useTheme();
 
   return (
+
+    <SafeAreaView style={{ flex: 1}} edges={["top"]}>
+
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
     >
@@ -79,6 +84,7 @@ export default function HomeScreen() {
         />
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -104,7 +110,7 @@ const ServiceCard = ({ icon, title, theme }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    
   },
 
   header: {

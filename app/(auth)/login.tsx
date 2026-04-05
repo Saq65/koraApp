@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { setToken } from "../../src/utils/storage";
 import { sendOtp, verifyOtp } from "../../src/api/auth";
+import { setToken } from "../../src/utils/storage";
 
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,100 +16,115 @@ import { router } from "expo-router";
 
 export default function LoginScreen() {
   const { theme } = useTheme();
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [phone, setPhone] = useState("");
   const [showOtp, setShowOtp] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  
+  // Create refs for OTP inputs
+  const otpRefs = useRef([]);
 
-  const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
+  // Auto-focus first OTP input when OTP section appears
+  useEffect(() => {
+    if (showOtp && otpRefs.current[0]) {
+      otpRefs.current[0].focus();
+    }
+  }, [showOtp]);
 
-  const inputs = useRef<TextInput[]>([]);
+  const handleOtpChange = (text, index) => {
+    // Handle paste (multiple digits at once)
+    if (text.length > 1) {
+      const digits = text.split("").slice(0, 6);
+      const newOtp = [...otp];
+      digits.forEach((digit, i) => {
+        if (i < 6) newOtp[i] = digit;
+      });
+      setOtp(newOtp);
+      
+      // Focus on the next empty box or last filled box
+      const lastFilledIndex = Math.min(digits.length - 1, 5);
+      if (lastFilledIndex < 5 && otpRefs.current[lastFilledIndex + 1]) {
+        otpRefs.current[lastFilledIndex + 1].focus();
+      } else if (lastFilledIndex === 5) {
+        otpRefs.current[5]?.blur();
+      }
+      return;
+    }
 
-  // ✅ OTP input handler (auto focus next)
-  const handleOtpChange = (text: string, index: number) => {
-    if (!/^[0-9]?$/.test(text)) return;
-
+    // Handle single digit input
     const newOtp = [...otp];
     newOtp[index] = text;
     setOtp(newOtp);
 
-    if (text && index < 3) {
-      inputs.current[index + 1]?.focus();
+    // Move to next input if current is filled and not last
+    if (text.length === 1 && index < 5) {
+      otpRefs.current[index + 1]?.focus();
     }
   };
 
-  // ✅ MAIN AUTH FUNCTION
+  const handleKeyPress = (e, index) => {
+    // Handle backspace to move to previous input
+    if (e.nativeEvent.key === "Backspace" && index > 0 && !otp[index]) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
   const handleAuth = async () => {
     try {
       setError("");
-
-      if (!phone || phone.length < 10) {
-        setError("Enter valid phone number");
-        return;
-      }
-
       setLoading(true);
 
-      // 📤 SEND OTP
       if (!showOtp) {
-        await sendOtp({
-          mobile: phone,
-          role: "customer", // ✅ REQUIRED
-        });
-
+        // Send OTP
+        if (!phone || phone.length < 10) {
+          setError("Please enter a valid phone number");
+          setLoading(false);
+          return;
+        }
+        
+        await sendOtp(phone);
+        setOtp(["", "", "", "", "", ""]);
         setShowOtp(true);
-        setOtp(["", "", "", ""]);
         return;
       }
 
-      // 📥 VERIFY OTP
+      // Verify OTP
       const enteredOtp = otp.join("");
 
-      if (enteredOtp.length !== 4) {
-        setError("Enter complete OTP");
+      if (enteredOtp.length !== 6) {
+        setError("Please enter complete 6-digit OTP");
+        setLoading(false);
         return;
       }
 
-      const res = await verifyOtp({
-        mobile: phone,
-        otp: enteredOtp,
-        role: "customer", // ✅ REQUIRED
-      });
+      const res = await verifyOtp(phone, enteredOtp);
 
       console.log("LOGIN SUCCESS:", res);
 
+      // Save token
       if (res?.token) {
         await setToken(res.token);
       }
 
+      // Navigate to dashboard
       router.replace("/(tabs)");
-    } catch (err: any) {
-      console.log("AUTH ERROR:", err);
-
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Something went wrong"
-      );
+    } catch (err) {
+      console.log("AUTH ERROR:", err.message);
+      setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ SAFE ARRAY (prevents crash)
-  const otpArray = Array.isArray(otp) ? otp : ["", "", "", ""];
-
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      
-      {/* LOGO */}
+      {/* Logo */}
       <View style={styles.logoContainer}>
         <View
           style={[
             styles.logoBox,
-            { backgroundColor: theme.primary },
+            { backgroundColor: theme.primaryLight || theme.primary },
           ]}
         >
           <Text style={styles.logoIcon}>💧</Text>
@@ -124,24 +139,23 @@ export default function LoginScreen() {
         </Text>
       </View>
 
-      {/* TITLE */}
+      {/* Welcome */}
       <Text style={[styles.title, { color: theme.text }]}>
         Welcome Back
       </Text>
 
       <Text style={[styles.subTitle, { color: theme.subText }]}>
-        Login with OTP
+        Sign in to continue
       </Text>
 
-      {/* PHONE INPUT */}
+      {/* Phone Input */}
       <View
         style={[
           styles.inputContainer,
-          { backgroundColor: theme.card },
+          { backgroundColor: theme.inputBg || theme.card },
         ]}
       >
         <Ionicons name="call-outline" size={18} color={theme.subText} />
-
         <TextInput
           placeholder="Phone Number"
           placeholderTextColor={theme.subText}
@@ -149,50 +163,50 @@ export default function LoginScreen() {
           value={phone}
           onChangeText={setPhone}
           keyboardType="numeric"
+          editable={!loading}
         />
       </View>
 
-      {/* OTP INPUT */}
+      {/* OTP Boxes */}
       {showOtp && (
-        <View style={styles.otpContainer}>
-          {otpArray.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(ref) => {
-                if (ref) inputs.current[index] = ref;
-              }}
-              style={[
-                styles.otpBox,
-                {
-                  borderColor: digit
-                    ? theme.primary
-                    : theme.border || "#ddd",
-                  color: theme.text,
-                  backgroundColor: theme.card,
-                },
-              ]}
-              maxLength={1}
-              keyboardType="numeric"
-              value={digit}
-              onChangeText={(text) =>
-                handleOtpChange(text, index)
-              }
-            />
-          ))}
-        </View>
+        <>
+          <View style={styles.otpContainer}>
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(el) => (otpRefs.current[index] = el)}
+                style={[
+                  styles.otpBox,
+                  {
+                    borderColor:
+                      digit.length > 0
+                        ? theme.primary
+                        : theme.border || "#ddd",
+                    color: theme.text,
+                    backgroundColor: theme.inputBg || theme.card,
+                  },
+                ]}
+                maxLength={6}
+                keyboardType="numeric"
+                value={digit}
+                onChangeText={(text) => handleOtpChange(text, index)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                editable={!loading}
+              />
+            ))}
+          </View>
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : null}
+        </>
       )}
 
-      {/* ERROR */}
-      {error ? (
-        <Text style={{ color: "red", marginTop: 10 }}>
-          {error}
-        </Text>
-      ) : null}
-
-      {/* BUTTON */}
+      {/* Button */}
       <TouchableOpacity onPress={handleAuth} disabled={loading}>
         <LinearGradient
           colors={theme.gradient || [theme.primary, theme.primary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
           style={styles.button}
         >
           <Text style={styles.buttonText}>
@@ -205,10 +219,46 @@ export default function LoginScreen() {
         </LinearGradient>
       </TouchableOpacity>
 
-      {/* SIGNUP */}
+      {/* Divider */}
+      <View style={styles.dividerContainer}>
+        <View
+          style={[styles.line, { backgroundColor: theme.border || "#ddd" }]}
+        />
+        <Text style={[styles.orText, { color: theme.subText }]}>
+          or continue with
+        </Text>
+        <View
+          style={[styles.line, { backgroundColor: theme.border || "#ddd" }]}
+        />
+      </View>
+
+      {/* Google Button */}
+      <TouchableOpacity
+        style={[
+          styles.googleBtn,
+          {
+            backgroundColor: theme.card,
+            borderColor: theme.border || "#E5E7EB",
+          },
+        ]}
+      >
+        <Text style={{ fontSize: 18 }}>🌐</Text>
+        <Text style={[styles.googleText, { color: theme.text }]}>
+          Continue with Google
+        </Text>
+      </TouchableOpacity>
+
+      {/* Email */}
+      <Text
+        style={[styles.emailText, { color: theme.primary }]}
+        onPress={() => router.push("/(auth)/email-login")}
+      >
+        Use Email instead
+      </Text>
+
       <View style={styles.bottomContainer}>
         <Text style={{ color: theme.subText }}>
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
         </Text>
 
         <Text
@@ -281,22 +331,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
+    gap: 8,
   },
 
   otpBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
+    flex: 1,
+    height: 55,
+    borderRadius: 12,
     textAlign: "center",
     fontSize: 20,
+    fontWeight: "600",
     borderWidth: 2,
+    marginHorizontal: 2,
   },
 
   button: {
-    marginTop: 20,
     padding: 15,
     alignItems: "center",
     borderRadius: 14,
+    marginTop: 20,
   },
 
   buttonText: {
@@ -305,9 +358,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 25,
+  },
+
+  line: {
+    flex: 1,
+    height: 1,
+  },
+
+  orText: {
+    marginHorizontal: 10,
+    fontSize: 12,
+  },
+
+  googleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+
+  googleText: {
+    marginLeft: 10,
+    fontWeight: "500",
+  },
+
+  emailText: {
+    textAlign: "center",
+    marginTop: 20,
+    fontWeight: "500",
+  },
+
   bottomContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 30,
+  },
+
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginTop: 10,
+    fontSize: 14,
   },
 });
