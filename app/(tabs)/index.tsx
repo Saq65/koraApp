@@ -10,15 +10,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import Header from "../../components/Header";
+import SideDrawer from "../../components/SideDrawer";
 
 export default function HomeScreen() {
   const { theme } = useTheme();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>("Men"); // default open Men
+  const [selectedCategory, setSelectedCategory] = useState<string | null>("Men");
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
-  // Categories: Men, Women, Kids, Linen
   const categories = ["Men", "Women", "Kids", "Linen"];
 
-  // Subcategories for each main category
   const subcategoriesMap: Record<string, string[]> = {
     Men: ["Shirt", "T-Shirt", "Trousers", "Jeans"],
     Women: ["Saree", "Kurti", "Blouse", "Leggings"],
@@ -26,14 +27,12 @@ export default function HomeScreen() {
     Linen: ["Bedsheet", "Towel", "Curtains", "Cushion Cover"],
   };
 
-  // Services (Dry Clean removed)
   const services = [
     { icon: "water-outline", label: "Wash" },
     { icon: "flame-outline", label: "Iron" },
     { icon: "shirt-outline", label: "Wash + Iron" },
   ];
 
-  // Recent orders (kept as per original design)
   const recentOrders = [
     {
       id: 1,
@@ -44,7 +43,7 @@ export default function HomeScreen() {
     },
     {
       id: 2,
-      service: "Dry Clean",
+      service: "Wash + Iron",
       items: "3 items",
       date: "Mar 25",
       status: "Delivered",
@@ -56,30 +55,21 @@ export default function HomeScreen() {
       style={{ flex: 1, backgroundColor: theme.background }}
       edges={["top", "bottom"]}
     >
+      {/* Header - unchanged */}
+      <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} />
+
+      {/* Location row (added) */}
+      <View style={styles.locationRow}>
+        <Ionicons name="location-outline" size={14} color={theme.subText} />
+        <Text style={[styles.locationText, { color: theme.subText }]}>
+          123 Main Street, Mumbai
+        </Text>
+      </View>
+
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.greeting, { color: theme.subText }]}>
-              Good Morning 👋
-            </Text>
-            <Text style={[styles.name, { color: theme.text }]}>John Doe</Text>
-            <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={14} color={theme.primary} />
-              <Text style={[styles.location, { color: theme.subText }]}>
-                123 Main Street, Mumbai
-              </Text>
-            </View>
-          </View>
-          <View style={styles.headerIcons}>
-            <Ionicons name="search-outline" size={22} color={theme.text} />
-            <Ionicons name="notifications-outline" size={22} color={theme.text} />
-          </View>
-        </View>
-
         {/* ACTIVE ORDER CARD */}
         <LinearGradient
           colors={theme.gradient || [theme.primary, theme.primary]}
@@ -98,7 +88,7 @@ export default function HomeScreen() {
           </View>
         </LinearGradient>
 
-        {/* SERVICES SECTION - smaller boxes */}
+        {/* SERVICES SECTION */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
             Services
@@ -112,7 +102,7 @@ export default function HomeScreen() {
               icon={service.icon}
               label={service.label}
               theme={theme}
-              active={service.label === "Iron"} // Iron highlighted as example
+              active={service.label === "Iron"}
             />
           ))}
         </View>
@@ -146,7 +136,7 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* SUBCATEGORIES - visible when a category is selected */}
+        {/* SUBCATEGORIES */}
         {selectedCategory && subcategoriesMap[selectedCategory] && (
           <View style={styles.subcategoryContainer}>
             <Text style={[styles.subcategoryTitle, { color: theme.text }]}>
@@ -165,22 +155,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* PROMO CARDS */}
-        <View
-          style={[
-            styles.promoCard,
-            { backgroundColor: theme.card, borderColor: theme.border },
-          ]}
-        >
-          <Text style={{ color: theme.primary, fontWeight: "600" }}>NEW</Text>
-          <Text style={[styles.promoTitle, { color: theme.text }]}>
-            Rent Premium Outfits
-          </Text>
-          <Text style={{ color: theme.subText }}>
-            From ₹500/day • Dry cleaned & delivered
-          </Text>
-        </View>
-
+        {/* SPECIAL OFFER */}
         <View
           style={[
             styles.promoCard,
@@ -188,7 +163,7 @@ export default function HomeScreen() {
           ]}
         >
           <Text style={{ color: "#f59e0b", fontWeight: "600" }}>
-            ★ SPECIAL OFFER
+            ✨ SPECIAL OFFER
           </Text>
           <Text style={[styles.promoTitle, { color: theme.text }]}>
             30% Off First Order!
@@ -220,19 +195,27 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-      {/* FLOATING BOOK PICKUP BUTTON */}
-      <View style={styles.bottomContainer}>
+    <View style={styles.bottomContainer}>
         <TouchableOpacity
           style={[styles.pickupBtn, { backgroundColor: theme.primary }]}
         >
           <Text style={styles.pickupText}>Book Pickup</Text>
         </TouchableOpacity>
       </View>
+
+      {/* SideDrawer - unchanged */}
+      {drawerVisible && (
+        <SideDrawer
+          visible={drawerVisible}
+          onClose={() => setDrawerVisible(false)}
+          theme={theme}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
-// ==================== SERVICE COMPONENT (SMALLER) ====================
+// ==================== SERVICE COMPONENT (IMPROVED) ====================
 const Service = ({ icon, label, theme, active = false }: any) => {
   return (
     <TouchableOpacity
@@ -240,19 +223,22 @@ const Service = ({ icon, label, theme, active = false }: any) => {
         styles.serviceCard,
         {
           backgroundColor: active ? "#f59e0b" : theme.card,
+          borderWidth: active ? 0 : 1,
+          borderColor: theme.border,
         },
       ]}
     >
       <Ionicons
         name={icon}
-        size={18} // reduced from 20
+        size={22}
         color={active ? "#fff" : theme.primary}
       />
       <Text
         style={{
-          marginTop: 4,
+          marginTop: 6,
           color: active ? "#fff" : theme.text,
-          fontSize: 11, // smaller text
+          fontSize: 12,
+          fontWeight: "500",
         }}
       >
         {label}
@@ -263,57 +249,71 @@ const Service = ({ icon, label, theme, active = false }: any) => {
 
 // ==================== STYLES ====================
 const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: 16,
-    marginTop: 10,
+  locationRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 8,
   },
-  greeting: { fontSize: 14 },
-  name: { fontSize: 22, fontWeight: "700" },
-  locationRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  location: { marginLeft: 4, fontSize: 12 },
-  headerIcons: { flexDirection: "row", gap: 15 },
+  locationText: {
+    fontSize: 12,
+    marginLeft: 4,
+  },
   orderCard: {
     margin: 16,
     padding: 16,
     borderRadius: 20,
     flexDirection: "row",
+    alignItems: "center",
   },
-  orderLabel: { color: "#fff", fontSize: 12 },
+  orderLabel: { color: "#fff", fontSize: 12, opacity: 0.9 },
   orderId: { color: "#fff", fontSize: 18, fontWeight: "700", marginTop: 5 },
   orderRow: { flexDirection: "row", alignItems: "center", marginTop: 5 },
   orderTime: { color: "#fff", marginLeft: 5, fontSize: 12 },
-  iconBox: { backgroundColor: "rgba(255,255,255,0.2)", padding: 10, borderRadius: 12 },
+  iconBox: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    padding: 10,
+    borderRadius: 12,
+  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
-    marginTop: 10,
+    marginTop: 8,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
     paddingHorizontal: 16,
-    marginTop: 10,
-    marginBottom: 5,
+    marginTop: 16,
+    marginBottom: 8,
   },
   serviceRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginTop: 15,
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
   serviceCard: {
     alignItems: "center",
-    padding: 8, // reduced padding
-    borderRadius: 14,
-    width: 60, // smaller width
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    width: 90,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   categoryChip: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 30,
     marginHorizontal: 8,
     marginTop: 10,
   },
@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
   },
-  promoCard: { margin: 16, padding: 16, borderRadius: 16, borderWidth: 1 },
-  promoTitle: { fontSize: 16, fontWeight: "700", marginTop: 5 },
+  promoCard: { margin: 16, padding: 16, borderRadius: 20, borderWidth: 1 },
+  promoTitle: { fontSize: 16, fontWeight: "700", marginTop: 4, marginBottom: 4 },
   recentOrderCard: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -336,10 +336,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 10,
     padding: 14,
-    borderRadius: 14,
+    borderRadius: 16,
   },
   recentOrderService: { fontSize: 14, fontWeight: "600", marginBottom: 4 },
-  bottomContainer: {
+  bottomTab: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+    backgroundColor: "#fff",
+  },
+  tabItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  tabLabel: {
+    fontSize: 11,
+    marginTop: 4,
+  },
+   bottomContainer: {
     position: "absolute",
     bottom: 10,
     left: 0,

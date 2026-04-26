@@ -5,10 +5,10 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Image,
 } from "react-native";
 import { sendOtp, verifyOtp } from "../../src/api/auth";
 import { setToken } from "../../src/utils/storage";
-
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,11 +21,12 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [isPhoneFocused, setIsPhoneFocused] = useState(false);
+  const [focusedOtpIndex, setFocusedOtpIndex] = useState<number | null>(null);
+  const logoImage = require("../../assets/images/kora-logo.png");
   
-  // Create refs for OTP inputs
   const otpRefs = useRef([]);
 
-  // Auto-focus first OTP input when OTP section appears
   useEffect(() => {
     if (showOtp && otpRefs.current[0]) {
       otpRefs.current[0].focus();
@@ -33,7 +34,6 @@ export default function LoginScreen() {
   }, [showOtp]);
 
   const handleOtpChange = (text, index) => {
-    // Handle paste (multiple digits at once)
     if (text.length > 1) {
       const digits = text.split("").slice(0, 6);
       const newOtp = [...otp];
@@ -41,8 +41,6 @@ export default function LoginScreen() {
         if (i < 6) newOtp[i] = digit;
       });
       setOtp(newOtp);
-      
-      // Focus on the next empty box or last filled box
       const lastFilledIndex = Math.min(digits.length - 1, 5);
       if (lastFilledIndex < 5 && otpRefs.current[lastFilledIndex + 1]) {
         otpRefs.current[lastFilledIndex + 1].focus();
@@ -52,22 +50,30 @@ export default function LoginScreen() {
       return;
     }
 
-    // Handle single digit input
     const newOtp = [...otp];
     newOtp[index] = text;
     setOtp(newOtp);
-
-    // Move to next input if current is filled and not last
     if (text.length === 1 && index < 5) {
       otpRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyPress = (e, index) => {
-    // Handle backspace to move to previous input
     if (e.nativeEvent.key === "Backspace" && index > 0 && !otp[index]) {
       otpRefs.current[index - 1]?.focus();
     }
+  };
+
+  const normalizeIndianPhone = (rawPhone: string): string => {
+    let cleaned = rawPhone.trim().replace(/\s/g, '');
+    if (!cleaned.startsWith('+')) {
+      if (cleaned.startsWith('91')) {
+        cleaned = '+' + cleaned;
+      } else {
+        cleaned = '+91' + cleaned;
+      }
+    }
+    return cleaned;
   };
 
   const handleAuth = async () => {
@@ -76,38 +82,33 @@ export default function LoginScreen() {
       setLoading(true);
 
       if (!showOtp) {
-        // Send OTP
-        if (!phone || phone.length < 10) {
-          setError("Please enter a valid phone number");
+        let normalizedPhone = normalizeIndianPhone(phone);
+        const phoneRegex = /^\+91\d{10}$/;
+        if (!phoneRegex.test(normalizedPhone)) {
+          setError("Please enter a valid 10-digit Indian mobile number");
           setLoading(false);
           return;
         }
-        
-        await sendOtp(phone);
+        await sendOtp(normalizedPhone);
         setOtp(["", "", "", "", "", ""]);
         setShowOtp(true);
         return;
       }
 
-      // Verify OTP
       const enteredOtp = otp.join("");
-
       if (enteredOtp.length !== 6) {
         setError("Please enter complete 6-digit OTP");
         setLoading(false);
         return;
       }
 
-      const res = await verifyOtp(phone, enteredOtp);
-
+      const normalizedPhone = normalizeIndianPhone(phone);
+      const res = await verifyOtp(normalizedPhone, enteredOtp);
       console.log("LOGIN SUCCESS:", res);
 
-      // Save token
       if (res?.token) {
         await setToken(res.token);
       }
-
-      // Navigate to dashboard
       router.replace("/(tabs)");
     } catch (err) {
       console.log("AUTH ERROR:", err.message);
@@ -121,38 +122,28 @@ export default function LoginScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Logo */}
       <View style={styles.logoContainer}>
-        <View
-          style={[
-            styles.logoBox,
-            { backgroundColor: theme.primaryLight || theme.primary },
-          ]}
-        >
-          <Text style={styles.logoIcon}>💧</Text>
-        </View>
-
-        <Text style={[styles.logoText, { color: theme.primary }]}>
-          KORA Care
-        </Text>
-
-        <Text style={[styles.subTitle, { color: theme.subText }]}>
-          Premium Laundry Service
+        <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
+        <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
+        <Text style={[styles.subText, { color: theme.subText }]}>
+          Your care is our priority/responsibility
         </Text>
       </View>
 
       {/* Welcome */}
-      <Text style={[styles.title, { color: theme.text }]}>
-        Welcome Back
-      </Text>
-
+      <Text style={[styles.title, { color: theme.text }]}>Welcome Back</Text>
       <Text style={[styles.subTitle, { color: theme.subText }]}>
         Sign in to continue
       </Text>
 
-      {/* Phone Input */}
+      {/* Phone Input with focus border */}
       <View
         style={[
           styles.inputContainer,
-          { backgroundColor: theme.inputBg || theme.card },
+          {
+            backgroundColor: theme.inputBg || theme.card,
+            borderWidth: 1,
+            borderColor: isPhoneFocused ? theme.primary : "transparent",
+          },
         ]}
       >
         <Ionicons name="call-outline" size={18} color={theme.subText} />
@@ -164,10 +155,12 @@ export default function LoginScreen() {
           onChangeText={setPhone}
           keyboardType="numeric"
           editable={!loading}
+          onFocus={() => setIsPhoneFocused(true)}
+          onBlur={() => setIsPhoneFocused(false)}
         />
       </View>
 
-      {/* OTP Boxes */}
+      {/* OTP Boxes with focus border */}
       {showOtp && (
         <>
           <View style={styles.otpContainer}>
@@ -179,7 +172,9 @@ export default function LoginScreen() {
                   styles.otpBox,
                   {
                     borderColor:
-                      digit.length > 0
+                      focusedOtpIndex === index
+                        ? theme.primary
+                        : digit.length > 0
                         ? theme.primary
                         : theme.border || "#ddd",
                     color: theme.text,
@@ -192,12 +187,12 @@ export default function LoginScreen() {
                 onChangeText={(text) => handleOtpChange(text, index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
                 editable={!loading}
+                onFocus={() => setFocusedOtpIndex(index)}
+                onBlur={() => setFocusedOtpIndex(null)}
               />
             ))}
           </View>
-          {error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </>
       )}
 
@@ -210,26 +205,16 @@ export default function LoginScreen() {
           style={styles.button}
         >
           <Text style={styles.buttonText}>
-            {loading
-              ? "Please wait..."
-              : showOtp
-              ? "Verify OTP"
-              : "Send OTP"}
+            {loading ? "Please wait..." : showOtp ? "Verify OTP" : "Send OTP"}
           </Text>
         </LinearGradient>
       </TouchableOpacity>
 
       {/* Divider */}
       <View style={styles.dividerContainer}>
-        <View
-          style={[styles.line, { backgroundColor: theme.border || "#ddd" }]}
-        />
-        <Text style={[styles.orText, { color: theme.subText }]}>
-          or continue with
-        </Text>
-        <View
-          style={[styles.line, { backgroundColor: theme.border || "#ddd" }]}
-        />
+        <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
+        <Text style={[styles.orText, { color: theme.subText }]}>or continue with</Text>
+        <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
       </View>
 
       {/* Google Button */}
@@ -257,10 +242,7 @@ export default function LoginScreen() {
       </Text>
 
       <View style={styles.bottomContainer}>
-        <Text style={{ color: theme.subText }}>
-          Don't have an account?{" "}
-        </Text>
-
+        <Text style={{ color: theme.subText }}>Don't have an account? </Text>
         <Text
           style={{ color: theme.primary, fontWeight: "600" }}
           onPress={() => router.push("/(auth)/register")}
@@ -273,67 +255,24 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-  },
+  container: { flex: 1, padding: 20, justifyContent: "center" },
+  logoContainer: { alignItems: "center", marginBottom: 40 },
+  logoBox: { width: 70, height: 70, borderRadius: 20, justifyContent: "center", alignItems: "center", marginBottom: 10 },
+   logoImage: { width: 70, height: 70, marginBottom: 10 },
 
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-
-  logoBox: {
-    width: 70,
-    height: 70,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-
-  logoIcon: {
-    fontSize: 30,
-    color: "#fff",
-  },
-
-  logoText: {
-    fontSize: 28,
-    fontWeight: "700",
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    marginTop: 10,
-  },
-
-  subTitle: {
-    fontSize: 14,
-    marginTop: 5,
-  },
-
+  logoText: { fontSize: 28, fontWeight: "700" },
+  title: { fontSize: 26, fontWeight: "700", marginTop: 10 },
+  subText: { fontSize: 14, marginTop: 5 },
+  subTitle: { fontSize: 14, marginTop: 5 },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 15,
+    padding: 7,
     borderRadius: 14,
     marginTop: 20,
   },
-
-  input: {
-    marginLeft: 10,
-    flex: 1,
-  },
-
-  otpContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-    gap: 8,
-  },
-
+  input: { marginLeft: 10, flex: 1 },
+  otpContainer: { flexDirection: "row", justifyContent: "space-between", marginTop: 20, gap: 8 },
   otpBox: {
     flex: 1,
     height: 55,
@@ -344,66 +283,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginHorizontal: 2,
   },
-
-  button: {
-    padding: 15,
-    alignItems: "center",
-    borderRadius: 14,
-    marginTop: 20,
-  },
-
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 25,
-  },
-
-  line: {
-    flex: 1,
-    height: 1,
-  },
-
-  orText: {
-    marginHorizontal: 10,
-    fontSize: 12,
-  },
-
-  googleBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-
-  googleText: {
-    marginLeft: 10,
-    fontWeight: "500",
-  },
-
-  emailText: {
-    textAlign: "center",
-    marginTop: 20,
-    fontWeight: "500",
-  },
-
-  bottomContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 30,
-  },
-
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    marginTop: 10,
-    fontSize: 14,
-  },
+  button: { padding: 15, alignItems: "center", borderRadius: 14, marginTop: 20 },
+  buttonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 25 },
+  line: { flex: 1, height: 1 },
+  orText: { marginHorizontal: 10, fontSize: 12 },
+  googleBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 14, borderRadius: 14, borderWidth: 1 },
+  googleText: { marginLeft: 10, fontWeight: "500" },
+  emailText: { textAlign: "center", marginTop: 20, fontWeight: "500" },
+  bottomContainer: { flexDirection: "row", justifyContent: "center", marginTop: 30 },
+  errorText: { color: "red", textAlign: "center", marginTop: 10, fontSize: 14 },
 });
