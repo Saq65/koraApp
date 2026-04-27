@@ -132,7 +132,6 @@ export default function LoginScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
           keyboardShouldPersistTaps="handled"
@@ -278,7 +277,6 @@ export default function LoginScreen() {
             </Text>
           </View>
         </ScrollView>
-      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
     </SafeAreaView>
   );

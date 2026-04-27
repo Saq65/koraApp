@@ -64,7 +64,6 @@ export default function ResetPasswordScreen() {
                  behavior={Platform.OS === "ios" ? "padding" : "height"}
                  keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
                >
-                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                    <ScrollView
                      contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
                      keyboardShouldPersistTaps="handled"
@@ -145,7 +144,6 @@ export default function ResetPasswordScreen() {
         </LinearGradient>
       </TouchableOpacity>
     </ScrollView>
-          </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
         </SafeAreaView>
   );

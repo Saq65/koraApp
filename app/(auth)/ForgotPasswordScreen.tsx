@@ -70,7 +70,6 @@ export default function ForgotPasswordScreen() {
              behavior={Platform.OS === "ios" ? "padding" : "height"}
              keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
            >
-             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                <ScrollView
                  contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
                  keyboardShouldPersistTaps="handled"
@@ -80,7 +79,7 @@ export default function ForgotPasswordScreen() {
                 <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
                 <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
                 <Text style={[styles.subTitle, { color: theme.subText }]}>
-                    Premium Laundry Service
+                    Your care is our priority/responsibility
                 </Text>
             </View>
 
@@ -131,7 +130,6 @@ export default function ForgotPasswordScreen() {
                 </Text>
             </TouchableOpacity>
         </ScrollView>
-              </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
             </SafeAreaView>
         

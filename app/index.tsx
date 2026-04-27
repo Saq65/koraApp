@@ -1,31 +1,44 @@
-// import { Redirect } from "expo-router";
-
-// export default function Index() {
-//   return <Redirect href="/(auth)/login" />;
-// }
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { router } from "expo-router";
+import { router, SplashScreen } from "expo-router";
 import { getToken } from "../src/utils/storage";
 
 export default function Index() {
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
-    checkAuth();
+    async function initialize() {
+      try {
+        // Prevent auto-hide
+        await SplashScreen.preventAutoHideAsync();
+
+        const token = await getToken();
+        if (token) {
+          router.replace("/(tabs)");
+        } else {
+          router.replace("/(auth)/login");
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        router.replace("/(auth)/login");
+      } finally {
+        setIsReady(true);
+        // Hide splash screen after a short delay to ensure the next screen has rendered
+        setTimeout(() => {
+          SplashScreen.hideAsync();
+        }, 100);
+      }
+    }
+    initialize();
   }, []);
 
-  const checkAuth = async () => {
-    const token = await getToken();
+  if (!isReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
-    if (token) {
-      router.replace("/(tabs)"); // ✅ logged in
-    } else {
-      router.replace("/(auth)/login"); // ❌ not logged in
-    }
-  };
-
-  return (
-    <View style={{ flex: 1, justifyContent: "center" }}>
-      <ActivityIndicator size="large" />
-    </View>
-  );
+  return null;
 }
