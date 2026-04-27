@@ -6,6 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { sendOtp, verifyOtp } from "../../src/api/auth";
 import { setToken } from "../../src/utils/storage";
@@ -13,6 +18,7 @@ import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const { theme } = useTheme();
@@ -24,7 +30,7 @@ export default function LoginScreen() {
   const [isPhoneFocused, setIsPhoneFocused] = useState(false);
   const [focusedOtpIndex, setFocusedOtpIndex] = useState<number | null>(null);
   const logoImage = require("../../assets/images/kora-logo.png");
-  
+
   const otpRefs = useRef([]);
 
   useEffect(() => {
@@ -119,151 +125,173 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Logo */}
-      <View style={styles.logoContainer}>
-        <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
-        <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
-        <Text style={[styles.subText, { color: theme.subText }]}>
-          Your care is our priority/responsibility
-        </Text>
-      </View>
-
-      {/* Welcome */}
-      <Text style={[styles.title, { color: theme.text }]}>Welcome Back</Text>
-      <Text style={[styles.subTitle, { color: theme.subText }]}>
-        Sign in to continue
-      </Text>
-
-      {/* Phone Input with focus border */}
-      <View
-        style={[
-          styles.inputContainer,
-          {
-            backgroundColor: theme.inputBg || theme.card,
-            borderWidth: 1,
-            borderColor: isPhoneFocused ? theme.primary : "transparent",
-          },
-        ]}
-      >
-        <Ionicons name="call-outline" size={18} color={theme.subText} />
-        <TextInput
-          placeholder="Phone Number"
-          placeholderTextColor={theme.subText}
-          style={[styles.input, { color: theme.text }]}
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="numeric"
-          editable={!loading}
-          onFocus={() => setIsPhoneFocused(true)}
-          onBlur={() => setIsPhoneFocused(false)}
-        />
-      </View>
-
-      {/* OTP Boxes with focus border */}
-      {showOtp && (
-        <>
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(el) => (otpRefs.current[index] = el)}
-                style={[
-                  styles.otpBox,
-                  {
-                    borderColor:
-                      focusedOtpIndex === index
-                        ? theme.primary
-                        : digit.length > 0
-                        ? theme.primary
-                        : theme.border || "#ddd",
-                    color: theme.text,
-                    backgroundColor: theme.inputBg || theme.card,
-                  },
-                ]}
-                maxLength={6}
-                keyboardType="numeric"
-                value={digit}
-                onChangeText={(text) => handleOtpChange(text, index)}
-                onKeyPress={(e) => handleKeyPress(e, index)}
-                editable={!loading}
-                onFocus={() => setFocusedOtpIndex(index)}
-                onBlur={() => setFocusedOtpIndex(null)}
-              />
-            ))}
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
+            <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
+            <Text style={[styles.subText, { color: theme.subText }]}>
+              Your care is our priority/responsibility
+            </Text>
           </View>
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        </>
-      )}
 
-      {/* Button */}
-      <TouchableOpacity onPress={handleAuth} disabled={loading}>
-        <LinearGradient
-          colors={theme.gradient || [theme.primary, theme.primary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "Please wait..." : showOtp ? "Verify OTP" : "Send OTP"}
+          {/* Welcome */}
+          <Text style={[styles.title, { color: theme.text }]}>Welcome Back</Text>
+          <Text style={[styles.subText, { color: theme.subText }]}>
+            Sign in to continue
           </Text>
-        </LinearGradient>
-      </TouchableOpacity>
 
-      {/* Divider */}
-      <View style={styles.dividerContainer}>
-        <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
-        <Text style={[styles.orText, { color: theme.subText }]}>or continue with</Text>
-        <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
-      </View>
+          {/* Phone Input */}
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                backgroundColor: theme.inputBg || theme.card,
+                borderWidth: 1,
+                borderColor: isPhoneFocused ? theme.primary : "transparent",
+              },
+            ]}
+          >
+            <Ionicons name="call-outline" size={18} color={theme.subText} />
+            <TextInput
+              placeholder="Phone Number"
+              placeholderTextColor={theme.subText}
+              style={[styles.input, { color: theme.text }]}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="numeric"
+              editable={!loading}
+              onFocus={() => setIsPhoneFocused(true)}
+              onBlur={() => setIsPhoneFocused(false)}
+            />
+          </View>
 
-      {/* Google Button */}
-      <TouchableOpacity
-        style={[
-          styles.googleBtn,
-          {
-            backgroundColor: theme.card,
-            borderColor: theme.border || "#E5E7EB",
-          },
-        ]}
-      >
-        <Text style={{ fontSize: 18 }}>🌐</Text>
-        <Text style={[styles.googleText, { color: theme.text }]}>
-          Continue with Google
-        </Text>
-      </TouchableOpacity>
+          {/* OTP Boxes */}
+          {showOtp && (
+            <>
+              <View style={styles.otpContainer}>
+                {otp.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    ref={(el) => (otpRefs.current[index] = el)}
+                    style={[
+                      styles.otpBox,
+                      {
+                        borderColor:
+                          focusedOtpIndex === index
+                            ? theme.primary
+                            : digit.length > 0
+                            ? theme.primary
+                            : theme.border || "#ddd",
+                        color: theme.text,
+                        backgroundColor: theme.inputBg || theme.card,
+                      },
+                    ]}
+                    maxLength={6}
+                    keyboardType="numeric"
+                    value={digit}
+                    onChangeText={(text) => handleOtpChange(text, index)}
+                    onKeyPress={(e) => handleKeyPress(e, index)}
+                    editable={!loading}
+                    onFocus={() => setFocusedOtpIndex(index)}
+                    onBlur={() => setFocusedOtpIndex(null)}
+                  />
+                ))}
+              </View>
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            </>
+          )}
 
-      {/* Email */}
-      <Text
-        style={[styles.emailText, { color: theme.primary }]}
-        onPress={() => router.push("/(auth)/email-login")}
-      >
-        Use Email instead
-      </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/ForgotPasswordScreen")}
+            style={styles.forgotLink}
+          >
+            <Text style={[styles.forgotText, { color: theme.primary }]}>
+              Forgot Password?
+            </Text>
+          </TouchableOpacity>
 
-      <View style={styles.bottomContainer}>
-        <Text style={{ color: theme.subText }}>Don't have an account? </Text>
-        <Text
-          style={{ color: theme.primary, fontWeight: "600" }}
-          onPress={() => router.push("/(auth)/register")}
-        >
-          Sign Up
-        </Text>
-      </View>
-    </View>
+          {/* Button */}
+          <TouchableOpacity onPress={handleAuth} disabled={loading}>
+            <LinearGradient
+              colors={theme.gradient || [theme.primary, theme.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Please wait..." : showOtp ? "Verify OTP" : "Send OTP"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
+            <Text style={[styles.orText, { color: theme.subText }]}>or continue with</Text>
+            <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
+          </View>
+
+          {/* Google Button */}
+          <TouchableOpacity
+            style={[
+              styles.googleBtn,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border || "#E5E7EB",
+              },
+            ]}
+          >
+            <Text style={{ fontSize: 18 }}>🌐</Text>
+            <Text style={[styles.googleText, { color: theme.text }]}>
+              Continue with Google
+            </Text>
+          </TouchableOpacity>
+
+          {/* Email */}
+          <Text
+            style={[styles.emailText, { color: theme.primary }]}
+            onPress={() => router.push("/(auth)/email-login")}
+          >
+            Use Email instead
+          </Text>
+
+          <View style={styles.bottomContainer}>
+            <Text style={{ color: theme.subText }}>Don't have an account? </Text>
+            <Text
+              style={{ color: theme.primary, fontWeight: "600" }}
+              onPress={() => router.push("/(auth)/register")}
+            >
+              Sign Up
+            </Text>
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: "center" },
   logoContainer: { alignItems: "center", marginBottom: 40 },
-  logoBox: { width: 70, height: 70, borderRadius: 20, justifyContent: "center", alignItems: "center", marginBottom: 10 },
-   logoImage: { width: 70, height: 70, marginBottom: 10 },
-
+  logoImage: { width: 70, height: 70, marginBottom: 10 },
   logoText: { fontSize: 28, fontWeight: "700" },
-  title: { fontSize: 26, fontWeight: "700", marginTop: 10 },
   subText: { fontSize: 14, marginTop: 5 },
-  subTitle: { fontSize: 14, marginTop: 5 },
+  title: { fontSize: 26, fontWeight: "700", marginTop: 10 },
+  forgotLink: { alignSelf: "flex-end", marginTop: 12, marginBottom: 8 },
+  forgotText: { fontSize: 14, fontWeight: "500" },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
