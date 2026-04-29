@@ -77,7 +77,7 @@ export default function EmailLoginScreen() {
               <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
               <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
               <Text style={[styles.subText, { color: theme.subText }]}>
-                Your care is our priority/responsibility                                                                                                                                                              
+                Your care is our priority                                                                                                                                                              
               </Text>
             </View>
 

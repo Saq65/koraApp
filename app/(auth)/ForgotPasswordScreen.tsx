@@ -81,7 +81,7 @@ export default function ForgotPasswordScreen() {
                 <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
                 <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
                 <Text style={[styles.subTitle, { color: theme.subText }]}>
-                    Your care is our priority/responsibility
+                    Your care is our priority
                 </Text>
             </View>
 
