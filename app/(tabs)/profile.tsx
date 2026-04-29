@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -12,15 +13,15 @@ import { removeToken } from "../../src/utils/storage";
 import { router } from "expo-router";
 
 export default function ProfileScreen() {
-  const { theme } = useTheme();
+  const { theme, isDarkMode, toggleTheme } = useTheme(); // add these from your provider
 
   const handleLogout = async () => {
     await removeToken();
     router.replace("/(auth)/login");
   };
 
-  const MenuItem = ({ icon, title, subtitle }: any) => (
-    <TouchableOpacity style={styles.menuItem}>
+  const MenuItem = ({ icon, title, subtitle, rightElement, onPress }: any) => (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuLeft}>
         <View
           style={[
@@ -43,7 +44,11 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <Ionicons name="chevron-forward" size={18} color={theme.subText} />
+      {rightElement ? (
+        rightElement
+      ) : (
+        <Ionicons name="chevron-forward" size={18} color={theme.subText} />
+      )}
     </TouchableOpacity>
   );
 
@@ -87,10 +92,69 @@ export default function ProfileScreen() {
 
       {/* MENU */}
       <View style={styles.menuContainer}>
-        <MenuItem icon="cube-outline" title="Order History" subtitle="12 orders" />
-        <MenuItem icon="card-outline" title="Payment Methods" />
-        <MenuItem icon="location-outline" title="Saved Addresses" />
-        <MenuItem icon="star-outline" title="Rate Us" />
+        {/* Dark Mode toggle */}
+        <MenuItem
+          icon="moon-outline"
+          title="Dark Mode"
+          subtitle="Switch between light and dark theme"
+          rightElement={
+            <Switch
+              value={isDarkMode}
+              onValueChange={toggleTheme}
+              trackColor={{ false: "#767577", true: theme.primary }}
+              thumbColor={isDarkMode ? "#fff" : "#f4f3f4"}
+            />
+          }
+          onPress={() => {}}
+        />
+
+        {/* Personal Details */}
+        <MenuItem
+          icon="person-outline"
+          title="Personal Details"
+          subtitle="Name, DOB, mobile, email"
+          onPress={() => console.log("Navigate to Personal Details")}
+        />
+
+        {/* Order History */}
+        <MenuItem
+          icon="cube-outline"
+          title="Order History"
+          subtitle="12 orders"
+          onPress={() => console.log("Navigate to Order History")}
+        />
+
+        {/* Saved Addresses */}
+        <MenuItem
+          icon="location-outline"
+          title="Saved Addresses"
+          subtitle="Home, Office"
+          onPress={() => console.log("Navigate to Saved Addresses")}
+        />
+
+        {/* Rate Us */}
+        <MenuItem
+          icon="star-outline"
+          title="Rate Us"
+          subtitle="Share your feedback"
+          onPress={() => console.log("Rate Us")}
+        />
+
+        {/* Notifications */}
+        <MenuItem
+          icon="notifications-outline"
+          title="Notifications"
+          subtitle="3 new"
+          onPress={() => console.log("Navigate to Notifications")}
+        />
+
+        {/* Settings */}
+        <MenuItem
+          icon="settings-outline"
+          title="Settings"
+          subtitle="Theme, sound, permissions"
+          onPress={() => console.log("Navigate to Settings")}
+        />
       </View>
 
       {/* LOGOUT BUTTON */}
