@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import AppBackground from "@/components/AppBackground";
 
 const logoImage = require("../../assets/images/kora-logo.png");
 
@@ -10,6 +11,7 @@ export default function ResetSuccessScreen() {
   const { theme } = useTheme();
 
   return (
+    <AppBackground>
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.logoContainer}>
         <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
@@ -34,6 +36,7 @@ export default function ResetSuccessScreen() {
         </LinearGradient>
       </TouchableOpacity>
     </View>
+    </AppBackground>
   );
 }
 

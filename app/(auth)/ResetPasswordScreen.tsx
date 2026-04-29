@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { resetPassword } from "../../src/api/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AppBackground from "@/components/AppBackground";
 
 // ...
 const logoImage = require("../../assets/images/kora-logo.png");
@@ -58,7 +59,7 @@ export default function ResetPasswordScreen() {
 
   return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-               
+               <AppBackground>
                <KeyboardAvoidingView
                  style={{ flex: 1 }}
                  behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -145,6 +146,7 @@ export default function ResetPasswordScreen() {
       </TouchableOpacity>
     </ScrollView>
         </KeyboardAvoidingView>
+        </AppBackground>
         </SafeAreaView>
   );
 }

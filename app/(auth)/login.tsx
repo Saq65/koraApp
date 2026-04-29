@@ -19,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AppBackground from "@/components/AppBackground";
 
 export default function LoginScreen() {
   const { theme } = useTheme();
@@ -125,7 +126,8 @@ export default function LoginScreen() {
   };
 
   return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+        <SafeAreaView style={{ flex: 1,backgroundColor: theme.background }}>
+    <AppBackground>
     
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -278,6 +280,8 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
     </KeyboardAvoidingView>
+    </AppBackground>
+
     </SafeAreaView>
   );
 }

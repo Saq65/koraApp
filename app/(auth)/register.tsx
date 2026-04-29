@@ -20,6 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { registerUser } from "../../src/api/auth";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AppBackground from "@/components/AppBackground";
 
 const logoImage = require("../../assets/images/kora-logo.png");
 
@@ -118,6 +119,7 @@ export default function RegisterScreen() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+            <AppBackground>
             <KeyboardAvoidingView
                 style={{ flex: 1, backgroundColor: theme.background }}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -288,6 +290,7 @@ export default function RegisterScreen() {
                         </View>
                     </ScrollView>
             </KeyboardAvoidingView>
+            </AppBackground>
         </SafeAreaView>
     );
 }

@@ -17,6 +17,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { verifyResetOtp, resendResetCode } from "../../src/api/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AppBackground from "@/components/AppBackground";
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function VerifyResetOtpScreen() {
@@ -102,7 +103,7 @@ export default function VerifyResetOtpScreen() {
 
     return (
          <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-            
+            <AppBackground>
             <KeyboardAvoidingView
               style={{ flex: 1 }}
               behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -167,6 +168,7 @@ export default function VerifyResetOtpScreen() {
             </View>
         </ScrollView>
             </KeyboardAvoidingView>
+            </AppBackground>
             </SafeAreaView>
     );
 }

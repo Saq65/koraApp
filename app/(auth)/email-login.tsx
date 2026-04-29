@@ -20,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { loginUser } from "../../src/api/auth";
 import { setToken } from "../../src/utils/storage";
+import AppBackground from "@/components/AppBackground";
 
 const logoImage = require("../../assets/images/kora-logo.png");
 
@@ -59,6 +60,8 @@ export default function EmailLoginScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+          <AppBackground>
+      
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -215,6 +218,7 @@ export default function EmailLoginScreen() {
             </View>
           </ScrollView>
       </KeyboardAvoidingView>
+      </AppBackground>
     </SafeAreaView>
   );
 }
