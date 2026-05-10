@@ -2,7 +2,17 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
+  if (hour < 17) return { text: "Good Afternoon", emoji: "☀️" };
+  if (hour < 21) return { text: "Good Evening", emoji: "🌆" };
+  return { text: "Good Night", emoji: "🌙" };
+}
+
 export default function Header({ theme, onMenuPress }: any) {
+  const { text, emoji } = getGreeting();
+
   return (
     <View style={styles.header}>
       {/* LEFT: Menu icon + greeting/name */}
@@ -12,9 +22,9 @@ export default function Header({ theme, onMenuPress }: any) {
         </TouchableOpacity>
         <View>
           <Text style={[styles.greeting, { color: theme.subText }]}>
-            Good Morning 👋
+            {text} {emoji}
           </Text>
-          <Text style={[styles.name, { color: theme.text }]}>John</Text>
+          <Text style={[styles.name, { color: theme.text }]}>Saqlain</Text>
         </View>
       </View>
 
@@ -26,6 +36,7 @@ export default function Header({ theme, onMenuPress }: any) {
   );
 }
 
+// styles unchanged
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",

@@ -6,7 +6,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack
+          screenOptions={{ headerShown: false }}
+          initialRouteName="index" 
+        />
       </ThemeProvider>
     </SafeAreaProvider>
   );

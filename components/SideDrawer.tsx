@@ -70,7 +70,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
             <View style={styles.profile}>
               <Ionicons name="person-outline" size={24} color="#fff" />
             </View>
-            <Text style={styles.name}>John Doe</Text>
+            <Text style={styles.name}>Saqlain</Text>
             <Text style={styles.phone}>+91 98765 43210</Text>
             <TouchableOpacity style={styles.close} onPress={onClose}>
               <Ionicons name="close" size={20} color="#fff" />

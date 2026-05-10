@@ -1,44 +1,45 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { useEffect } from "react";
 import { router, SplashScreen } from "expo-router";
 import { getToken } from "../src/utils/storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, ActivityIndicator } from "react-native";
 
 export default function Index() {
-  const [isReady, setIsReady] = useState(false);
-
   useEffect(() => {
     async function initialize() {
       try {
-        // Prevent auto-hide
         await SplashScreen.preventAutoHideAsync();
 
+        const [hasSelectedLanguage, termsAccepted] = await Promise.all([
+          AsyncStorage.getItem("selectedLanguage"),
+          AsyncStorage.getItem("termsAccepted"),
+        ]);
         const token = await getToken();
-        if (token) {
-          router.replace("/(tabs)");
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        if (!hasSelectedLanguage) {
+          router.replace("/(onboarding)/language");
+        } else if (!termsAccepted) {
+          router.replace("/(onboarding)/terms");
+        } else if (token) {
+          router.replace("/(tabs)/home"); 
         } else {
           router.replace("/(auth)/login");
         }
       } catch (error) {
-        console.error("Auth check error:", error);
-        router.replace("/(auth)/login");
+        router.replace("/(onboarding)/language");
       } finally {
-        setIsReady(true);
-        // Hide splash screen after a short delay to ensure the next screen has rendered
-        setTimeout(() => {
-          SplashScreen.hideAsync();
-        }, 100);
+        setTimeout(() => SplashScreen.hideAsync(), 100);
       }
     }
+
     initialize();
   }, []);
 
-  if (!isReady) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  return null;
+  return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator size="large" />
+    </View>
+  );
 }
