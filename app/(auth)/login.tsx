@@ -7,10 +7,10 @@ import {
   StyleSheet,
   Image,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
   Platform,
   ScrollView,
+  Modal,
+  FlatList,
 } from "react-native";
 import { sendOtp, verifyOtp } from "../../src/api/auth";
 import { setToken } from "../../src/utils/storage";
@@ -20,8 +20,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
+import { useTranslation } from "react-i18next";
+import i18n from "../../src/translations/i18n";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,9 +34,26 @@ export default function LoginScreen() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isPhoneFocused, setIsPhoneFocused] = useState(false);
   const [focusedOtpIndex, setFocusedOtpIndex] = useState<number | null>(null);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const logoImage = require("../../assets/images/kora-logo.png");
 
   const otpRefs = useRef([]);
+
+  // Language options
+  const languages = [
+    { code: "en", label: "English", nativeLabel: "English" },
+    { code: "hi", label: "हिन्दी", nativeLabel: "हिन्दी" },
+    { code: "mr", label: "मराठी", nativeLabel: "मराठी" },
+    { code: "gu", label: "ગુજરાતી", nativeLabel: "ગુજરાતી" },
+  ];
+
+  const currentLanguageLabel = languages.find(l => l.code === i18n.language)?.nativeLabel || "English";
+
+  const changeLanguage = async (langCode: string) => {
+    await i18n.changeLanguage(langCode);
+    await AsyncStorage.setItem("app-language", langCode);
+    setShowLanguageDropdown(false);
+  };
 
   useEffect(() => {
     if (showOtp && otpRefs.current[0]) {
@@ -92,7 +113,7 @@ export default function LoginScreen() {
         let normalizedPhone = normalizeIndianPhone(phone);
         const phoneRegex = /^\+91\d{10}$/;
         if (!phoneRegex.test(normalizedPhone)) {
-          setError("Please enter a valid 10-digit Indian mobile number");
+          setError(t("validation.valid_phone"));
           setLoading(false);
           return;
         }
@@ -104,7 +125,7 @@ export default function LoginScreen() {
 
       const enteredOtp = otp.join("");
       if (enteredOtp.length !== 6) {
-        setError("Please enter complete 6-digit OTP");
+        setError(t("auth.enter_complete_otp"));
         setLoading(false);
         return;
       }
@@ -126,162 +147,222 @@ export default function LoginScreen() {
   };
 
   return (
-        <SafeAreaView style={{ flex: 1,backgroundColor: theme.background }}>
-    <AppBackground>
-    
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-    >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <AppBackground>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
         >
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
-            <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Language Selector - Dropdown */}
+            <View style={styles.languageRow}>
+              <TouchableOpacity
+                style={[
+                  styles.languageBtn,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border || "#ddd",
+                  },
+                ]}
+                onPress={() => setShowLanguageDropdown(true)}
+              >
+                <Ionicons name="language-outline" size={18} color={theme.primary} />
+                <Text style={[styles.languageBtnText, { color: theme.primary }]}>
+                  {currentLanguageLabel}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={theme.primary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
+              <Text style={[styles.logoText, { color: theme.primary }]}>{t("app_name")}</Text>
+              <Text style={[styles.subText, { color: theme.subText }]}>
+                {t("branding.your_care")}
+              </Text>
+            </View>
+
+            {/* Welcome */}
+            <Text style={[styles.title, { color: theme.text }]}>{t("auth.welcome_back")}</Text>
             <Text style={[styles.subText, { color: theme.subText }]}>
-              Your care is our priority
+              {t("auth.sign_in_continue")}
             </Text>
-          </View>
 
-          {/* Welcome */}
-          <Text style={[styles.title, { color: theme.text }]}>Welcome Back</Text>
-          <Text style={[styles.subText, { color: theme.subText }]}>
-            Sign in to continue
-          </Text>
+            {/* Phone Input */}
+            <View
+              style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: theme.inputBg || theme.card,
+                  borderWidth: 1,
+                  borderColor: isPhoneFocused ? theme.primary : "transparent",
+                },
+              ]}
+            >
+              <Ionicons name="call-outline" size={18} color={theme.subText} />
+              <TextInput
+                placeholder={t("auth.phone_number")}
+                placeholderTextColor={theme.subText}
+                style={[styles.input, { color: theme.text }]}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="numeric"
+                editable={!loading}
+                onFocus={() => setIsPhoneFocused(true)}
+                onBlur={() => setIsPhoneFocused(false)}
+              />
+            </View>
 
-          {/* Phone Input */}
+            {/* OTP Boxes */}
+            {showOtp && (
+              <>
+                <View style={styles.otpContainer}>
+                  {otp.map((digit, index) => (
+                    <TextInput
+                      key={index}
+                      ref={(el) => (otpRefs.current[index] = el)}
+                      style={[
+                        styles.otpBox,
+                        {
+                          borderColor:
+                            focusedOtpIndex === index
+                              ? theme.primary
+                              : digit.length > 0
+                              ? theme.primary
+                              : theme.border || "#ddd",
+                          color: theme.text,
+                          backgroundColor: theme.inputBg || theme.card,
+                        },
+                      ]}
+                      maxLength={6}
+                      keyboardType="numeric"
+                      value={digit}
+                      onChangeText={(text) => handleOtpChange(text, index)}
+                      onKeyPress={(e) => handleKeyPress(e, index)}
+                      editable={!loading}
+                      onFocus={() => setFocusedOtpIndex(index)}
+                      onBlur={() => setFocusedOtpIndex(null)}
+                    />
+                  ))}
+                </View>
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              </>
+            )}
+
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/ForgotPasswordScreen")}
+              style={styles.forgotLink}
+            >
+              <Text style={[styles.forgotText, { color: theme.primary }]}>
+                {t("auth.forgot_password")}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Button */}
+            <TouchableOpacity onPress={handleAuth} disabled={loading}>
+              <LinearGradient
+                colors={theme.gradient || [theme.primary, theme.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? t("auth.please_wait") : showOtp ? t("auth.verify_otp") : t("auth.send_otp")}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
+              <Text style={[styles.orText, { color: theme.subText }]}>{t("auth.or_continue_with")}</Text>
+              <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
+            </View>
+
+            {/* Google Button */}
+            <TouchableOpacity
+              style={[
+                styles.googleBtn,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border || "#E5E7EB",
+                },
+              ]}
+            >
+              <Text style={{ fontSize: 18 }}>🌐</Text>
+              <Text style={[styles.googleText, { color: theme.text }]}>
+                {t("auth.continue_google")}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Email */}
+            <Text
+              style={[styles.emailText, { color: theme.primary }]}
+              onPress={() => router.push("/(auth)/email-login")}
+            >
+              {t("auth.use_email")}
+            </Text>
+
+            <View style={styles.bottomContainer}>
+              <Text style={{ color: theme.subText }}>{t("auth.dont_have_account")} </Text>
+              <Text
+                style={{ color: theme.primary, fontWeight: "600" }}
+                onPress={() => router.push("/(auth)/register")}
+              >
+                {t("auth.sign_up")}
+              </Text>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </AppBackground>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLanguageDropdown(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowLanguageDropdown(false)}
+        >
           <View
             style={[
-              styles.inputContainer,
-              {
-                backgroundColor: theme.inputBg || theme.card,
-                borderWidth: 1,
-                borderColor: isPhoneFocused ? theme.primary : "transparent",
-              },
-            ]}
-          >
-            <Ionicons name="call-outline" size={18} color={theme.subText} />
-            <TextInput
-              placeholder="Phone Number"
-              placeholderTextColor={theme.subText}
-              style={[styles.input, { color: theme.text }]}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="numeric"
-              editable={!loading}
-              onFocus={() => setIsPhoneFocused(true)}
-              onBlur={() => setIsPhoneFocused(false)}
-            />
-          </View>
-
-          {/* OTP Boxes */}
-          {showOtp && (
-            <>
-              <View style={styles.otpContainer}>
-                {otp.map((digit, index) => (
-                  <TextInput
-                    key={index}
-                    ref={(el) => (otpRefs.current[index] = el)}
-                    style={[
-                      styles.otpBox,
-                      {
-                        borderColor:
-                          focusedOtpIndex === index
-                            ? theme.primary
-                            : digit.length > 0
-                            ? theme.primary
-                            : theme.border || "#ddd",
-                        color: theme.text,
-                        backgroundColor: theme.inputBg || theme.card,
-                      },
-                    ]}
-                    maxLength={6}
-                    keyboardType="numeric"
-                    value={digit}
-                    onChangeText={(text) => handleOtpChange(text, index)}
-                    onKeyPress={(e) => handleKeyPress(e, index)}
-                    editable={!loading}
-                    onFocus={() => setFocusedOtpIndex(index)}
-                    onBlur={() => setFocusedOtpIndex(null)}
-                  />
-                ))}
-              </View>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            </>
-          )}
-
-          <TouchableOpacity
-            onPress={() => router.push("/(auth)/ForgotPasswordScreen")}
-            style={styles.forgotLink}
-          >
-            <Text style={[styles.forgotText, { color: theme.primary }]}>
-              Forgot Password?
-            </Text>
-          </TouchableOpacity>
-
-          {/* Button */}
-          <TouchableOpacity onPress={handleAuth} disabled={loading}>
-            <LinearGradient
-              colors={theme.gradient || [theme.primary, theme.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? "Please wait..." : showOtp ? "Verify OTP" : "Send OTP"}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
-            <Text style={[styles.orText, { color: theme.subText }]}>or continue with</Text>
-            <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
-          </View>
-
-          {/* Google Button */}
-          <TouchableOpacity
-            style={[
-              styles.googleBtn,
+              styles.dropdownContainer,
               {
                 backgroundColor: theme.card,
-                borderColor: theme.border || "#E5E7EB",
+                borderColor: theme.border || "#ddd",
               },
             ]}
           >
-            <Text style={{ fontSize: 18 }}>🌐</Text>
-            <Text style={[styles.googleText, { color: theme.text }]}>
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
-
-          {/* Email */}
-          <Text
-            style={[styles.emailText, { color: theme.primary }]}
-            onPress={() => router.push("/(auth)/email-login")}
-          >
-            Use Email instead
-          </Text>
-
-          <View style={styles.bottomContainer}>
-            <Text style={{ color: theme.subText }}>Don't have an account? </Text>
-            <Text
-              style={{ color: theme.primary, fontWeight: "600" }}
-              onPress={() => router.push("/(auth)/register")}
-            >
-              Sign Up
-            </Text>
+            <FlatList
+              data={languages}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => changeLanguage(item.code)}
+                >
+                  <Text style={[styles.dropdownItemText, { color: theme.text }]}>
+                    {item.nativeLabel}
+                  </Text>
+                  {i18n.language === item.code && (
+                    <Ionicons name="checkmark" size={18} color={theme.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
           </View>
-        </ScrollView>
-    </KeyboardAvoidingView>
-    </AppBackground>
-
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -323,4 +404,49 @@ const styles = StyleSheet.create({
   emailText: { textAlign: "center", marginTop: 20, fontWeight: "500" },
   bottomContainer: { flexDirection: "row", justifyContent: "center", marginTop: 30 },
   errorText: { color: "red", textAlign: "center", marginTop: 10, fontSize: 14 },
+  languageRow: {
+    alignItems: "flex-end",
+    marginBottom: 10,
+  },
+  languageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  languageBtnText: {
+    marginHorizontal: 6,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dropdownContainer: {
+    width: 200,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: "hidden",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#eee",
+  },
+  dropdownItemText: {
+    fontSize: 16,
+  },
 });

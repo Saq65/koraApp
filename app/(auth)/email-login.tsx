@@ -23,8 +23,9 @@ import { setToken } from "../../src/utils/storage";
 import AppBackground from "@/components/AppBackground";
 
 const logoImage = require("../../assets/images/kora-logo.png");
-
+import { useTranslation } from "react-i18next";
 export default function EmailLoginScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +36,7 @@ export default function EmailLoginScreen() {
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      setError("Please enter both email/username and password");
+      setError(t("validation.enter_email_password"));
       return;
     }
 
@@ -48,11 +49,11 @@ export default function EmailLoginScreen() {
         await setToken(data.token);
         router.replace("/(tabs)");
       } else {
-        setError("Invalid response from server");
+        setError(t("validation.invalid_server_response"));
       }
     } catch (err: any) {
       console.log("Login error:", err);
-      setError(err.message || "Invalid username or password");
+      setError(err.message || t("validation.invalid_credentials"));
     } finally {
       setLoading(false);
     }
@@ -60,13 +61,13 @@ export default function EmailLoginScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-          <AppBackground>
-      
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-      >
+      <AppBackground>
+
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
           <ScrollView
             contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
             keyboardShouldPersistTaps="handled"
@@ -75,16 +76,18 @@ export default function EmailLoginScreen() {
             {/* Logo */}
             <View style={styles.logoContainer}>
               <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
-              <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
+              <Text style={[styles.logoText, { color: theme.primary }]}>{t("app_name")}</Text>
               <Text style={[styles.subText, { color: theme.subText }]}>
-                Your care is our priority                                                                                                                                                              
+                {t("branding.your_care")}
               </Text>
             </View>
 
             {/* Title */}
-            <Text style={[styles.title, { color: theme.text }]}>Welcome Back</Text>
+            <Text style={[styles.title, { color: theme.text }]}>
+              {t("auth.welcome_back")}
+            </Text>
             <Text style={[styles.subText, { color: theme.subText }]}>
-              Sign in to continue
+              {t("auth.sign_in_continue")}
             </Text>
 
             {/* Username/Email Input */}
@@ -101,7 +104,7 @@ export default function EmailLoginScreen() {
             >
               <Ionicons name="mail-outline" size={18} color={theme.subText} />
               <TextInput
-                placeholder="Email or Username"
+                placeholder={t("auth.email_or_username")}
                 placeholderTextColor={theme.subText}
                 style={[styles.input, { color: theme.text }]}
                 value={username}
@@ -126,7 +129,7 @@ export default function EmailLoginScreen() {
             >
               <Ionicons name="lock-closed-outline" size={18} color={theme.subText} />
               <TextInput
-                placeholder="Password"
+                placeholder={t("auth.password")}
                 placeholderTextColor={theme.subText}
                 secureTextEntry={secureTextEntry}
                 style={[styles.input, { color: theme.text }]}
@@ -148,7 +151,7 @@ export default function EmailLoginScreen() {
             <View style={styles.forgotRow}>
               <TouchableOpacity onPress={() => router.push("/(auth)/ForgotPasswordScreen")}>
                 <Text style={[styles.forgotText, { color: theme.primary }]}>
-                  Forgot Password?
+                  {t("auth.forgot_password")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -171,7 +174,9 @@ export default function EmailLoginScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.buttonText}>Sign In</Text>
+                  <Text style={styles.buttonText}>
+                    {t("auth.sign_in")}
+                  </Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>
@@ -179,7 +184,9 @@ export default function EmailLoginScreen() {
             {/* Divider */}
             <View style={styles.dividerContainer}>
               <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
-              <Text style={[styles.orText, { color: theme.subText }]}>or continue with</Text>
+              <Text style={[styles.orText, { color: theme.subText }]}>
+                {t("auth.or_continue_with")}
+              </Text>
               <View style={[styles.line, { backgroundColor: theme.border || "#ddd" }]} />
             </View>
 
@@ -194,7 +201,7 @@ export default function EmailLoginScreen() {
               ]}
             >
               <Text style={[styles.googleText, { color: theme.text }]}>
-                Continue with Google
+                {t("auth.continue_google")}
               </Text>
             </TouchableOpacity>
 
@@ -203,21 +210,21 @@ export default function EmailLoginScreen() {
               style={[styles.phoneBtn, { borderColor: theme.text }]}
               onPress={() => router.push("/(auth)/login")}
             >
-              <Text style={{ color: theme.primary }}>Use Phone instead</Text>
+              <Text style={{ color: theme.primary }}>{t("auth.use_phone_instead")}</Text>
             </TouchableOpacity>
 
             {/* Sign Up Link */}
             <View style={styles.bottomContainer}>
-              <Text style={{ color: theme.subText }}>Don't have an account? </Text>
+              <Text style={{ color: theme.subText }}>{t("auth.dont_have_account")}</Text>
               <Text
                 style={{ color: theme.primary, fontWeight: "600" }}
                 onPress={() => router.push("/(auth)/register")}
               >
-                Sign Up
+                {t("auth.sign_up")}
               </Text>
             </View>
           </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
       </AppBackground>
     </SafeAreaView>
   );

@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-    KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
@@ -19,12 +17,13 @@ import { router, useLocalSearchParams } from "expo-router";
 import { resetPassword } from "../../src/api/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
+import { useTranslation } from "react-i18next";
 
-// ...
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function ResetPasswordScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation(); // ← language hook
   const { resetToken } = useLocalSearchParams<{ resetToken: string }>();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,118 +35,134 @@ export default function ResetPasswordScreen() {
   const [focusedConfirm, setFocusedConfirm] = useState(false);
 
   const handleReset = async () => {
-  if (newPassword.length < 6) {
-    setError("Password must be at least 6 characters");
-    return;
-  }
-  if (newPassword !== confirmPassword) {
-    setError("Passwords do not match");
-    return;
-  }
+    if (newPassword.length < 6) {
+      setError(t("validation.password_min"));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError(t("validation.passwords_not_match"));
+      return;
+    }
 
-  setLoading(true);
-  setError("");
-  try {
-    await resetPassword(resetToken, newPassword, confirmPassword);
-    router.replace("/(auth)/ResetSuccessScreen");
-  } catch (err: any) {
-    setError(err.message || "Password reset failed");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setError("");
+    try {
+      await resetPassword(resetToken, newPassword, confirmPassword);
+      router.replace("/(auth)/ResetSuccessScreen");
+    } catch (err: any) {
+      setError(err.message || t("validation.reset_failed"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-               <AppBackground>
-               <KeyboardAvoidingView
-                 style={{ flex: 1 }}
-                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                 keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-               >
-                   <ScrollView
-                     contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
-                     keyboardShouldPersistTaps="handled"
-                     showsVerticalScrollIndicator={false}
-                   >
-      <View style={styles.logoContainer}>
-        <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
-        <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
-      </View>
-
-      <Text style={[styles.title, { color: theme.text }]}>Create New Password</Text>
-      <Text style={[styles.description, { color: theme.subText }]}>
-        Your new password must be different from previously used passwords.
-      </Text>
-
-      <View
-        style={[
-          styles.inputContainer,
-          {
-            backgroundColor: theme.inputBg || theme.card,
-            borderColor: focusedNew ? theme.primary : "transparent",
-            borderWidth: focusedNew ? 2 : 1,
-          },
-        ]}
-      >
-        <Ionicons name="lock-closed-outline" size={18} color={theme.subText} />
-        <TextInput
-          placeholder="New Password"
-          placeholderTextColor={theme.subText}
-          style={[styles.input, { color: theme.text }]}
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry={secureNew}
-          onFocus={() => setFocusedNew(true)}
-          onBlur={() => setFocusedNew(false)}
-        />
-        <TouchableOpacity onPress={() => setSecureNew(!secureNew)}>
-          <Ionicons name={secureNew ? "eye-outline" : "eye-off-outline"} size={18} color={theme.subText} />
-        </TouchableOpacity>
-      </View>
-
-      <View
-        style={[
-          styles.inputContainer,
-          {
-            backgroundColor: theme.inputBg || theme.card,
-            borderColor: focusedConfirm ? theme.primary : "transparent",
-            borderWidth: focusedConfirm ? 2 : 1,
-          },
-        ]}
-      >
-        <Ionicons name="lock-closed-outline" size={18} color={theme.subText} />
-        <TextInput
-          placeholder="Confirm New Password"
-          placeholderTextColor={theme.subText}
-          style={[styles.input, { color: theme.text }]}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry={secureConfirm}
-          onFocus={() => setFocusedConfirm(true)}
-          onBlur={() => setFocusedConfirm(false)}
-        />
-        <TouchableOpacity onPress={() => setSecureConfirm(!secureConfirm)}>
-          <Ionicons name={secureConfirm ? "eye-outline" : "eye-off-outline"} size={18} color={theme.subText} />
-        </TouchableOpacity>
-      </View>
-
-      <Text style={[styles.hint, { color: theme.subText }]}>Password must be at least 6 characters</Text>
-
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-      <TouchableOpacity onPress={handleReset} disabled={loading}>
-        <LinearGradient
-          colors={theme.gradient || [theme.primary, theme.primary]}
-          style={styles.button}
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <AppBackground>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
         >
-          <Text style={styles.buttonText}>{loading ? "Resetting..." : "Reset Password"}</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-    </ScrollView>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.logoContainer}>
+              <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
+              <Text style={[styles.logoText, { color: theme.primary }]}>
+                {t("app_name")}
+              </Text>
+            </View>
+
+            <Text style={[styles.title, { color: theme.text }]}>
+              {t("auth.create_new_password")}
+            </Text>
+            <Text style={[styles.description, { color: theme.subText }]}>
+              {t("auth.password_reset_description")}
+            </Text>
+
+            <View
+              style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: theme.inputBg || theme.card,
+                  borderColor: focusedNew ? theme.primary : "transparent",
+                  borderWidth: focusedNew ? 2 : 1,
+                },
+              ]}
+            >
+              <Ionicons name="lock-closed-outline" size={18} color={theme.subText} />
+              <TextInput
+                placeholder={t("auth.new_password")}
+                placeholderTextColor={theme.subText}
+                style={[styles.input, { color: theme.text }]}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry={secureNew}
+                onFocus={() => setFocusedNew(true)}
+                onBlur={() => setFocusedNew(false)}
+              />
+              <TouchableOpacity onPress={() => setSecureNew(!secureNew)}>
+                <Ionicons
+                  name={secureNew ? "eye-outline" : "eye-off-outline"}
+                  size={18}
+                  color={theme.subText}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: theme.inputBg || theme.card,
+                  borderColor: focusedConfirm ? theme.primary : "transparent",
+                  borderWidth: focusedConfirm ? 2 : 1,
+                },
+              ]}
+            >
+              <Ionicons name="lock-closed-outline" size={18} color={theme.subText} />
+              <TextInput
+                placeholder={t("auth.confirm_new_password")}
+                placeholderTextColor={theme.subText}
+                style={[styles.input, { color: theme.text }]}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={secureConfirm}
+                onFocus={() => setFocusedConfirm(true)}
+                onBlur={() => setFocusedConfirm(false)}
+              />
+              <TouchableOpacity onPress={() => setSecureConfirm(!secureConfirm)}>
+                <Ionicons
+                  name={secureConfirm ? "eye-outline" : "eye-off-outline"}
+                  size={18}
+                  color={theme.subText}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.hint, { color: theme.subText }]}>
+              {t("validation.password_min_hint")}
+            </Text>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <TouchableOpacity onPress={handleReset} disabled={loading}>
+              <LinearGradient
+                colors={theme.gradient || [theme.primary, theme.primary]}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? t("auth.please_wait") : t("auth.reset_password")}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </ScrollView>
         </KeyboardAvoidingView>
-        </AppBackground>
-        </SafeAreaView>
+      </AppBackground>
+    </SafeAreaView>
   );
 }
 

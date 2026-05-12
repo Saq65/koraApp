@@ -8,10 +8,7 @@ import {
     ScrollView,
     Image,
     Platform,
-    Alert,
     KeyboardAvoidingView,
-    TouchableWithoutFeedback,
-    Keyboard,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -21,11 +18,13 @@ import { registerUser } from "../../src/api/auth";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
+import { useTranslation } from "react-i18next";
 
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function RegisterScreen() {
     const { theme } = useTheme();
+    const { t } = useTranslation(); // ← language hook
 
     const [form, setForm] = useState({
         username: "",
@@ -68,19 +67,19 @@ export default function RegisterScreen() {
             setError("");
 
             if (!form.username.trim()) {
-                setError("Username is required");
+                setError(t("validation.username_required"));
                 return;
             }
             if (!form.password || form.password.length < 6) {
-                setError("Password must be at least 6 characters");
+                setError(t("validation.password_min"));
                 return;
             }
             if (!form.mobile || form.mobile.length !== 10) {
-                setError("Please enter a valid 10-digit mobile number");
+                setError(t("auth.enter_valid_phone"));
                 return;
             }
             if (!form.fullName.trim()) {
-                setError("Full name is required");
+                setError(t("validation.fullname_required"));
                 return;
             }
 
@@ -102,7 +101,7 @@ export default function RegisterScreen() {
             router.replace("/(auth)/login");
         } catch (error: any) {
             console.log("REGISTER ERROR:", error.message);
-            setError(error.message || "Registration failed. Please try again.");
+            setError(error.message || t("validation.registration_failed"));
         } finally {
             setLoading(false);
         }
@@ -120,11 +119,11 @@ export default function RegisterScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
             <AppBackground>
-            <KeyboardAvoidingView
-                style={{ flex: 1, backgroundColor: theme.background }}
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-            >
+                <KeyboardAvoidingView
+                    style={{ flex: 1, backgroundColor: theme.background }}
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+                >
                     <ScrollView
                         contentContainerStyle={styles.scrollContent}
                         keyboardShouldPersistTaps="handled"
@@ -132,17 +131,19 @@ export default function RegisterScreen() {
                     >
                         <View style={styles.logoContainer}>
                             <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
-                            <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
+                            <Text style={[styles.logoText, { color: theme.primary }]}>
+                                {t("app_name")}
+                            </Text>
                             <Text style={[styles.subTitle, { color: theme.subText }]}>
-                                Create your account
+                                {t("auth.create_account")}
                             </Text>
                         </View>
 
                         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                         <InputField
-                            label="Username *"
-                            placeholder="Choose a username"
+                            label={`${t("auth.username")} *`}
+                            placeholder={t("auth.choose_username")}
                             icon="person-outline"
                             value={form.username}
                             onChangeText={(v: string) => handleChange("username", v)}
@@ -153,11 +154,13 @@ export default function RegisterScreen() {
                         />
 
                         <View style={styles.fieldWrapper}>
-                            <Text style={[styles.label, { color: theme.text }]}>Password *</Text>
+                            <Text style={[styles.label, { color: theme.text }]}>
+                                {`${t("auth.password")} *`}
+                            </Text>
                             <View style={inputBoxStyle("password")}>
                                 <Ionicons name="lock-closed-outline" size={18} color={theme.subText} />
                                 <TextInput
-                                    placeholder="Min 6 characters"
+                                    placeholder={t("auth.min_6_characters")}
                                     placeholderTextColor={theme.subText}
                                     style={[styles.input, { color: theme.text }]}
                                     value={form.password}
@@ -177,8 +180,8 @@ export default function RegisterScreen() {
                         </View>
 
                         <InputField
-                            label="Mobile Number *"
-                            placeholder="Enter 10 digit mobile number"
+                            label={`${t("auth.mobile_number")} *`}
+                            placeholder={t("auth.phone_number")}
                             icon="call-outline"
                             value={form.mobile}
                             onChangeText={handleMobileChange}
@@ -191,8 +194,8 @@ export default function RegisterScreen() {
                         />
 
                         <InputField
-                            label="Full Name *"
-                            placeholder="Your full name"
+                            label={`${t("auth.full_name")} *`}
+                            placeholder={t("auth.full_name_placeholder")}
                             icon="person-circle-outline"
                             value={form.fullName}
                             onChangeText={(v: string) => handleChange("fullName", v)}
@@ -203,8 +206,8 @@ export default function RegisterScreen() {
                         />
 
                         <InputField
-                            label="Email (optional)"
-                            placeholder="your@email.com"
+                            label={t("auth.email_optional")}
+                            placeholder={t("auth.email_placeholder")}
                             icon="mail-outline"
                             value={form.email}
                             onChangeText={(v: string) => handleChange("email", v)}
@@ -218,7 +221,7 @@ export default function RegisterScreen() {
 
                         <View style={styles.fieldWrapper}>
                             <Text style={[styles.label, { color: theme.text }]}>
-                                Date of Birth (optional)
+                                {t("auth.dob_optional")}
                             </Text>
                             <TouchableOpacity
                                 activeOpacity={0.8}
@@ -235,7 +238,7 @@ export default function RegisterScreen() {
                                         { color: form.dob ? theme.text : theme.subText },
                                     ]}
                                 >
-                                    {form.dob || "Select date of birth"}
+                                    {form.dob || t("auth.select_dob")}
                                 </Text>
                             </TouchableOpacity>
                             {showDatePicker && (
@@ -259,14 +262,16 @@ export default function RegisterScreen() {
                                 style={styles.button}
                             >
                                 <Text style={styles.buttonText}>
-                                    {loading ? "Creating..." : "Create Account"}
+                                    {loading ? t("auth.please_wait") : t("auth.create_account_btn")}
                                 </Text>
                             </LinearGradient>
                         </TouchableOpacity>
 
                         <View style={styles.dividerContainer}>
                             <View style={[styles.line, { backgroundColor: theme.border }]} />
-                            <Text style={[styles.orText, { color: theme.subText }]}>or</Text>
+                            <Text style={[styles.orText, { color: theme.subText }]}>
+                                {t("auth.or_continue_with")}
+                            </Text>
                             <View style={[styles.line, { backgroundColor: theme.border }]} />
                         </View>
 
@@ -278,23 +283,25 @@ export default function RegisterScreen() {
                         >
                             <Text style={styles.googleIcon}>🌐</Text>
                             <Text style={[styles.googleText, { color: theme.text }]}>
-                                Sign up with Google
+                                {t("auth.signup_google")}
                             </Text>
                         </TouchableOpacity>
+
                         <View style={{ alignItems: "center", marginTop: 20 }}>
                             <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
                                 <Text style={{ color: theme.primary, textAlign: "center" }}>
-                                    Go back to login page
+                                    {t("auth.go_back_login")}
                                 </Text>
                             </TouchableOpacity>
                         </View>
                     </ScrollView>
-            </KeyboardAvoidingView>
+                </KeyboardAvoidingView>
             </AppBackground>
         </SafeAreaView>
     );
 }
 
+// Helper component with translated placeholders
 function InputField({
     label,
     placeholder,

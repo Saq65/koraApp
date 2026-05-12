@@ -6,11 +6,9 @@ import {
     TouchableOpacity,
     StyleSheet,
     Image,
-      KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-  ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
 } from "react-native";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { router, useLocalSearchParams } from "expo-router";
@@ -18,10 +16,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { verifyResetOtp, resendResetCode } from "../../src/api/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
+import { useTranslation } from "react-i18next";
+
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function VerifyResetOtpScreen() {
     const { theme } = useTheme();
+    const { t } = useTranslation(); // ← language hook
     const { mobile } = useLocalSearchParams<{ mobile: string }>();
     const [otp, setOtp] = useState(["", "", "", "", "", ""]); // 6 digits
     const [loading, setLoading] = useState(false);
@@ -63,21 +64,20 @@ export default function VerifyResetOtpScreen() {
     const handleVerify = async () => {
         const otpString = otp.join("");
         if (otpString.length !== 6) {
-            setError("Please enter the complete 6-digit code");
+            setError(t("auth.enter_complete_otp"));
             return;
         }
 
         setLoading(true);
         setError("");
         try {
-            const data = await verifyResetOtp(mobile, otpString);  // ✅ no .json()
-            // If verifyResetOtp throws on error, we don't need response.ok check
+            const data = await verifyResetOtp(mobile, otpString);
             router.push({
                 pathname: "/(auth)/ResetPasswordScreen",
                 params: { resetToken: data.resetToken },
             });
         } catch (err: any) {
-            setError(err.message || "Verification failed");
+            setError(err.message || t("validation.verification_failed"));
         } finally {
             setLoading(false);
         }
@@ -88,88 +88,97 @@ export default function VerifyResetOtpScreen() {
         setLoading(true);
         setError("");
         try {
-            await resendResetCode(mobile);   // ✅ uses your apiClient
+            await resendResetCode(mobile);
             setTimer(60);
             setCanResend(false);
             setOtp(["", "", "", "", "", ""]);
             inputs.current[0]?.focus();
         } catch (err: any) {
-            setError(err.message || "Failed to resend code");
+            setError(err.message || t("validation.resend_failed"));
         } finally {
             setLoading(false);
         }
     };
-   
 
     return (
-         <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
             <AppBackground>
-            <KeyboardAvoidingView
-              style={{ flex: 1 }}
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-            >
-                <ScrollView
-                  contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
                 >
-            <View style={styles.logoContainer}>
-                <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
-                <Text style={[styles.logoText, { color: theme.primary }]}>KORA</Text>
-            </View>
+                    <ScrollView
+                        contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 20 }}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={styles.logoContainer}>
+                            <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
+                            <Text style={[styles.logoText, { color: theme.primary }]}>
+                                {t("app_name")}
+                            </Text>
+                        </View>
 
-            <Text style={[styles.title, { color: theme.text }]}>Enter Verification Code</Text>
-            <Text style={[styles.description, { color: theme.subText }]}>
-                We've sent a 6-digit code to {mobile}
-            </Text>
+                        <Text style={[styles.title, { color: theme.text }]}>
+                            {t("auth.verification_code")}
+                        </Text>
+                        <Text style={[styles.description, { color: theme.subText }]}>
+                            {t("auth.verification_description")} {mobile}
+                        </Text>
 
-            <View style={styles.otpContainer}>
-                {otp.map((digit, idx) => (
-                    <TextInput
-                        key={idx}
-                        ref={(ref) => (inputs.current[idx] = ref)}
-                        style={[
-                            styles.otpBox,
-                            {
-                                borderColor: digit ? theme.primary : theme.border || "#ddd",
-                                color: theme.text,
-                                backgroundColor: theme.inputBg || theme.card,
-                            },
-                        ]}
-                        maxLength={6}
-                        keyboardType="numeric"
-                        value={digit}
-                        onChangeText={(text) => handleOtpChange(text, idx)}
-                        onKeyPress={(e) => handleKeyPress(e, idx)}
-                    />
-                ))}
-            </View>
+                        <View style={styles.otpContainer}>
+                            {otp.map((digit, idx) => (
+                                <TextInput
+                                    key={idx}
+                                    ref={(ref) => (inputs.current[idx] = ref)}
+                                    style={[
+                                        styles.otpBox,
+                                        {
+                                            borderColor: digit ? theme.primary : theme.border || "#ddd",
+                                            color: theme.text,
+                                            backgroundColor: theme.inputBg || theme.card,
+                                        },
+                                    ]}
+                                    maxLength={6}
+                                    keyboardType="numeric"
+                                    value={digit}
+                                    onChangeText={(text) => handleOtpChange(text, idx)}
+                                    onKeyPress={(e) => handleKeyPress(e, idx)}
+                                />
+                            ))}
+                        </View>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <TouchableOpacity style={styles.verifyButton} onPress={handleVerify} disabled={loading}>
-                <LinearGradient
-                    colors={theme.gradient || [theme.primary, theme.primary]}
-                    style={styles.button}
-                >
-                    <Text style={styles.buttonText}>{loading ? "Verifying..." : "Verify Code"}</Text>
-                </LinearGradient>
-            </TouchableOpacity>
+                        <TouchableOpacity style={styles.verifyButton} onPress={handleVerify} disabled={loading}>
+                            <LinearGradient
+                                colors={theme.gradient || [theme.primary, theme.primary]}
+                                style={styles.button}
+                            >
+                                <Text style={styles.buttonText}>
+                                    {loading ? t("auth.verifying") : t("auth.verify_code")}
+                                </Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
 
-            <View style={styles.resendContainer}>
-                {!canResend ? (
-                    <Text style={{ color: theme.subText }}>Resend code in {timer}s</Text>
-                ) : (
-                    <TouchableOpacity onPress={handleResend}>
-                        <Text style={{ color: theme.primary, fontWeight: "500" }}>Didn't get a code? Resend</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
-        </ScrollView>
-            </KeyboardAvoidingView>
+                        <View style={styles.resendContainer}>
+                            {!canResend ? (
+                                <Text style={{ color: theme.subText }}>
+                                    {t("auth.resend_code_in", { seconds: timer })}
+                                </Text>
+                            ) : (
+                                <TouchableOpacity onPress={handleResend}>
+                                    <Text style={{ color: theme.primary, fontWeight: "500" }}>
+                                        {t("auth.didnt_get_code")} {t("auth.resend_code")}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </AppBackground>
-            </SafeAreaView>
+        </SafeAreaView>
     );
 }
 

@@ -12,7 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getToken } from "../../src/utils/storage";
-
+import { useTranslation } from "react-i18next";
+import i18n from "../../src/translations/i18n";
 const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
@@ -25,12 +26,17 @@ const LANGUAGES = [
 ];
 
 export default function LanguageScreen() {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState("en");
 
   async function handleContinue() {
-    await AsyncStorage.setItem("selectedLanguage", selected);
-    router.replace("/(onboarding)/terms");
-  }
+  await AsyncStorage.setItem("selectedLanguage", selected);
+
+  // change language instantly
+  await i18n.changeLanguage(selected);
+
+  router.replace("/(onboarding)/terms");
+}
 
   return (
     <SafeAreaView style={styles.container}>
@@ -43,16 +49,20 @@ export default function LanguageScreen() {
           style={styles.logo}
         /> */}
         <Text style={styles.brandName}>KORA.care</Text>
-        <Text style={styles.tagline}>Your care is our priority</Text>
+        <Text style={styles.tagline}>
+          {t("your_care")}
+        </Text>
       </View>
 
       {/* Title */}
       <View style={styles.titleContainer}>
         <Text style={styles.globeIcon}>🌐</Text>
-        <Text style={styles.title}>Choose your language</Text>
+        <Text style={styles.title}>
+          {t("choose_language")}
+        </Text>
       </View>
       <Text style={styles.subtitle}>
-        You can change this anytime from your Profile
+        {t("change_language_anytime")}
       </Text>
 
       {/* Language List */}
@@ -92,7 +102,9 @@ export default function LanguageScreen() {
 
       {/* Continue Button */}
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueText}>Continue</Text>
+        <Text style={styles.continueText}>
+  {t("continue")}
+</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
