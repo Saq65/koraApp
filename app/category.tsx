@@ -26,7 +26,7 @@ const categories = [
         label: "Men",
         desc: "Shirts, pants, kurtas & more",
         icon: "person-outline",
-        route: "/(tabs)/subcategory?category=Men",
+        route: "/subcategory?category=Men",
     },
     {
         id: "women",

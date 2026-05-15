@@ -39,7 +39,7 @@ export default function HomeScreen() {
 
   const services = [
     {
-      icon: "water-outline", label: "Laundry", sub: "Wash, Iron &\nmore", iconBg: TEAL_LIGHT, iconColor: TEAL, soon: false, route: "/(tabs)/category",
+      icon: "water-outline", label: "Laundry", sub: "Wash, Iron &\nmore", iconBg: TEAL_LIGHT, iconColor: TEAL, soon: false, route: "/category",
     },
     { icon: "sparkles-outline", label: "Dry Clean", sub: "Premium care", iconBg: "#1a1a2e", iconColor: "#fff", soon: true },
     { icon: "cube-outline", label: "Rental", sub: "Coming soon", iconBg: "#f59e0b", iconColor: "#fff", soon: true },
