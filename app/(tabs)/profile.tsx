@@ -113,7 +113,7 @@ export default function ProfileScreen() {
           icon="person-outline"
           title="Personal Details"
           subtitle="Name, DOB, mobile, email"
-          onPress={() => console.log("Navigate to Personal Details")}
+          onPress={() => router.push("/profile-page/personal-details")}
         />
 
         {/* Order History */}
