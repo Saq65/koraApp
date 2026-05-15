@@ -44,10 +44,10 @@ export default function LanguageScreen() {
 
       {/* Logo */}
       <View style={styles.logoContainer}>
-        {/* <Image
-          source={require("../../assets/icon.png")}
+         <Image
+         source={require("../../assets/images/icon.png")} 
           style={styles.logo}
-        /> */}
+        /> 
         <Text style={styles.brandName}>KORA.care</Text>
         <Text style={styles.tagline}>
           {t("your_care")}
