@@ -216,7 +216,7 @@ export default function ProfileScreen() {
               icon="location-outline"
               title="Saved Addresses"
               subtitle="Home, Office"
-              onPress={() => console.log("Saved Addresses")}
+              onPress={() =>  router.push("/profile-page/savedaddress" as any)}
             />
 
             {/* Rate Us */}
