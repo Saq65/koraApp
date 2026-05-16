@@ -61,30 +61,33 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: bottomPad }}
       >
         {/* ── ACTIVE ORDER CARD ── */}
-        <View style={styles.cardWrap}>
-          <LinearGradient
-            colors={[TEAL, TEAL_DARK]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.orderCard}
-          >
-            <View style={styles.circle1} />
-            <View style={styles.circle2} />
+        <TouchableOpacity onPress={()=>router.push('/trackorder/trackorder')}>
+          <View style={styles.cardWrap}>
+            <LinearGradient
+              colors={[TEAL, TEAL_DARK]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.orderCard}
+            >
+              <View style={styles.circle1} />
+              <View style={styles.circle2} />
 
-            <View style={{ flex: 1, zIndex: 1 }}>
-              <Text style={styles.orderTag}>ACTIVE ORDER</Text>
-              <Text style={styles.orderId}>Order #KR-2847</Text>
-              <View style={styles.orderTimeRow}>
-                <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.orderTime}> In Process • Est. 4:30 PM</Text>
+              <View style={{ flex: 1, zIndex: 1 }}>
+                <Text style={styles.orderTag}>ACTIVE ORDER</Text>
+                <Text style={styles.orderId}>Order #KR-2847</Text>
+                <View style={styles.orderTimeRow}>
+                  <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
+                  <Text style={styles.orderTime}> In Process • Est. 4:30 PM</Text>
+                </View>
               </View>
-            </View>
 
-            <View style={styles.orderIconBox}>
-              <Ionicons name="shirt-outline" size={s(22)} color="#fff" />
-            </View>
-          </LinearGradient>
-        </View>
+              <View style={styles.orderIconBox}>
+                <Ionicons name="shirt-outline" size={s(22)} color="#fff" />
+              </View>
+            </LinearGradient>
+          </View>
+        </TouchableOpacity>
+
 
         {/* ── SERVICES ── */}
         <Text style={styles.sectionTitle}>Services</Text>
@@ -96,7 +99,7 @@ export default function HomeScreen() {
 
         {/* ── PROMO ── */}
         <View style={styles.promoCard}>
-          <Text style={styles.promoTag}>⭐ SPECIAL OFFER</Text>
+          <Text style={styles.promoTag}> SPECIAL OFFER</Text>
           <Text style={styles.promoTitle}>30% Off First Order!</Text>
           <Text style={styles.promoSub}>Use code KORA30 at checkout</Text>
         </View>
@@ -119,7 +122,7 @@ export default function HomeScreen() {
 
       {/* ── BOOK PICKUP — floats above tab bar ── */}
       <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
-        <TouchableOpacity activeOpacity={0.88}>
+        <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')} activeOpacity={0.88}>
           <LinearGradient
             colors={[TEAL, TEAL_DARK]}
             start={{ x: 0, y: 0 }}
@@ -231,7 +234,7 @@ const styles = StyleSheet.create({
   // Promo
   promoCard: {
     marginHorizontal: PH, marginTop: vs(18), backgroundColor: TEAL_LIGHT,
-    borderRadius: R, padding: s(18), borderLeftWidth: 4, borderLeftColor: TEAL,
+    borderRadius: R, padding: s(20), borderLeftWidth: 4, borderLeftColor: TEAL,
   },
   promoTag: { fontSize: ms(11), fontWeight: "700", color: "#c07a00", marginBottom: vs(4) },
   promoTitle: { fontSize: ms(17), fontWeight: "800", color: "#1a1a1a", marginBottom: vs(4) },
