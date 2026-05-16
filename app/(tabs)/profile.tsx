@@ -208,7 +208,7 @@ export default function ProfileScreen() {
               icon="cube-outline"
               title="Order History"
               subtitle={`${stats.orders} orders`}
-              onPress={() => console.log("Order History")}
+              onPress={() => router.push("/profile-page/orderhistory" as any)}
             />
 
             {/* Saved Addresses */}
