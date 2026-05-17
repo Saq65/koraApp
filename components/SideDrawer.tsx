@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,31 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { getUser, clearAll } from "../src/utils/storage"; // adjust path
 
 const { width } = Dimensions.get("window");
 
 export default function SideDrawer({ visible, onClose, theme }: any) {
   const translateX = useRef(new Animated.Value(-width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+
+  const [userName, setUserName] = useState("");
+  const [userPhone, setUserPhone] = useState("");
+
+  // Load user data when drawer becomes visible
+  useEffect(() => {
+    if (visible) {
+      const loadUser = async () => {
+        const user = await getUser();
+        if (user) {
+          setUserName(user.name || "User");
+          setUserPhone(user.mobile || "");
+        }
+      };
+      loadUser();
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (visible) {
@@ -47,6 +66,12 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
     }
   }, [visible]);
 
+  const handleLogout = async () => {
+    await clearAll();
+    onClose(); // close drawer
+    router.replace("/(auth)/login");
+  };
+
   return (
     <View style={styles.overlay}>
       <Animated.View style={[styles.backdrop, { opacity }]}>
@@ -70,8 +95,8 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
             <View style={styles.profile}>
               <Ionicons name="person-outline" size={24} color="#fff" />
             </View>
-            <Text style={styles.name}>Saqlain</Text>
-            <Text style={styles.phone}>+91 98765 43210</Text>
+            <Text style={styles.name}>{userName || "Guest"}</Text>
+            <Text style={styles.phone}>{userPhone || ""}</Text>
             <TouchableOpacity style={styles.close} onPress={onClose}>
               <Ionicons name="close" size={20} color="#fff" />
             </TouchableOpacity>
@@ -91,7 +116,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
             </TouchableOpacity>
           ))}
 
-          <TouchableOpacity style={styles.logout}>
+          <TouchableOpacity style={styles.logout} onPress={handleLogout}>
             <Text style={{ color: "red", fontWeight: "600" }}>Log Out</Text>
           </TouchableOpacity>
         </SafeAreaView>

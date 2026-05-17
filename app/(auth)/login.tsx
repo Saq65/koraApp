@@ -13,7 +13,8 @@ import {
   FlatList,
 } from "react-native";
 import { sendOtp, verifyOtp } from "../../src/api/auth";
-import { setToken } from "../../src/utils/storage";
+// Remove: import { setToken } from "../../src/utils/storage";
+import { handleSuccessfulLogin } from "../../src/utils/authHelpers"; // ✅ ADD THIS
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,7 +62,7 @@ export default function LoginScreen() {
     }
   }, [showOtp]);
 
-  const handleOtpChange = (text, index) => {
+  const handleOtpChange = (text:any, index:any) => {
     if (text.length > 1) {
       const digits = text.split("").slice(0, 6);
       const newOtp = [...otp];
@@ -135,9 +136,10 @@ export default function LoginScreen() {
       console.log("LOGIN SUCCESS:", res);
 
       if (res?.token) {
-        await setToken(res.token);
+        // ✅ REPLACE direct setToken with the helper
+        await handleSuccessfulLogin(res.token, res.role);
       }
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/home");
     } catch (err) {
       console.log("AUTH ERROR:", err.message);
       setError(err.message || "Something went wrong");
@@ -146,6 +148,7 @@ export default function LoginScreen() {
     }
   };
 
+  // The rest of the component (JSX) stays exactly the same
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <AppBackground>
@@ -367,6 +370,7 @@ export default function LoginScreen() {
   );
 }
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   logoContainer: { alignItems: "center", marginBottom: 40 },
   logoImage: { width: 70, height: 70, marginBottom: 10 },

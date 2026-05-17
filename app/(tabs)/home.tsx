@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -14,6 +16,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import Header from "../../components/Header";
 import SideDrawer from "../../components/SideDrawer";
 import { router } from "expo-router";
+import { getUser } from "../../src/utils/storage";
+import { getActiveOrder, getRecentOrders } from "../../src/api/order"; // adjust path if needed
 
 const { width: W, height: H } = Dimensions.get("window");
 const s = (n: number) => Math.round((W / 375) * n);
@@ -32,11 +36,68 @@ export default function HomeScreen() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
-  // Height of the floating Book Pickup button + its padding
+  // Dynamic state
+  const [userName, setUserName] = useState("");
+  const [activeOrder, setActiveOrder] = useState<any>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
   const BUTTON_HEIGHT = vs(56);
   const BUTTON_BOTTOM = vs(16);
   const bottomPad = BUTTON_HEIGHT + BUTTON_BOTTOM + vs(12);
 
+  // Helper: format status text
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "pending_sp": return "Pending";
+      case "accepted": return "In Process";
+      case "picked_up": return "Picked Up";
+      case "delivered": return "Delivered";
+      case "cancelled": return "Cancelled";
+      default: return status;
+    }
+  };
+
+  // Helper: format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
+
+  // Fetch all data
+  const fetchAllData = useCallback(async () => {
+    try {
+      // Get user name from stored user object
+      const user = await getUser();
+      if (user?.name) setUserName(user.name);
+      else setUserName("Guest");
+
+      // Fetch orders in parallel
+      const [activeRes, recentRes] = await Promise.all([
+        getActiveOrder(),
+        getRecentOrders(),
+      ]);
+      setActiveOrder(activeRes.data || null);
+      setRecentOrders(recentRes.data || []);
+    } catch (error) {
+      console.error("Home fetch error:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAllData();
+  };
+
+  // Services list (unchanged)
   const services = [
     {
       icon: "water-outline", label: "Laundry", sub: "Wash, Iron &\nmore", iconBg: TEAL_LIGHT, iconColor: TEAL, soon: false, route: "/category",
@@ -45,51 +106,71 @@ export default function HomeScreen() {
     { icon: "cube-outline", label: "Rental", sub: "Coming soon", iconBg: "#f59e0b", iconColor: "#fff", soon: true },
   ];
 
-  const recentOrders = [
-    { id: 1, service: "Wash + Iron", items: "12 items", date: "Mar 28", status: "Delivered" },
-    { id: 2, service: "Wash + Iron", items: "3 items", date: "Mar 25", status: "Delivered" },
-  ];
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName || "Loading..."} />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={TEAL} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    // edges={["top"]} only — bottom is handled by the tab bar itself
     <SafeAreaView style={styles.container} edges={["top"]}>
-
-      <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} />
+      <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomPad }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* ── ACTIVE ORDER CARD ── */}
-        <TouchableOpacity onPress={()=>router.push('/trackorder/trackorder')}>
-          <View style={styles.cardWrap}>
-            <LinearGradient
-              colors={[TEAL, TEAL_DARK]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.orderCard}
-            >
-              <View style={styles.circle1} />
-              <View style={styles.circle2} />
+        {/* ACTIVE ORDER CARD */}
+        {activeOrder ? (
+          <TouchableOpacity onPress={() => router.push(`/trackorder/${activeOrder._id}`)}>
+            <View style={styles.cardWrap}>
+              <LinearGradient
+                colors={[TEAL, TEAL_DARK]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.orderCard}
+              >
+                <View style={styles.circle1} />
+                <View style={styles.circle2} />
 
-              <View style={{ flex: 1, zIndex: 1 }}>
-                <Text style={styles.orderTag}>ACTIVE ORDER</Text>
-                <Text style={styles.orderId}>Order #KR-2847</Text>
-                <View style={styles.orderTimeRow}>
-                  <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
-                  <Text style={styles.orderTime}> In Process • Est. 4:30 PM</Text>
+                <View style={{ flex: 1, zIndex: 1 }}>
+                  <Text style={styles.orderTag}>ACTIVE ORDER</Text>
+                  <Text style={styles.orderId}>{activeOrder.orderNumber}</Text>
+                  <View style={styles.orderTimeRow}>
+                    <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
+                    <Text style={styles.orderTime}>
+                      {getStatusText(activeOrder.status)} • {activeOrder.items?.length || 0} items
+                    </Text>
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.orderIconBox}>
-                <Ionicons name="shirt-outline" size={s(22)} color="#fff" />
-              </View>
-            </LinearGradient>
+                <View style={styles.orderIconBox}>
+                  <Ionicons name="shirt-outline" size={s(22)} color="#fff" />
+                </View>
+              </LinearGradient>
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.cardWrap}>
+            <View style={styles.noOrderCard}>
+              <Ionicons name="cart-outline" size={s(32)} color={TEAL} />
+              <Text style={styles.noOrderText}>No active order</Text>
+              <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')}>
+                <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.startOrderBtn}>
+                  <Text style={styles.startOrderBtnText}>Place first order</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableOpacity>
+        )}
 
-
-        {/* ── SERVICES ── */}
+        {/* SERVICES */}
         <Text style={styles.sectionTitle}>Services</Text>
         <View style={styles.servicesRow}>
           {services.map((svc, i) => (
@@ -97,38 +178,45 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* ── PROMO ── */}
+        {/* PROMO */}
         <View style={styles.promoCard}>
           <Text style={styles.promoTag}> SPECIAL OFFER</Text>
           <Text style={styles.promoTitle}>30% Off First Order!</Text>
           <Text style={styles.promoSub}>Use code KORA30 at checkout</Text>
         </View>
 
-        {/* ── RECENT ORDERS ── */}
+        {/* RECENT ORDERS */}
         <Text style={styles.sectionTitle}>Recent Orders</Text>
-        {recentOrders.map((order) => (
-          <View key={order.id} style={styles.recentCard}>
-            <View style={styles.recentIconBox}>
-              <Ionicons name="shirt-outline" size={s(20)} color={TEAL} />
-            </View>
-            <View style={{ flex: 1, marginLeft: s(12) }}>
-              <Text style={styles.recentService}>{order.service}</Text>
-              <Text style={styles.recentMeta}>{order.items} • {order.date}</Text>
-            </View>
-            <Text style={styles.recentStatus}>{order.status}</Text>
-          </View>
-        ))}
+        {recentOrders.length === 0 ? (
+          <Text style={styles.emptyText}>No orders yet</Text>
+        ) : (
+          recentOrders.map((order) => (
+            <TouchableOpacity
+              key={order._id}
+              onPress={() => router.push(`/order/${order._id}`)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.recentCard}>
+                <View style={styles.recentIconBox}>
+                  <Ionicons name="shirt-outline" size={s(20)} color={TEAL} />
+                </View>
+                <View style={{ flex: 1, marginLeft: s(12) }}>
+                  <Text style={styles.recentService}>{order.orderNumber}</Text>
+                  <Text style={styles.recentMeta}>
+                    {order.items?.length || 0} items • {formatDate(order.createdAt)}
+                  </Text>
+                </View>
+                <Text style={styles.recentStatus}>{getStatusText(order.status)}</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
-      {/* ── BOOK PICKUP — floats above tab bar ── */}
+      {/* FLOATING BOOK PICKUP BUTTON */}
       <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
         <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')} activeOpacity={0.88}>
-          <LinearGradient
-            colors={[TEAL, TEAL_DARK]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.pickupBtn}
-          >
+          <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
             <Ionicons name="car-outline" size={s(20)} color="#fff" />
             <Text style={styles.pickupText}>Book Pickup</Text>
           </LinearGradient>
@@ -146,13 +234,16 @@ export default function HomeScreen() {
   );
 }
 
-// ── Service Card ──────────────────────────────────────────────
+// Service Card component (unchanged)
 function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) {
   return (
-    <TouchableOpacity onPress={() => {
-      if (!soon && route) router.push(route);
-    }}
-      activeOpacity={0.85} style={styles.serviceCard}>
+    <TouchableOpacity
+      onPress={() => {
+        if (!soon && route) router.push(route);
+      }}
+      activeOpacity={0.85}
+      style={styles.serviceCard}
+    >
       {soon && (
         <View style={styles.soonBadge}>
           <Text style={styles.soonText}>SOON</Text>
@@ -167,13 +258,12 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) 
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────
+// Styles – add new ones and keep existing
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f4f6f5",
   },
-
   // Order card
   cardWrap: { paddingHorizontal: PH, marginTop: vs(8) },
   orderCard: {
@@ -203,14 +293,33 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center", justifyContent: "center", zIndex: 1,
   },
-
-  // Section title
+  noOrderCard: {
+    backgroundColor: "#fff",
+    borderRadius: R,
+    padding: s(24),
+    alignItems: "center",
+    marginHorizontal: PH,
+  },
+  noOrderText: {
+    fontSize: ms(14),
+    color: "#666",
+    marginTop: vs(8),
+    marginBottom: vs(16),
+  },
+  startOrderBtn: {
+    paddingVertical: vs(10),
+    paddingHorizontal: s(20),
+    borderRadius: s(25),
+  },
+  startOrderBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: ms(14),
+  },
   sectionTitle: {
     fontSize: ms(17), fontWeight: "700", color: "#1a1a1a",
     paddingHorizontal: PH, marginTop: vs(22), marginBottom: vs(12),
   },
-
-  // Services
   servicesRow: { flexDirection: "row", paddingHorizontal: PH, gap: s(12), justifyContent: 'center' },
   serviceCard: {
     flex: 1, backgroundColor: "#fff", borderRadius: R,
@@ -230,8 +339,6 @@ const styles = StyleSheet.create({
   },
   serviceLabel: { fontSize: ms(13), fontWeight: "700", color: "#1a1a1a", marginBottom: vs(3) },
   serviceSub: { fontSize: ms(11), color: "#888", lineHeight: ms(15) },
-
-  // Promo
   promoCard: {
     marginHorizontal: PH, marginTop: vs(18), backgroundColor: TEAL_LIGHT,
     borderRadius: R, padding: s(20), borderLeftWidth: 4, borderLeftColor: TEAL,
@@ -239,8 +346,6 @@ const styles = StyleSheet.create({
   promoTag: { fontSize: ms(11), fontWeight: "700", color: "#c07a00", marginBottom: vs(4) },
   promoTitle: { fontSize: ms(17), fontWeight: "800", color: "#1a1a1a", marginBottom: vs(4) },
   promoSub: { fontSize: ms(12), color: "#555" },
-
-  // Recent orders
   recentCard: {
     flexDirection: "row", alignItems: "center", backgroundColor: "#fff",
     marginHorizontal: PH, marginBottom: vs(10), padding: s(14),
@@ -254,8 +359,6 @@ const styles = StyleSheet.create({
   recentService: { fontSize: ms(14), fontWeight: "700", color: "#1a1a1a", marginBottom: vs(3) },
   recentMeta: { fontSize: ms(12), color: "#888" },
   recentStatus: { fontSize: ms(13), fontWeight: "600", color: TEAL },
-
-  // Bottom button
   bottomBar: {
     position: "absolute",
     left: PH,
@@ -266,4 +369,10 @@ const styles = StyleSheet.create({
     paddingVertical: vs(17), borderRadius: s(50), gap: s(8),
   },
   pickupText: { color: "#fff", fontSize: ms(16), fontWeight: "800" },
+  emptyText: {
+    textAlign: "center",
+    color: "#888",
+    marginTop: vs(20),
+    fontSize: ms(14),
+  },
 });

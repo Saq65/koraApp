@@ -8,22 +8,21 @@ import {
   Image,
   ActivityIndicator,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
   Platform,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // ✅ import
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { loginUser } from "../../src/api/auth";
-import { setToken } from "../../src/utils/storage";
 import AppBackground from "@/components/AppBackground";
+import { useTranslation } from "react-i18next";
+import { handleSuccessfulLogin } from "../../src/utils/authHelpers";
 
 const logoImage = require("../../assets/images/kora-logo.png");
-import { useTranslation } from "react-i18next";
+
 export default function EmailLoginScreen() {
   const { t } = useTranslation();
   const { theme } = useTheme();
@@ -35,34 +34,37 @@ export default function EmailLoginScreen() {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
-      setError(t("validation.enter_email_password"));
+  if (!username.trim() || !password.trim()) {
+    setError(t("validation.enter_email_password"));
+    return;
+  }
+
+  setLoading(true);
+  setError("");
+
+  try {
+    const data = await loginUser({ username: username.trim(), password });
+    if (!data.token) {
+      setError(t("validation.invalid_server_response"));
       return;
     }
 
-    setLoading(true);
-    setError("");
+    // ✅ One line does everything: stores token, fetches profile, stores user
+    await handleSuccessfulLogin(data.token, data.role);
 
-    try {
-      const data = await loginUser({ username: username.trim(), password });
-      if (data.token) {
-        await setToken(data.token);
-        router.replace("/(tabs)");
-      } else {
-        setError(t("validation.invalid_server_response"));
-      }
-    } catch (err: any) {
-      console.log("Login error:", err);
-      setError(err.message || t("validation.invalid_credentials"));
-    } finally {
-      setLoading(false);
-    }
-  };
+    router.replace("/(tabs)/home");
+  } catch (err: any) {
+    console.log("Login error:", err);
+    setError(err.message || t("validation.invalid_credentials"));
+  } finally {
+    setLoading(false);
+  }
+};
 
+  // The rest of the component remains exactly the same
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <AppBackground>
-
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -174,9 +176,7 @@ export default function EmailLoginScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.buttonText}>
-                    {t("auth.sign_in")}
-                  </Text>
+                  <Text style={styles.buttonText}>{t("auth.sign_in")}</Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>

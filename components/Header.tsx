@@ -11,7 +11,7 @@ function getGreeting() {
   return { text: "Good Night", emoji: "🌙" };
 }
 
-export default function Header({ theme, onMenuPress }: any) {
+export default function Header({ theme, onMenuPress, userName }: any) {
   const { text, emoji } = getGreeting();
 
   return (
@@ -25,19 +25,20 @@ export default function Header({ theme, onMenuPress }: any) {
           <Text style={[styles.greeting, { color: theme.subText }]}>
             {text} {emoji}
           </Text>
-          <Text style={[styles.name, { color: theme.text }]}>Saqlain</Text>
+          <Text style={[styles.name, { color: theme.text }]}>
+            {userName || "Guest"}
+          </Text>
         </View>
       </View>
 
       {/* RIGHT: Bell icon */}
-      <TouchableOpacity onPress={()=>router.push('/notifications')} style={styles.iconButton}>
+      <TouchableOpacity onPress={() => router.push('/notifications')} style={styles.iconButton}>
         <Ionicons name="notifications-outline" size={22} color={theme.text} />
       </TouchableOpacity>
     </View>
   );
 }
 
-// styles unchanged
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",

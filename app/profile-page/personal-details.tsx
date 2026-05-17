@@ -21,6 +21,7 @@ import {
 } from "../../src/services/customer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
+import { getUser, setUser } from "../../src/utils/storage"; // add storage helpers
 
 export default function PersonalDetailsScreen() {
     const { theme, isDarkMode } = useTheme();
@@ -35,42 +36,68 @@ export default function PersonalDetailsScreen() {
         dob: "",
     });
 
-    // ─────────────────────────────────────────────
-    // FETCH PROFILE
-    // ─────────────────────────────────────────────
-    const fetchProfile = async () => {
+    // Load from cache instantly, then refresh from API
+    const loadProfile = async () => {
+        // 1. Instant display from stored user
+        const storedUser = await getUser();
+        if (storedUser) {
+            setProfile({
+                fullName: storedUser.name || "",
+                email: storedUser.email || "",
+                phone: storedUser.mobile || "",
+                dob: storedUser.dob || "",
+            });
+            setLoading(false); // show UI immediately
+        }
+
+        // 2. Background refresh from API (for latest data)
         try {
-            setLoading(true);
             const response = await getProfile();
             const data = response.data;
-            setProfile({
-                fullName: data.fullName || "John Doe",
-                email: data.email || "john.doe@email.com",
-                phone: data.mobile || "+919876543210",
-                dob: data.dob
-                    ? data.dob.split("T")[0]
-                    : "06/15/1995",
+            const freshProfile = {
+                fullName: data.fullName || storedUser?.name || "",
+                email: data.email || storedUser?.email || "",
+                phone: data.mobile || storedUser?.mobile || "",
+                dob: data.dob ? data.dob.split("T")[0] : "",
+            };
+            setProfile(freshProfile);
+            // Also update stored user with fresh data
+            await setUser({
+                ...storedUser,
+                name: freshProfile.fullName,
+                email: freshProfile.email,
+                mobile: freshProfile.phone,
+                dob: freshProfile.dob,
             });
         } catch (error) {
-            console.log("PROFILE ERROR:", error);
-            Alert.alert("Error", "Failed to load profile");
+            console.log("Background refresh error:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    // ─────────────────────────────────────────────
-    // UPDATE PROFILE
-    // ─────────────────────────────────────────────
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
     const handleUpdate = async () => {
         try {
             const formattedProfile = {
                 ...profile,
-                dob: profile.dob
-                    ? new Date(profile.dob).toISOString()
-                    : "",
+                dob: profile.dob ? new Date(profile.dob).toISOString() : "",
             };
             await updateProfile(formattedProfile);
+            
+            // After successful update, refresh stored user data
+            const storedUser = await getUser();
+            await setUser({
+                ...storedUser,
+                name: profile.fullName,
+                email: profile.email,
+                mobile: profile.phone,
+                dob: profile.dob,
+            });
+            
             setEditing(false);
             Alert.alert("Success", "Profile updated successfully");
         } catch (error) {
@@ -78,13 +105,6 @@ export default function PersonalDetailsScreen() {
             Alert.alert("Error", "Failed to update profile");
         }
     };
-
-    // ─────────────────────────────────────────────
-    // INITIAL FETCH
-    // ─────────────────────────────────────────────
-    useEffect(() => {
-        fetchProfile();
-    }, []);
 
     if (loading) {
         return (
@@ -186,7 +206,7 @@ export default function PersonalDetailsScreen() {
     );
 }
 
-// Detail field component with proper theme support
+// Detail field component (unchanged)
 function DetailField({ 
     label, 
     value, 
@@ -230,14 +250,8 @@ function DetailField({
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    loader: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
+    container: { flex: 1 },
+    loader: { flex: 1, justifyContent: "center", alignItems: "center" },
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -246,68 +260,19 @@ const styles = StyleSheet.create({
         paddingTop: 16,
         paddingBottom: 8,
     },
-    backButton: {
-        padding: 4,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-    },
-    editText: {
-        fontSize: 16,
-        fontWeight: "500",
-    },
-    profileSection: {
-        alignItems: "center",
-        paddingVertical: 24,
-    },
-    avatarContainer: {
-        marginBottom: 12,
-    },
-    avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    avatarText: {
-        fontSize: 36,
-        fontWeight: "500",
-        color: "#FFFFFF",
-    },
-    name: {
-        fontSize: 20,
-        fontWeight: "600",
-        marginBottom: 4,
-    },
-    username: {
-        fontSize: 14,
-    },
-    form: {
-        paddingHorizontal: 16,
-    },
-    fieldContainer: {
-        marginBottom: 4,
-    },
-    fieldLabel: {
-        fontSize: 13,
-        fontWeight: "500",
-        marginBottom: 6,
-    },
-    fieldValue: {
-        fontSize: 16,
-        paddingVertical: 8,
-    },
-    fieldValueInput: {
-        fontSize: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 12,
-        borderRadius: 8,
-        marginTop: 4,
-    },
-    separator: {
-        height: 1,
-        marginVertical: 8,
-    },
+    backButton: { padding: 4 },
+    headerTitle: { fontSize: 18, fontWeight: "600" },
+    editText: { fontSize: 16, fontWeight: "500" },
+    profileSection: { alignItems: "center", paddingVertical: 24 },
+    avatarContainer: { marginBottom: 12 },
+    avatar: { width: 80, height: 80, borderRadius: 40, justifyContent: "center", alignItems: "center" },
+    avatarText: { fontSize: 36, fontWeight: "500", color: "#FFFFFF" },
+    name: { fontSize: 20, fontWeight: "600", marginBottom: 4 },
+    username: { fontSize: 14 },
+    form: { paddingHorizontal: 16 },
+    fieldContainer: { marginBottom: 4 },
+    fieldLabel: { fontSize: 13, fontWeight: "500", marginBottom: 6 },
+    fieldValue: { fontSize: 16, paddingVertical: 8 },
+    fieldValueInput: { fontSize: 16, paddingVertical: 12, paddingHorizontal: 12, borderRadius: 8, marginTop: 4 },
+    separator: { height: 1, marginVertical: 8 },
 });
