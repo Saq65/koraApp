@@ -63,8 +63,8 @@ export const ThemeProvider = ({ children }: any) => {
         theme,
         mode,
         setMode,
-        isDarkMode,    // Added
-        toggleTheme,   // Added
+        isDarkMode,    
+        toggleTheme,   
       }}
     >
       {children}

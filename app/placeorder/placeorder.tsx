@@ -12,6 +12,12 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { router } from "expo-router";
+import {
+  useAppSelector,
+  selectCartItems,
+  selectCartCount,
+  selectCartTotal,
+} from "../../src/redux/store/hooks";
 
 /* ─── Constants ─── */
 const TEAL       = "#1A6B5A";
@@ -22,55 +28,17 @@ const TEXT_DARK  = "#1A1A1A";
 const TEXT_MID   = "#666666";
 
 /* ─── Types ─── */
-interface OrderItem {
-  id: string;
-  name: string;
-  service: string;
-  price: number;
-}
-
 type PickupDay = "Today" | "Tomorrow";
 type TimeSlot  = "10:00 AM" | "2:00 PM";
 
-/* ─── Mock Data ─── */
-const ORDER_ITEMS: OrderItem[] = [
-  { id: "1", name: "T-Shirt", service: "Wash", price: 30 },
-  { id: "2", name: "T-Shirt", service: "Iron", price: 25 },
-];
-
-const DELIVERY_CHARGE = 0; // FREE
-const itemsTotal = ORDER_ITEMS.reduce((s, i) => s + i.price, 0);
+const DELIVERY_CHARGE = 0;
 
 /* ─── Sub-components ─── */
-
 function SectionTitle({ title }: { title: string }) {
   return <Text style={styles.sectionTitle}>{title}</Text>;
 }
 
-function ItemRow({ item }: { item: OrderItem }) {
-  return (
-    <View style={styles.itemRow}>
-      <View style={styles.itemIconWrap}>
-        <MaterialCommunityIcons name="tshirt-crew" size={20} color={TEAL} />
-      </View>
-      <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemSub}>
-          {item.service} • ₹{item.price} x 1
-        </Text>
-      </View>
-      <Text style={styles.itemPrice}>₹{item.price}</Text>
-    </View>
-  );
-}
-
-function LocationRow({
-  label,
-  address,
-}: {
-  label: string;
-  address: string;
-}) {
+function LocationRow({ label, address }: { label: string; address: string }) {
   return (
     <View style={styles.locationRow}>
       <View style={styles.locationLeft}>
@@ -95,11 +63,15 @@ function LocationRow({
 
 /* ─── Main Screen ─── */
 export default function PlaceOrder() {
-  const [pickupDay, setPickupDay]   = useState<PickupDay>("Tomorrow");
-  const [timeSlot, setTimeSlot]     = useState<TimeSlot>("10:00 AM");
-  const [agreed, setAgreed]         = useState(false);
+  const [pickupDay, setPickupDay] = useState<PickupDay>("Tomorrow");
+  const [timeSlot, setTimeSlot]   = useState<TimeSlot>("10:00 AM");
+  const [agreed, setAgreed]       = useState(false);
 
-  const total = itemsTotal + DELIVERY_CHARGE;
+  // ✅ Live from Redux
+  const cartItems  = useAppSelector(selectCartItems);
+  const totalItems = useAppSelector(selectCartCount);
+  const itemsTotal = useAppSelector(selectCartTotal);
+  const total      = itemsTotal + DELIVERY_CHARGE;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -107,7 +79,7 @@ export default function PlaceOrder() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Place Order</Text>
@@ -119,12 +91,23 @@ export default function PlaceOrder() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Your Items ── */}
-        <SectionTitle title={`Your Items (${ORDER_ITEMS.length})`} />
+        <SectionTitle title={`Your Items (${totalItems})`} />
         <View style={styles.card}>
-          {ORDER_ITEMS.map((item, idx) => (
+          {cartItems.map((item, idx) => (
             <View key={item.id}>
-              <ItemRow item={item} />
-              {idx < ORDER_ITEMS.length - 1 && <View style={styles.divider} />}
+              <View style={styles.itemRow}>
+                <View style={styles.itemIconWrap}>
+                  <MaterialCommunityIcons name="tshirt-crew" size={20} color={TEAL} />
+                </View>
+                <View style={styles.itemInfo}>
+                  <Text style={styles.itemName}>{item.subCategoryName}</Text>
+                  <Text style={styles.itemSub}>
+                    {item.serviceName} • ₹{item.price} x {item.quantity}
+                  </Text>
+                </View>
+                <Text style={styles.itemPrice}>₹{item.price * item.quantity}</Text>
+              </View>
+              {idx < cartItems.length - 1 && <View style={styles.divider} />}
             </View>
           ))}
         </View>
@@ -146,7 +129,6 @@ export default function PlaceOrder() {
         {/* ── Schedule ── */}
         <SectionTitle title="Schedule" />
         <View style={styles.card}>
-          {/* Day selector */}
           <View style={styles.scheduleRow}>
             {/* Pickup Date */}
             <View style={styles.scheduleBlock}>
@@ -159,17 +141,9 @@ export default function PlaceOrder() {
                   <TouchableOpacity
                     key={day}
                     onPress={() => setPickupDay(day)}
-                    style={[
-                      styles.pill,
-                      pickupDay === day ? styles.pillActive : styles.pillInactive,
-                    ]}
+                    style={[styles.pill, pickupDay === day ? styles.pillActive : styles.pillInactive]}
                   >
-                    <Text
-                      style={[
-                        styles.pillText,
-                        pickupDay === day ? styles.pillTextActive : styles.pillTextInactive,
-                      ]}
-                    >
+                    <Text style={[styles.pillText, pickupDay === day ? styles.pillTextActive : styles.pillTextInactive]}>
                       {day}
                     </Text>
                   </TouchableOpacity>
@@ -188,17 +162,9 @@ export default function PlaceOrder() {
                   <TouchableOpacity
                     key={slot}
                     onPress={() => setTimeSlot(slot)}
-                    style={[
-                      styles.pill,
-                      timeSlot === slot ? styles.pillActive : styles.pillInactive,
-                    ]}
+                    style={[styles.pill, timeSlot === slot ? styles.pillActive : styles.pillInactive]}
                   >
-                    <Text
-                      style={[
-                        styles.pillText,
-                        timeSlot === slot ? styles.pillTextActive : styles.pillTextInactive,
-                      ]}
-                    >
+                    <Text style={[styles.pillText, timeSlot === slot ? styles.pillTextActive : styles.pillTextInactive]}>
                       {slot}
                     </Text>
                   </TouchableOpacity>
@@ -211,7 +177,7 @@ export default function PlaceOrder() {
         {/* ── Bill Summary ── */}
         <View style={styles.card}>
           <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Items ({ORDER_ITEMS.length})</Text>
+            <Text style={styles.billLabel}>Items ({totalItems})</Text>
             <Text style={styles.billValue}>₹{itemsTotal}</Text>
           </View>
           <View style={styles.billRow}>
@@ -248,7 +214,16 @@ export default function PlaceOrder() {
           style={[styles.payBtn, !agreed && styles.payBtnDisabled]}
           activeOpacity={agreed ? 0.85 : 1}
           disabled={!agreed}
-          onPress={()=>router.push('/payment/payment')}
+          onPress={() =>
+            router.push({
+              pathname: "/payment/payment",
+              params: {
+                total: String(total),
+                pickupDay,
+                timeSlot,
+              },
+            })
+          }
         >
           <MaterialCommunityIcons
             name="credit-card-outline"
@@ -265,291 +240,87 @@ export default function PlaceOrder() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: GRAY_LIGHT,
-  },
+  safeArea: { flex: 1, backgroundColor: GRAY_LIGHT },
 
-  /* Header */
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, paddingVertical: 12,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    width: 36, height: 36, borderRadius: 18, backgroundColor: "#fff",
+    alignItems: "center", justifyContent: "center",
+    elevation: 2, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 4,
   },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: TEXT_DARK,
-  },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: TEXT_DARK },
 
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    gap: 10,
-  },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
 
-  /* Section title */
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: TEXT_DARK,
-    marginTop: 6,
-    marginBottom: 2,
-  },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: TEXT_DARK, marginTop: 6, marginBottom: 2 },
 
-  /* Card */
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: "#fff", borderRadius: 16, paddingHorizontal: 14, paddingVertical: 14,
+    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 2,
   },
+  divider: { height: 1, backgroundColor: "#F0F0F0", marginVertical: 10 },
 
-  divider: {
-    height: 1,
-    backgroundColor: "#F0F0F0",
-    marginVertical: 10,
-  },
-
-  /* Item row */
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  itemRow: { flexDirection: "row", alignItems: "center" },
   itemIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: TEAL_LIGHT,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
+    width: 38, height: 38, borderRadius: 19, backgroundColor: TEAL_LIGHT,
+    alignItems: "center", justifyContent: "center", marginRight: 10,
   },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: TEXT_DARK,
-  },
-  itemSub: {
-    fontSize: 11,
-    color: GRAY_TEXT,
-    marginTop: 2,
-  },
-  itemPrice: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: TEXT_DARK,
-  },
+  itemInfo: { flex: 1 },
+  itemName: { fontSize: 14, fontWeight: "600", color: TEXT_DARK },
+  itemSub: { fontSize: 11, color: GRAY_TEXT, marginTop: 2 },
+  itemPrice: { fontSize: 14, fontWeight: "700", color: TEXT_DARK },
 
-  /* Location */
-  locationRow: {
-    paddingVertical: 4,
-  },
-  locationLeft: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  greenDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#2ECC71",
-    marginTop: 4,
-  },
-  locationText: {
-    flex: 1,
-  },
-  locationTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  locationLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: TEXT_DARK,
-  },
-  changeBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-  },
-  changeBtnText: {
-    fontSize: 12,
-    color: TEAL,
-    fontWeight: "600",
-  },
-  addressRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    marginTop: 3,
-  },
-  addressText: {
-    fontSize: 11,
-    color: GRAY_TEXT,
-    flex: 1,
-  },
-  locationDivider: {
-    height: 1,
-    backgroundColor: "#F0F0F0",
-    marginVertical: 12,
-  },
+  locationRow: { paddingVertical: 4 },
+  locationLeft: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  greenDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#2ECC71", marginTop: 4 },
+  locationText: { flex: 1 },
+  locationTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  locationLabel: { fontSize: 13, fontWeight: "600", color: TEXT_DARK },
+  changeBtn: { flexDirection: "row", alignItems: "center", gap: 3 },
+  changeBtnText: { fontSize: 12, color: TEAL, fontWeight: "600" },
+  addressRow: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: 3 },
+  addressText: { fontSize: 11, color: GRAY_TEXT, flex: 1 },
+  locationDivider: { height: 1, backgroundColor: "#F0F0F0", marginVertical: 12 },
 
-  /* Schedule */
-  scheduleRow: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  scheduleBlock: {
-    flex: 1,
-  },
-  scheduleHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 8,
-  },
-  scheduleHeaderText: {
-    fontSize: 12,
-    color: GRAY_TEXT,
-    fontWeight: "500",
-  },
-  pillRow: {
-    flexDirection: "row",
-    gap: 6,
-    flexWrap: "wrap",
-  },
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  pillActive: {
-    backgroundColor: TEAL,
-  },
-  pillInactive: {
-    backgroundColor: "#EBEBE5",
-  },
-  pillText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  pillTextActive: {
-    color: "#fff",
-  },
-  pillTextInactive: {
-    color: TEXT_MID,
-  },
+  scheduleRow: { flexDirection: "row", gap: 16 },
+  scheduleBlock: { flex: 1 },
+  scheduleHeader: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 },
+  scheduleHeaderText: { fontSize: 12, color: GRAY_TEXT, fontWeight: "500" },
+  pillRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
+  pill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20 },
+  pillActive: { backgroundColor: TEAL },
+  pillInactive: { backgroundColor: "#EBEBE5" },
+  pillText: { fontSize: 13, fontWeight: "600" },
+  pillTextActive: { color: "#fff" },
+  pillTextInactive: { color: TEXT_MID },
 
-  /* Bill */
-  billRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 3,
-  },
-  billLabel: {
-    fontSize: 13,
-    color: TEXT_MID,
-  },
-  billValue: {
-    fontSize: 13,
-    color: TEXT_DARK,
-    fontWeight: "600",
-  },
-  billFree: {
-    fontSize: 13,
-    color: "#2ECC71",
-    fontWeight: "700",
-  },
-  billTotal: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: TEXT_DARK,
-  },
+  billRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: 3 },
+  billLabel: { fontSize: 13, color: TEXT_MID },
+  billValue: { fontSize: 13, color: TEXT_DARK, fontWeight: "600" },
+  billFree: { fontSize: 13, color: "#2ECC71", fontWeight: "700" },
+  billTotal: { fontSize: 15, fontWeight: "800", color: TEXT_DARK },
 
-  /* T&C */
-  tcRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    marginTop: 4,
-  },
+  tcRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 4 },
   checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: GRAY_TEXT,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 1,
+    width: 18, height: 18, borderRadius: 4, borderWidth: 1.5,
+    borderColor: GRAY_TEXT, alignItems: "center", justifyContent: "center", marginTop: 1,
   },
-  checkboxChecked: {
-    backgroundColor: TEAL,
-    borderColor: TEAL,
-  },
-  tcText: {
-    flex: 1,
-    fontSize: 12,
-    color: TEXT_MID,
-    lineHeight: 18,
-  },
-  tcLink: {
-    color: TEAL,
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
+  checkboxChecked: { backgroundColor: TEAL, borderColor: TEAL },
+  tcText: { flex: 1, fontSize: 12, color: TEXT_MID, lineHeight: 18 },
+  tcLink: { color: TEAL, fontWeight: "600", textDecorationLine: "underline" },
 
-  /* Footer CTA */
   footer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: GRAY_LIGHT,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E5E0",
+    paddingHorizontal: 16, paddingVertical: 12,
+    backgroundColor: GRAY_LIGHT, borderTopWidth: 1, borderTopColor: "#E5E5E0",
   },
   payBtn: {
-    backgroundColor: TEAL,
-    borderRadius: 30,
-    paddingVertical: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    backgroundColor: TEAL, borderRadius: 30, paddingVertical: 15,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
   },
-  payBtnDisabled: {
-    backgroundColor: "#D4D4CC",
-  },
-  payBtnText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  payBtnTextDisabled: {
-    color: GRAY_TEXT,
-  },
+  payBtnDisabled: { backgroundColor: "#D4D4CC" },
+  payBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  payBtnTextDisabled: { color: GRAY_TEXT },
 });

@@ -33,19 +33,23 @@ const categories = [
         label: "Women",
         desc: "Tops, sarees, dresses & more",
         icon: "person-outline",
-        route: "/(tabs)/subcategory?category=Women",    
+        route: "/subcategory?category=Women",
     },
     {
         id: "children",
         label: "Children",
         desc: "Kids clothing & uniforms",
         icon: "happy-outline",
+        route: "/subcategory?category=Children",
+
     },
     {
         id: "linen",
         label: "Linen",
         desc: "Bedsheets, curtains, towels",
         icon: "bed-outline",
+        route: "/subcategory?category=Linen",
+
     },
 ];
 
@@ -59,7 +63,7 @@ export default function CategoryScreen() {
                     onPress={() => router.back()}
                     activeOpacity={0.7}
                 >
-                    <Ionicons name="chevron-back" size={s(20)} color="#1a1a1a" />
+                    <Ionicons name="arrow-back" size={s(20)} color="#1a1a1a" />
                 </TouchableOpacity>
                 <View style={styles.headerText}>
                     <Text style={styles.headerSuper}>Laundry</Text>
