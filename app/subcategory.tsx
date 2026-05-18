@@ -11,6 +11,8 @@ import {
   Animated,
   LayoutAnimation,
   UIManager,
+  Modal,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -60,6 +62,17 @@ const shadow = (depth: 1 | 2 | 3) => {
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type IconLib = "ion" | "mci";
 type Item    = { label: string; icon: string; lib: IconLib };
+
+// Cart item structure
+type CartItem = {
+  id: string; // unique identifier
+  itemName: string;
+  category: string; // e.g., "Men", "Women"
+  service: "Wash" | "Iron" | "Wash+Iron";
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+};
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 const DATA: Record<string, { tabs: string[]; items: Record<string, Item[]> }> = {
@@ -185,36 +198,144 @@ function ClothingIcon({ icon, lib, size, color }: {
     : <Ionicons name={icon as any} size={size} color={color} />;
 }
 
-// ─── ItemCard ──────────────────────────────────────────────────────────────────
-function ItemCard({ item, cardWidth }: { item: Item; cardWidth: number }) {
-  const [qty, setQty] = useState(0);
-  const pressAnim     = useRef(new Animated.Value(1)).current;
-  const qtyAnim       = useRef(new Animated.Value(0)).current;
+// ─── Service Selection Modal ───────────────────────────────────────────────────
+type ServiceModalProps = {
+  visible: boolean;
+  item: Item | null;
+  categoryName: string;
+  onClose: () => void;
+  onAddToCart: (entries: { service: CartItem["service"]; qty: number; price: number }[]) => void;
+};
 
-  const onPressIn  = () =>
+const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName, onClose, onAddToCart }) => {
+  const [washQty, setWashQty] = useState(0);
+  const [ironQty, setIronQty] = useState(0);
+  const [comboQty, setComboQty] = useState(0);
+
+  const WASH_PRICE = 30;
+  const IRON_PRICE = 25;
+  const COMBO_PRICE = 50;
+
+  const resetQuantities = () => {
+    setWashQty(0);
+    setIronQty(0);
+    setComboQty(0);
+  };
+
+  const handleAddToCart = () => {
+    const entries = [];
+    if (washQty > 0) entries.push({ service: "Wash" as const, qty: washQty, price: WASH_PRICE });
+    if (ironQty > 0) entries.push({ service: "Iron" as const, qty: ironQty, price: IRON_PRICE });
+    if (comboQty > 0) entries.push({ service: "Wash+Iron" as const, qty: comboQty, price: COMBO_PRICE });
+    if (entries.length === 0) return;
+    onAddToCart(entries);
+    resetQuantities();
+    onClose();
+  };
+
+  if (!item) return null;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHandle} />
+              <Text style={styles.modalTitle}>Choose Services & Quantity</Text>
+              <Text style={styles.modalSubtitle}>
+                {item.label} • {categoryName}
+              </Text>
+
+              {/* Wash Row */}
+              <ServiceRow
+                label="Wash"
+                price={WASH_PRICE}
+                quantity={washQty}
+                onIncrement={() => setWashQty(washQty + 1)}
+                onDecrement={() => washQty > 0 && setWashQty(washQty - 1)}
+              />
+              {/* Iron Row */}
+              <ServiceRow
+                label="Iron"
+                price={IRON_PRICE}
+                quantity={ironQty}
+                onIncrement={() => setIronQty(ironQty + 1)}
+                onDecrement={() => ironQty > 0 && setIronQty(ironQty - 1)}
+              />
+              {/* Wash+Iron Row */}
+              <ServiceRow
+                label="Wash + Iron"
+                price={COMBO_PRICE}
+                quantity={comboQty}
+                onIncrement={() => setComboQty(comboQty + 1)}
+                onDecrement={() => comboQty > 0 && setComboQty(comboQty - 1)}
+              />
+
+              <TouchableOpacity style={styles.modalAddBtn} onPress={handleAddToCart}>
+                <Text style={styles.modalAddBtnText}>Add to Cart</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
+
+type ServiceRowProps = {
+  label: string;
+  price: number;
+  quantity: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+};
+
+const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncrement, onDecrement }) => {
+  return (
+    <View style={styles.serviceRow}>
+      <View style={styles.serviceInfo}>
+        <Text style={styles.serviceLabel}>{label}</Text>
+        <Text style={styles.servicePrice}>₹{price}/piece</Text>
+      </View>
+      {quantity === 0 ? (
+        <TouchableOpacity style={styles.addButton} onPress={onIncrement}>
+          <Text style={styles.addButtonText}>ADD</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.stepperRow}>
+          <TouchableOpacity style={styles.stepCircle} onPress={onDecrement}>
+            <Ionicons name="remove" size={r(14)} color={C.teal} />
+          </TouchableOpacity>
+          <Text style={styles.stepQtyModal}>{quantity}</Text>
+          <TouchableOpacity style={styles.stepCircle} onPress={onIncrement}>
+            <Ionicons name="add" size={r(14)} color={C.teal} />
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// ─── ItemCard (now only opens modal) ──────────────────────────────────────────
+type ItemCardProps = {
+  item: Item;
+  cardWidth: number;
+  onPress: (item: Item) => void;
+};
+
+const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress }) => {
+  const pressAnim = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () =>
     Animated.spring(pressAnim, { toValue: 0.93, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
   const onPressOut = () =>
     Animated.spring(pressAnim, { toValue: 1, useNativeDriver: true, speed: 25, bounciness: 6 }).start();
-
-  const bump = () =>
-    Animated.sequence([
-      Animated.timing(qtyAnim, { toValue: -4, duration: 80,  useNativeDriver: true }),
-      Animated.spring(qtyAnim,  { toValue: 0,  useNativeDriver: true, speed: 30 }),
-    ]).start();
-
-  const increment = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setQty(q => q + 1);
-    bump();
-  };
-
-  const decrement = () => {
-    if (qty === 0) return;
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setQty(q => q - 1);
-  };
-
-  const selected = qty > 0;
 
   return (
     <Animated.View style={{ width: cardWidth, transform: [{ scale: pressAnim }] }}>
@@ -222,69 +343,46 @@ function ItemCard({ item, cardWidth }: { item: Item; cardWidth: number }) {
         activeOpacity={1}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
-        onPress={qty === 0 ? increment : undefined}
-        style={[styles.card, selected && styles.cardSelected]}
+        onPress={() => onPress(item)}
+        style={styles.card}
       >
-        {selected && <View style={styles.cardDot} />}
-
-        <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
-          <ClothingIcon
-            icon={item.icon}
-            lib={item.lib}
-            size={r(26)}
-            color={selected ? C.teal : C.inkMid}
-          />
+        <View style={styles.iconWrap}>
+          <ClothingIcon icon={item.icon} lib={item.lib} size={r(26)} color={C.inkMid} />
         </View>
-
-        <Text style={[styles.cardLabel, selected && styles.cardLabelSelected]} numberOfLines={2}>
+        <Text style={styles.cardLabel} numberOfLines={2}>
           {item.label}
         </Text>
-
-        {qty === 0 ? (
-          <View style={styles.addRow}>
-            <Text style={styles.addText}>Add</Text>
-            <View style={styles.addIcon}>
-              <Ionicons name="add" size={r(12)} color={C.teal} />
-            </View>
+        <View style={styles.addRow}>
+          <Text style={styles.addText}>Select</Text>
+          <View style={styles.addIcon}>
+            <Ionicons name="arrow-forward" size={r(12)} color={C.teal} />
           </View>
-        ) : (
-          <Animated.View style={[styles.stepper, { transform: [{ translateY: qtyAnim }] }]}>
-            <TouchableOpacity
-              style={styles.stepBtn}
-              onPress={decrement}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            >
-              <Ionicons name="remove" size={r(13)} color={C.teal} />
-            </TouchableOpacity>
-            <Text style={styles.stepQty}>{qty}</Text>
-            <TouchableOpacity
-              style={styles.stepBtn}
-              onPress={increment}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            >
-              <Ionicons name="add" size={r(13)} color={C.teal} />
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
-}
+};
 
-// ─── Screen ────────────────────────────────────────────────────────────────────
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function SubcategoryScreen() {
-  const params   = useLocalSearchParams<{ category: string }>();
+  const params = useLocalSearchParams<{ category: string }>();
   const category = params.category ?? "Men";
-  const data     = DATA[category] ?? DATA["Men"];
-  const meta     = CATEGORY_META[category] ?? CATEGORY_META["Men"];
+  const data = DATA[category] ?? DATA["Men"];
+  const meta = CATEGORY_META[category] ?? CATEGORY_META["Men"];
 
   const [activeTab, setActiveTab] = useState(data.tabs[0]);
   const items = data.items[activeTab] ?? [];
 
-  // 3 cols on normal, 4 cols on wide phones (≥428px)
-  const COLS      = W >= 428 ? 4 : 3;
-  const H_PAD     = r(16);
-  const GAP       = r(10);
+  // Cart state
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+
+  const COLS = W >= 428 ? 4 : 3;
+  const H_PAD = r(16);
+  const GAP = r(10);
   const cardWidth = clamp(
     Math.floor((W - H_PAD * 2 - GAP * (COLS - 1)) / COLS),
     76, 128
@@ -295,18 +393,51 @@ export default function SubcategoryScreen() {
     setActiveTab(tab);
   }, []);
 
+  const openModal = (item: Item) => {
+    setSelectedItem(item);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedItem(null);
+  };
+
+  const addToCart = (serviceEntries: { service: CartItem["service"]; qty: number; price: number }[]) => {
+    const newItems: CartItem[] = serviceEntries.map((entry, idx) => ({
+      id: `${Date.now()}-${idx}-${Math.random()}`,
+      itemName: selectedItem!.label,
+      category,
+      service: entry.service,
+      quantity: entry.qty,
+      unitPrice: entry.price,
+      totalPrice: entry.qty * entry.price,
+    }));
+    setCartItems((prev) => [...prev, ...newItems]);
+  };
+
+  // Compute totals
+  const totalItems = cartItems.reduce((sum, ci) => sum + ci.quantity, 0);
+  const totalPrice = cartItems.reduce((sum, ci) => sum + ci.totalPrice, 0);
+
+  const viewBasket = () => {
+    // For demonstration: show an alert with cart summary. Replace with navigation to cart screen.
+    if (cartItems.length === 0) {
+      alert("Your basket is empty");
+      return;
+    }
+    const summary = cartItems.map(ci => `${ci.itemName} (${ci.service}): ${ci.quantity} x ₹${ci.unitPrice}`).join("\n");
+    alert(`Basket:\n${summary}\n\nTotal: ${totalItems} items • ₹${totalPrice}`);
+    // In a real app: router.push("/cart");
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
 
-      {/* ── HEADER ── */}
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
           <Ionicons name="chevron-back" size={r(20)} color={C.ink} />
         </TouchableOpacity>
 
@@ -325,27 +456,15 @@ export default function SubcategoryScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ── TABS ── */}
+      {/* Tabs */}
       <View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsScroll}
-          decelerationRate="fast"
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsScroll}>
           {data.tabs.map((tab) => {
             const active = tab === activeTab;
-            const count  = data.items[tab]?.length ?? 0;
+            const count = data.items[tab]?.length ?? 0;
             return (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => switchTab(tab)}
-                activeOpacity={0.75}
-                style={[styles.tab, active && styles.tabActive]}
-              >
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                  {tab}
-                </Text>
+              <TouchableOpacity key={tab} onPress={() => switchTab(tab)} activeOpacity={0.75} style={[styles.tab, active && styles.tabActive]}>
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab}</Text>
                 {active && (
                   <View style={styles.tabBubble}>
                     <Text style={styles.tabBubbleText}>{count}</Text>
@@ -358,45 +477,51 @@ export default function SubcategoryScreen() {
         <View style={styles.tabLine} />
       </View>
 
-      {/* ── SECTION HEADING ── */}
+      {/* Section heading */}
       <View style={styles.sectionRow}>
         <Text style={styles.sectionTitle}>{activeTab}</Text>
         <Text style={styles.sectionCount}>{items.length} items</Text>
       </View>
 
-      {/* ── GRID ── */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.gridContent, { paddingHorizontal: H_PAD }]}
-      >
+      {/* Grid */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.gridContent, { paddingHorizontal: H_PAD }]}>
         <View style={[styles.grid, { gap: GAP }]}>
           {items.map((item, idx) => (
-            <ItemCard key={`${activeTab}-${idx}`} item={item} cardWidth={cardWidth} />
+            <ItemCard key={`${activeTab}-${idx}`} item={item} cardWidth={cardWidth} onPress={openModal} />
           ))}
-          {/* Ghost cells to keep last row aligned */}
+          {/* Ghost cells */}
           {Array.from({ length: (COLS - (items.length % COLS)) % COLS }).map((_, i) => (
             <View key={`ghost-${i}`} style={{ width: cardWidth }} />
           ))}
         </View>
       </ScrollView>
 
-      {/* ── BOTTOM BAR ── */}
+      {/* Bottom Bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.ctaBtn} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.ctaBtn} onPress={viewBasket} activeOpacity={0.85}>
           <View style={styles.ctaLeft}>
             <Ionicons name="cart-outline" size={r(18)} color="#fff" />
-            <Text style={styles.ctaText}>View Basket</Text>
+            <Text style={styles.ctaText}>{totalItems} items • Total ₹{totalPrice}</Text>
           </View>
           <View style={styles.ctaArrow}>
             <Ionicons name="arrow-forward" size={r(15)} color={C.tealMid} />
           </View>
         </TouchableOpacity>
       </View>
+
+      {/* Service Modal */}
+      <ServiceModal
+        visible={modalVisible}
+        item={selectedItem}
+        categoryName={category}
+        onClose={closeModal}
+        onAddToCart={addToCart}
+      />
     </SafeAreaView>
   );
 }
 
-// ─── Styles ────────────────────────────────────────────────────────────────────
+// ─── Styles (keep existing + add new modal styles) ────────────────────────────
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
 
@@ -493,20 +618,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1.5,
     borderColor: C.border,
-    position: "relative",
     ...shadow(1),
-  },
-  cardSelected: {
-    borderColor: C.teal,
-    backgroundColor: C.tealXLight,
-    ...shadow(2),
-  },
-  cardDot: {
-    position: "absolute",
-    top: r(8), right: r(8),
-    width: r(7), height: r(7),
-    borderRadius: r(4),
-    backgroundColor: C.teal,
   },
   iconWrap: {
     width: r(50), height: r(50),
@@ -516,7 +628,6 @@ const styles = StyleSheet.create({
     marginBottom: rv(9),
     borderWidth: 1.5, borderColor: C.border,
   },
-  iconWrapSelected: { backgroundColor: C.tealLight, borderColor: C.tealMid },
   cardLabel: {
     fontSize: rm(11),
     fontWeight: "600",
@@ -526,8 +637,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: r(2),
     marginBottom: rv(8),
   },
-  cardLabelSelected: { color: C.tealDark },
-
   addRow: { flexDirection: "row", alignItems: "center", gap: r(4) },
   addText: { fontSize: rm(10.5), fontWeight: "600", color: C.inkLight },
   addIcon: {
@@ -535,31 +644,6 @@ const styles = StyleSheet.create({
     borderRadius: r(9),
     backgroundColor: C.tealLight,
     alignItems: "center", justifyContent: "center",
-  },
-
-  stepper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: C.surface,
-    borderRadius: r(20),
-    borderWidth: 1.5,
-    borderColor: C.teal,
-    paddingHorizontal: r(4),
-    paddingVertical: rv(3),
-    gap: r(4),
-  },
-  stepBtn: {
-    width: r(20), height: r(20),
-    borderRadius: r(10),
-    backgroundColor: C.tealLight,
-    alignItems: "center", justifyContent: "center",
-  },
-  stepQty: {
-    fontSize: rm(12),
-    fontWeight: "700",
-    color: C.teal,
-    minWidth: r(14),
-    textAlign: "center",
   },
 
   bottomBar: {
@@ -589,5 +673,104 @@ const styles = StyleSheet.create({
     borderRadius: r(14),
     backgroundColor: "rgba(255,255,255,0.16)",
     alignItems: "center", justifyContent: "center",
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: C.surface,
+    borderTopLeftRadius: r(24),
+    borderTopRightRadius: r(24),
+    paddingHorizontal: r(20),
+    paddingBottom: rv(34),
+    paddingTop: rv(12),
+    ...shadow(3),
+  },
+  modalHandle: {
+    width: r(40),
+    height: r(4),
+    backgroundColor: C.borderMid,
+    borderRadius: r(2),
+    alignSelf: "center",
+    marginBottom: rv(16),
+  },
+  modalTitle: {
+    fontSize: rm(18),
+    fontWeight: "700",
+    color: C.ink,
+    marginBottom: rv(4),
+  },
+  modalSubtitle: {
+    fontSize: rm(13),
+    color: C.inkLight,
+    marginBottom: rv(20),
+  },
+  serviceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: rv(14),
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
+  },
+  serviceInfo: {
+    flexDirection: "column",
+  },
+  serviceLabel: {
+    fontSize: rm(14),
+    fontWeight: "600",
+    color: C.ink,
+    marginBottom: rv(2),
+  },
+  servicePrice: {
+    fontSize: rm(12),
+    color: C.inkLight,
+  },
+  addButton: {
+    backgroundColor: C.tealLight,
+    paddingHorizontal: r(16),
+    paddingVertical: rv(6),
+    borderRadius: r(20),
+  },
+  addButtonText: {
+    fontSize: rm(12),
+    fontWeight: "700",
+    color: C.tealDark,
+  },
+  stepperRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: r(12),
+  },
+  stepCircle: {
+    width: r(28),
+    height: r(28),
+    borderRadius: r(14),
+    backgroundColor: C.tealLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepQtyModal: {
+    fontSize: rm(14),
+    fontWeight: "700",
+    color: C.teal,
+    minWidth: r(20),
+    textAlign: "center",
+  },
+  modalAddBtn: {
+    backgroundColor: C.teal,
+    borderRadius: r(16),
+    paddingVertical: rv(14),
+    alignItems: "center",
+    marginTop: rv(20),
+  },
+  modalAddBtnText: {
+    fontSize: rm(16),
+    fontWeight: "700",
+    color: "#fff",
   },
 });
