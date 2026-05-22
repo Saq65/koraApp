@@ -1,28 +1,36 @@
 import { apiClient } from "../api/client";
 import { getToken } from "../utils/storage";
 
-
 // ─────────────────────────────────────────────
 // GET PROFILE
 // ─────────────────────────────────────────────
 export const getProfile = async () => {
-  const token = await getToken();
+  try {
+    const token = await getToken();
 
-  return apiClient(
-    "/customers/profile",
-    "GET",
-    undefined,
-    token || undefined
-  );
+    const response = await apiClient(
+      "/customers/profile",
+      "GET",
+      undefined,
+      token || undefined
+    );
+
+    console.log(
+      "Login Profile Data:",
+      JSON.stringify(response, null, 2)
+    );
+
+    return response;
+  } catch (error) {
+    console.log("Profile Error:", error);
+    throw error;
+  }
 };
-
 
 // ─────────────────────────────────────────────
 // UPDATE PROFILE
 // ─────────────────────────────────────────────
-export const updateProfile = async (
-  payload: any
-) => {
+export const updateProfile = async (payload: any) => {
   const token = await getToken();
 
   return apiClient(
@@ -33,13 +41,10 @@ export const updateProfile = async (
   );
 };
 
-
 // ─────────────────────────────────────────────
 // ADD ADDRESS
 // ─────────────────────────────────────────────
-export const addAddress = async (
-  payload: any
-) => {
+export const addAddress = async (payload: any) => {
   const token = await getToken();
 
   return apiClient(
@@ -49,7 +54,6 @@ export const addAddress = async (
     token || undefined
   );
 };
-
 
 // ─────────────────────────────────────────────
 // UPDATE ADDRESS
@@ -68,13 +72,10 @@ export const updateAddress = async (
   );
 };
 
-
 // ─────────────────────────────────────────────
 // DELETE ADDRESS
 // ─────────────────────────────────────────────
-export const deleteAddress = async (
-  addressId: string
-) => {
+export const deleteAddress = async (addressId: string) => {
   const token = await getToken();
 
   return apiClient(
@@ -84,7 +85,6 @@ export const deleteAddress = async (
     token || undefined
   );
 };
-
 
 // ─────────────────────────────────────────────
 // SET DEFAULT ADDRESS

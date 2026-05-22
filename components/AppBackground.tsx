@@ -12,8 +12,8 @@ export default function AppBackground({ children }: AppBackgroundProps) {
 
   // Choose image based on theme
   const backgroundImage = isDarkMode
-    ? require("../assets/images/bgallpage-dark.png")   // your dark mode image
-    : require("../assets/images/bgallpage.png");       // your light mode image
+    ? require("../assets/images/bgallpage-dark.png")  
+    : require("../assets/images/bgallpage.png");      
 
   // Optional: adjust overlay opacity/color for dark mode
   const overlayColor = isDarkMode

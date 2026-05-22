@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
