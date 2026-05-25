@@ -1,43 +1,58 @@
 import { apiClient } from "./client";
 import { getToken } from "../utils/storage";
 
-export const getActiveOrder=async()=>{
+export interface OrderPayload {
+items: {
+    serviceId: string;
+    categoryName: string;
+    subCategoryName: string;
+    quantity: number;
+  }[];
 
-const token=await getToken();
+  pickupAddress: {
+    address: string;
+    coordinates?: number[];
+  };
 
-return apiClient(
-"/orders/active",
-"GET",
-undefined,
-token || undefined
-);
+  deliveryAddress: {
+    address: string;
+    coordinates?: number[];
+  };
 
+  paymentMethod: "cash" | "upi" | "card";
+}
+
+export const getActiveOrder = async () => {
+  const token = await getToken();
+
+  return apiClient(
+    "/orders/active",
+    "GET",
+    undefined,
+    token || undefined
+  );
 };
 
+export const getRecentOrders = async () => {
+  const token = await getToken();
 
-export const getRecentOrders=async()=>{
-
-const token=await getToken();
-
-return apiClient(
-"/orders/recent",
-"GET",
-undefined,
-token || undefined
-);
-
+  return apiClient(
+    "/orders/recent",
+    "GET",
+    undefined,
+    token || undefined
+  );
 };
 
+export const createOrder = async (
+  payload: OrderPayload
+) => {
+  const token = await getToken();
 
-export const createOrder=async(payload:any)=>{
-
-const token=await getToken();
-
-return apiClient(
-"/orders",
-"POST",
-payload,
-token || undefined
-);
-
+  return apiClient(
+    "/orders",
+    "POST",
+    payload,
+    token || undefined
+  );
 };

@@ -23,24 +23,26 @@ import type { CartItem } from "../../src/redux/store/cartSlice";
 
 export default function Cart() {
   const dispatch = useAppDispatch();
-  const cartItems = useAppSelector(selectCartItems);   
+  const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const subtotal = useAppSelector(selectCartTotal);
 
   const handleIncrement = (item: CartItem) => {
-    dispatch(
-      addToCart({
-        id: item.id,
-        serviceId: item.serviceId,
-        serviceName: item.serviceName,
-        categoryId: item.categoryId,
-        categoryName: item.categoryName,
-        subCategoryId: item.subCategoryId,
-        subCategoryName: item.subCategoryName,
-        price: item.price,
-      })
-    );
-  };
+  dispatch(
+    addToCart({
+      id: item.id,
+      serviceId: item.serviceId,
+      serviceName: item.serviceName,
+      categoryId: item.categoryId,
+      categoryName: item.categoryName,
+      subCategoryId: item.subCategoryId,
+      subCategoryName: item.subCategoryName,
+
+      price: item.price,
+      quantity:item.quantity,
+    })
+  );
+};
 
   const handleDecrement = (id: string) => dispatch(removeFromCart(id));
   const handleDelete = (id: string) => dispatch(deleteFromCart(id));
@@ -98,7 +100,10 @@ export default function Cart() {
                         <Text style={styles.itemCategory}>
                           {item.categoryName} • {item.serviceName}
                         </Text>
-                        <Text style={styles.itemPrice}>₹{item.price} each</Text>
+                        {/* <Text style={styles.itemPrice}>₹{item.price} each</Text> */}
+                        <Text style={styles.itemPrice}>
+                          Qty: {item.quantity}
+                        </Text>
                       </View>
 
                       {/* Right: delete + qty controls */}
@@ -140,19 +145,40 @@ export default function Cart() {
 
               {/* Bill Summary */}
               <View style={styles.billCard}>
-                <Text style={styles.billTitle}>Bill Summary</Text>
+                <Text style={styles.billTitle}>
+                  Bill Summary
+                </Text>
+
                 <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>Subtotal ({totalItems})</Text>
-                  <Text style={styles.billValue}>₹{subtotal}</Text>
+                  <Text style={styles.billLabel}>
+                    Items ({totalItems})
+                  </Text>
+
+                  <Text style={styles.billValue}>
+                    ₹{subtotal}
+                  </Text>
                 </View>
+
                 <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>Delivery</Text>
-                  <Text style={styles.billFree}>FREE</Text>
+                  <Text style={styles.billLabel}>
+                    Delivery
+                  </Text>
+
+                  <Text style={styles.billFree}>
+                    FREE
+                  </Text>
                 </View>
+
                 <View style={styles.billDivider} />
+
                 <View style={styles.billRow}>
-                  <Text style={styles.billTotal}>Total</Text>
-                  <Text style={styles.billTotalValue}>₹{subtotal}</Text>
+                  <Text style={styles.billTotal}>
+                    Total
+                  </Text>
+
+                  <Text style={styles.billTotalValue}>
+                      Items ({totalItems})
+                  </Text>
                 </View>
               </View>
             </ScrollView>
@@ -166,7 +192,7 @@ export default function Cart() {
               >
                 <MaterialIcons name="credit-card" size={20} color="#fff" />
                 <Text style={styles.placeOrderText}>
-                  Place Order • ₹{subtotal}
+                  Place Order
                 </Text>
               </TouchableOpacity>
             </View>

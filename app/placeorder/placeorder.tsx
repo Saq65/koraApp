@@ -20,16 +20,16 @@ import {
 } from "../../src/redux/store/hooks";
 
 /* ─── Constants ─── */
-const TEAL       = "#1A6B5A";
+const TEAL = "#1A6B5A";
 const TEAL_LIGHT = "#E8F4F1";
 const GRAY_LIGHT = "#EFEFEA";
-const GRAY_TEXT  = "#ABABAB";
-const TEXT_DARK  = "#1A1A1A";
-const TEXT_MID   = "#666666";
+const GRAY_TEXT = "#ABABAB";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#666666";
 
 /* ─── Types ─── */
 type PickupDay = "Today" | "Tomorrow";
-type TimeSlot  = "10:00 AM" | "2:00 PM";
+type TimeSlot = "10:00 AM" | "2:00 PM";
 
 const DELIVERY_CHARGE = 0;
 
@@ -64,14 +64,14 @@ function LocationRow({ label, address }: { label: string; address: string }) {
 /* ─── Main Screen ─── */
 export default function PlaceOrder() {
   const [pickupDay, setPickupDay] = useState<PickupDay>("Tomorrow");
-  const [timeSlot, setTimeSlot]   = useState<TimeSlot>("10:00 AM");
-  const [agreed, setAgreed]       = useState(false);
+  const [timeSlot, setTimeSlot] = useState<TimeSlot>("10:00 AM");
+  const [agreed, setAgreed] = useState(false);
 
   // ✅ Live from Redux
-  const cartItems  = useAppSelector(selectCartItems);
+  const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const itemsTotal = useAppSelector(selectCartTotal);
-  const total      = itemsTotal + DELIVERY_CHARGE;
+  const total = itemsTotal + DELIVERY_CHARGE;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -100,12 +100,20 @@ export default function PlaceOrder() {
                   <MaterialCommunityIcons name="tshirt-crew" size={20} color={TEAL} />
                 </View>
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{item.subCategoryName}</Text>
+                  <Text style={styles.itemName}>
+                    {item.subCategoryName}
+                  </Text>
+
                   <Text style={styles.itemSub}>
-                    {item.serviceName} • ₹{item.price} x {item.quantity}
+                    {item.serviceName} • {item.quantity}{" "}
+                    {item.quantity > 1 ? "pieces" : "piece"}
                   </Text>
                 </View>
-                <Text style={styles.itemPrice}>₹{item.price * item.quantity}</Text>
+
+                <Text style={styles.itemPrice}>
+                  ₹{item.price * item.quantity}
+                </Text>
+                {/* <Text style={styles.itemPrice}>₹{item.price * item.quantity}</Text> */}
               </View>
               {idx < cartItems.length - 1 && <View style={styles.divider} />}
             </View>

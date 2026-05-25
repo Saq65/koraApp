@@ -80,9 +80,23 @@ type ServiceMapping = {
 };
 
 const SERVICES: Record<string, ServiceMapping> = {
-  Wash: { id: "wash", name: "Wash", price: 30 },
-  Iron: { id: "iron", name: "Iron", price: 25 },
-  "Wash+Iron": { id: "combo", name: "Wash+Iron", price: 50 },
+  Wash: {
+    id: "69f0746b11410d962926907f", // MongoDB _id from DB
+    name: "Wash",
+    price: 30,
+  },
+
+  Iron: {
+    id: "69f0746b11410d962926907d",
+    name: "Iron",
+    price: 25,
+  },
+
+  "Wash+Iron": {
+    id: "69f0746b11410d962926907e",
+    name: "Wash+Iron",
+    price: 50,
+  },
 };
 
 // ─── Data (same as your desired UI) ────────────────────────────────────────────
@@ -228,25 +242,27 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
   };
 
   // Helper to dispatch multiple addToCart actions (one per piece)
-  const addMultipleToCart = (serviceType: "Wash" | "Iron" | "Wash+Iron", quantity: number) => {
-    const service = SERVICES[serviceType];
-    if (!service) return;
+  const addMultipleToCart = (
+  serviceType: "Wash" | "Iron" | "Wash+Iron",
+  quantity: number
+) => {
+  const service = SERVICES[serviceType];
+  if (!service || !item) return;
 
-    for (let i = 0; i < quantity; i++) {
-      dispatch(
-        addToCart({
-          id: `${service.id}_${categoryName}_${item!.label}`, // unique per service + category + item
-          serviceId: service.id,
-          serviceName: service.name,
-          categoryId: categoryName,
-          categoryName: categoryName,
-          subCategoryId: item!.label,
-          subCategoryName: item!.label,
-          price: service.price,
-        })
-      );
-    }
-  };
+  dispatch(
+    addToCart({
+      id: `${service.id}_${categoryName}_${item.label}`,
+      serviceId: service.id,
+      serviceName: service.name,
+      categoryId: categoryName,
+      categoryName,
+      subCategoryId: item.label,
+      subCategoryName: item.label,
+      price: service.price,
+      quantity, // send selected quantity directly
+    })
+  );
+};
 
   const handleAddToCart = () => {
     if (!item) return;
