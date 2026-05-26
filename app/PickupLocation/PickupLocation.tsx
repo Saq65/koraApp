@@ -22,6 +22,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { setAddress } from '../../src/redux/store/addressSlice'
 
+
+
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
 
 type LocationType = 'pickup' | 'dropoff'
