@@ -15,7 +15,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useDispatch } from 'react-redux'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import MapView, { Marker, Region, PROVIDER_DEFAULT } from 'react-native-maps'
+// import MapView, { Marker, Region, PROVIDER_DEFAULT } from 'react-native-maps'
+import MapView, { Marker, Region } from 'react-native-maps'
 import * as Location from 'expo-location'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
@@ -342,7 +343,8 @@ export default function PickupLocation() {
           <View style={{ flex: 1 }}>
             <MapView
               ref={mapRef}
-              provider={PROVIDER_DEFAULT}
+              // provider={PROVIDER_DEFAULT}
+              
               style={StyleSheet.absoluteFillObject}
               region={region}
               onRegionChangeComplete={(r) => {
