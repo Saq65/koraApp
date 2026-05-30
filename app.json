@@ -20,7 +20,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.nikhilraj2908.koraApp"
+      "package": "com.nikhilraj2908.koraApp",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBbuTPQCDeDK4hpXmXAV-p-0zvjm6er9cc"
+        }
+      }
     },
     "web": {
       "output": "static",
