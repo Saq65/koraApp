@@ -18,6 +18,7 @@ import SideDrawer from "../../components/SideDrawer";
 import { router } from "expo-router";
 import { getUser } from "../../src/utils/storage";
 import { getActiveOrder, getRecentOrders } from "../../src/api/order"; // adjust path if needed
+import AppBackground from "@/components/AppBackground";
 
 const { width: W, height: H } = Dimensions.get("window");
 const s = (n: number) => Math.round((W / 375) * n);
@@ -119,6 +120,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <AppBackground>
       <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName} />
 
       <ScrollView
@@ -230,6 +232,7 @@ export default function HomeScreen() {
           theme={theme}
         />
       )}
+      </AppBackground>
     </SafeAreaView>
   );
 }

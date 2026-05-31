@@ -23,6 +23,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import AppBackground from "@/components/AppBackground";
 
 /* Colors */
 const TEAL = "#1A6B5A";
@@ -102,6 +103,7 @@ export default function Payment() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+        <AppBackground>
       <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -171,6 +173,7 @@ export default function Payment() {
           )}
         </TouchableOpacity>
       </View>
+      </AppBackground>
     </SafeAreaView>
   );
 }

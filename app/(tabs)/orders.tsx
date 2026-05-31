@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import AppBackground from "@/components/AppBackground";
 
 type OrderStatus = "Delivered" | "Cancelled" | "In Process";
 
@@ -114,6 +115,7 @@ const STATUS_COLOR: Record<OrderStatus, string> = {
 /* ─── Active Order Card with Timeline ─── */
 function ActiveOrderCard() {
   return (
+    <SafeAreaView edges={["top"]}>
     <View style={styles.activeCard}>
       {/* Order summary row */}
       <View style={styles.activeSummaryRow}>
@@ -210,6 +212,8 @@ function ActiveOrderCard() {
         </TouchableOpacity>
       </View>
     </View>
+  
+    </SafeAreaView>
   );
 }
 
@@ -248,6 +252,8 @@ export default function Orders() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+    <AppBackground>
+
       <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
 
       {/* Header */}
@@ -297,6 +303,8 @@ export default function Orders() {
           )
         )}
       </ScrollView>
+    </AppBackground>
+
     </SafeAreaView>
   );
 }

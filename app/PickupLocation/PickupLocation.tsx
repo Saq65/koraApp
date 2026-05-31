@@ -21,6 +21,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { setAddress } from '../../src/redux/store/addressSlice'
+import AppBackground from '@/components/AppBackground'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
 
@@ -380,6 +381,7 @@ export default function PickupLocation() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <AppBackground>
       <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
         {/* Header */}
@@ -581,6 +583,7 @@ export default function PickupLocation() {
           </View>
         )}
       </KeyboardAvoidingView>
+      </AppBackground>
     </SafeAreaView>
   )
 }

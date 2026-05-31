@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import i18n from "../../src/translations/i18n";
+import AppBackground from "@/components/AppBackground";
 
 const LANGUAGES = [
     { code: "en", label: "English", native: "English" },
@@ -85,7 +86,7 @@ export default function LanguageScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-
+            <AppBackground>
             <StatusBar barStyle="dark-content" backgroundColor="#f0f4f3" />
 
             {/* Header with Back Button */}
@@ -162,6 +163,7 @@ export default function LanguageScreen() {
                     {t("language_will_change_immediately") || "Language will change immediately"}
                 </Text>
             </View>
+            </AppBackground>
         </SafeAreaView>
     );
 }

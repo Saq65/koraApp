@@ -20,6 +20,7 @@ import {
 } from "../../src/redux/store/hooks";
 import { addToCart, removeFromCart, deleteFromCart } from "../../src/redux/store/cartSlice";
 import type { CartItem } from "../../src/redux/store/cartSlice";
+import AppBackground from "@/components/AppBackground";
 
 export default function Cart() {
   const dispatch = useAppDispatch();
@@ -49,6 +50,7 @@ export default function Cart() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <AppBackground>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F5F0" />
 
       {/* Header */}
@@ -199,6 +201,7 @@ export default function Cart() {
           </>
         )}
       </View>
+      </AppBackground>
     </SafeAreaView>
   );
 }

@@ -31,6 +31,7 @@ export default function PersonalDetailsScreen() {
 
     const [profile, setProfile] = useState({
         fullName: "",
+        username: "",
         email: "",
         phone: "",
         dob: "",
@@ -38,33 +39,33 @@ export default function PersonalDetailsScreen() {
 
     // Load from cache instantly, then refresh from API
     const loadProfile = async () => {
-        // 1. Instant display from stored user
         const storedUser = await getUser();
         if (storedUser) {
             setProfile({
                 fullName: storedUser.name || "",
+                username: storedUser.username || "",   // 👈
                 email: storedUser.email || "",
                 phone: storedUser.mobile || "",
                 dob: storedUser.dob || "",
             });
-            setLoading(false); // show UI immediately
+            setLoading(false);
         }
 
-        // 2. Background refresh from API (for latest data)
         try {
             const response = await getProfile();
             const data = response.data;
             const freshProfile = {
                 fullName: data.fullName || storedUser?.name || "",
+                username: data.username || storedUser?.username || "",  // 👈
                 email: data.email || storedUser?.email || "",
                 phone: data.mobile || storedUser?.mobile || "",
                 dob: data.dob ? data.dob.split("T")[0] : "",
             };
             setProfile(freshProfile);
-            // Also update stored user with fresh data
             await setUser({
                 ...storedUser,
                 name: freshProfile.fullName,
+                username: freshProfile.username,  // 👈 store username
                 email: freshProfile.email,
                 mobile: freshProfile.phone,
                 dob: freshProfile.dob,
@@ -75,6 +76,7 @@ export default function PersonalDetailsScreen() {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         loadProfile();
@@ -87,7 +89,7 @@ export default function PersonalDetailsScreen() {
                 dob: profile.dob ? new Date(profile.dob).toISOString() : "",
             };
             await updateProfile(formattedProfile);
-            
+
             // After successful update, refresh stored user data
             const storedUser = await getUser();
             await setUser({
@@ -97,7 +99,7 @@ export default function PersonalDetailsScreen() {
                 mobile: profile.phone,
                 dob: profile.dob,
             });
-            
+
             setEditing(false);
             Alert.alert("Success", "Profile updated successfully");
         } catch (error) {
@@ -149,7 +151,7 @@ export default function PersonalDetailsScreen() {
                             {profile.fullName || "John Doe"}
                         </Text>
                         <Text style={[styles.username, { color: theme.textSecondary || (isDarkMode ? "#9CA3AF" : "#6B7280") }]}>
-                            @{profile.fullName.toLowerCase().replace(/\s/g, '') || "johndoe"}
+                            @{profile.username || profile.fullName.toLowerCase().replace(/\s/g, '')}
                         </Text>
                     </View>
 
@@ -165,7 +167,7 @@ export default function PersonalDetailsScreen() {
                         />
                         <DetailField
                             label="Username"
-                            value={`@${profile.fullName.toLowerCase().replace(/\s/g, '')}`}
+                            value={`@${profile.username || profile.fullName.toLowerCase().replace(/\s/g, '')}`} 
                             editable={false}
                             theme={theme}
                             isDarkMode={isDarkMode}
@@ -207,15 +209,15 @@ export default function PersonalDetailsScreen() {
 }
 
 // Detail field component (unchanged)
-function DetailField({ 
-    label, 
-    value, 
-    editable, 
-    theme, 
+function DetailField({
+    label,
+    value,
+    editable,
+    theme,
     isDarkMode,
-    onChangeText, 
-    keyboardType = "default", 
-    placeholder = "" 
+    onChangeText,
+    keyboardType = "default",
+    placeholder = ""
 }: any) {
     return (
         <View style={styles.fieldContainer}>
@@ -225,8 +227,8 @@ function DetailField({
             {editable ? (
                 <TextInput
                     style={[
-                        styles.fieldValueInput, 
-                        { 
+                        styles.fieldValueInput,
+                        {
                             color: theme.text,
                             backgroundColor: isDarkMode ? "#1F2937" : "#F9FAFB",
                             borderWidth: 1,
