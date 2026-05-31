@@ -17,7 +17,7 @@ import Header from "../../components/Header";
 import SideDrawer from "../../components/SideDrawer";
 import { router } from "expo-router";
 import { getUser } from "../../src/utils/storage";
-import { getActiveOrder, getRecentOrders } from "../../src/api/order"; // adjust path if needed
+import { getActiveOrder, getRecentOrders } from "../../src/api/order";
 import AppBackground from "@/components/AppBackground";
 
 const { width: W, height: H } = Dimensions.get("window");
@@ -35,11 +35,11 @@ const PH = s(16);
 export default function HomeScreen() {
   const { theme } = useTheme();
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const insets = useSafeAreaInsets();
 
   // Dynamic state
   const [userName, setUserName] = useState("");
-  const [activeOrder, setActiveOrder] = useState<any>(null);
+  const [latestActiveOrder, setLatestActiveOrder] = useState<any>(null);
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,17 +69,37 @@ export default function HomeScreen() {
   // Fetch all data
   const fetchAllData = useCallback(async () => {
     try {
-      // Get user name from stored user object
       const user = await getUser();
       if (user?.name) setUserName(user.name);
       else setUserName("Guest");
 
-      // Fetch orders in parallel
       const [activeRes, recentRes] = await Promise.all([
         getActiveOrder(),
         getRecentOrders(),
       ]);
-      setActiveOrder(activeRes.data || null);
+
+      // activeRes.data is now an array of { order, tracking, cancellationDeadline }
+      const activeOrdersArray = activeRes.success && Array.isArray(activeRes.data) ? activeRes.data : [];
+      setActiveOrdersCount(activeOrdersArray.length);
+
+      if (activeOrdersArray.length > 0) {
+        // Pick the first order (most recent because backend sorted by createdAt -1)
+        const first = activeOrdersArray[0];
+        const orderFromApi = first.order;
+        setLatestActiveOrder({
+          _id: orderFromApi.id,
+          orderNumber: orderFromApi.id,
+          service: orderFromApi.service,
+          items: orderFromApi.items,
+          price: orderFromApi.price,
+          status: orderFromApi.status,
+          date: orderFromApi.date,
+          itemCount: orderFromApi.items, // items is a number already
+        });
+      } else {
+        setLatestActiveOrder(null);
+      }
+
       setRecentOrders(recentRes.data || []);
     } catch (error) {
       console.error("Home fetch error:", error);
@@ -121,117 +141,124 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <AppBackground>
-      <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName} />
+        <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName} />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        {/* ACTIVE ORDER CARD */}
-        {activeOrder ? (
-          <TouchableOpacity onPress={() => router.push(`/trackorder/${activeOrder._id}`)}>
-            <View style={styles.cardWrap}>
-              <LinearGradient
-                colors={[TEAL, TEAL_DARK]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.orderCard}
-              >
-                <View style={styles.circle1} />
-                <View style={styles.circle2} />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: bottomPad }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+          {/* ACTIVE ORDER CARD */}
+          {latestActiveOrder ? (
+            <TouchableOpacity onPress={() => router.push(`/trackorder/${latestActiveOrder._id}`)}>
+              <View style={styles.cardWrap}>
+                <LinearGradient
+                  colors={[TEAL, TEAL_DARK]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.orderCard}
+                >
+                  <View style={styles.circle1} />
+                  <View style={styles.circle2} />
 
-                <View style={{ flex: 1, zIndex: 1 }}>
-                  <Text style={styles.orderTag}>ACTIVE ORDER</Text>
-                  <Text style={styles.orderId}>{activeOrder.orderNumber}</Text>
-                  <View style={styles.orderTimeRow}>
-                    <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
-                    <Text style={styles.orderTime}>
-                      {getStatusText(activeOrder.status)} • {activeOrder.items?.length || 0} items
-                    </Text>
+                  <View style={{ flex: 1, zIndex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                      <Text style={styles.orderTag}>ACTIVE ORDER</Text>
+                      {activeOrdersCount > 1 && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>+{activeOrdersCount - 1} more</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.orderId}>{latestActiveOrder.orderNumber}</Text>
+                    <View style={styles.orderTimeRow}>
+                      <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
+                      <Text style={styles.orderTime}>
+                        {getStatusText(latestActiveOrder.status)} • {latestActiveOrder.itemCount} items
+                      </Text>
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.orderIconBox}>
-                  <Ionicons name="shirt-outline" size={s(22)} color="#fff" />
-                </View>
-              </LinearGradient>
-            </View>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.cardWrap}>
-            <View style={styles.noOrderCard}>
-              <Ionicons name="cart-outline" size={s(32)} color={TEAL} />
-              <Text style={styles.noOrderText}>No active order</Text>
-              <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')}>
-                <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.startOrderBtn}>
-                  <Text style={styles.startOrderBtnText}>Place first order</Text>
+                  <View style={styles.orderIconBox}>
+                    <Ionicons name="shirt-outline" size={s(22)} color="#fff" />
+                  </View>
                 </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* SERVICES */}
-        <Text style={styles.sectionTitle}>Services</Text>
-        <View style={styles.servicesRow}>
-          {services.map((svc, i) => (
-            <ServiceCard key={i} {...svc} />
-          ))}
-        </View>
-
-        {/* PROMO */}
-        <View style={styles.promoCard}>
-          <Text style={styles.promoTag}> SPECIAL OFFER</Text>
-          <Text style={styles.promoTitle}>30% Off First Order!</Text>
-          <Text style={styles.promoSub}>Use code KORA30 at checkout</Text>
-        </View>
-
-        {/* RECENT ORDERS */}
-        <Text style={styles.sectionTitle}>Recent Orders</Text>
-        {recentOrders.length === 0 ? (
-          <Text style={styles.emptyText}>No orders yet</Text>
-        ) : (
-          recentOrders.map((order) => (
-            <TouchableOpacity
-              key={order._id}
-              onPress={() => router.push(`/order/${order._id}`)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.recentCard}>
-                <View style={styles.recentIconBox}>
-                  <Ionicons name="shirt-outline" size={s(20)} color={TEAL} />
-                </View>
-                <View style={{ flex: 1, marginLeft: s(12) }}>
-                  <Text style={styles.recentService}>{order.orderNumber}</Text>
-                  <Text style={styles.recentMeta}>
-                    {order.items?.length || 0} items • {formatDate(order.createdAt)}
-                  </Text>
-                </View>
-                <Text style={styles.recentStatus}>{getStatusText(order.status)}</Text>
               </View>
             </TouchableOpacity>
-          ))
+          ) : (
+            <View style={styles.cardWrap}>
+              <View style={styles.noOrderCard}>
+                <Ionicons name="cart-outline" size={s(32)} color={TEAL} />
+                <Text style={styles.noOrderText}>No active order</Text>
+                <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')}>
+                  <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.startOrderBtn}>
+                    <Text style={styles.startOrderBtnText}>Place first order</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* SERVICES */}
+          <Text style={styles.sectionTitle}>Services</Text>
+          <View style={styles.servicesRow}>
+            {services.map((svc, i) => (
+              <ServiceCard key={i} {...svc} />
+            ))}
+          </View>
+
+          {/* PROMO */}
+          <View style={styles.promoCard}>
+            <Text style={styles.promoTag}> SPECIAL OFFER</Text>
+            <Text style={styles.promoTitle}>30% Off First Order!</Text>
+            <Text style={styles.promoSub}>Use code KORA30 at checkout</Text>
+          </View>
+
+          {/* RECENT ORDERS */}
+          <Text style={styles.sectionTitle}>Recent Orders</Text>
+          {recentOrders.length === 0 ? (
+            <Text style={styles.emptyText}>No orders yet</Text>
+          ) : (
+            recentOrders.map((order) => (
+              <TouchableOpacity
+                key={order._id}
+                onPress={() => router.push(`/order/${order._id}`)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.recentCard}>
+                  <View style={styles.recentIconBox}>
+                    <Ionicons name="shirt-outline" size={s(20)} color={TEAL} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: s(12) }}>
+                    <Text style={styles.recentService}>{order.orderNumber}</Text>
+                    <Text style={styles.recentMeta}>
+                      {order.items?.length || 0} items • {formatDate(order.createdAt)}
+                    </Text>
+                  </View>
+                  <Text style={styles.recentStatus}>{getStatusText(order.status)}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+
+        {/* FLOATING BOOK PICKUP BUTTON */}
+        <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
+          <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')} activeOpacity={0.88}>
+            <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
+              <Ionicons name="car-outline" size={s(20)} color="#fff" />
+              <Text style={styles.pickupText}>Book Pickup</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        {drawerVisible && (
+          <SideDrawer
+            visible={drawerVisible}
+            onClose={() => setDrawerVisible(false)}
+            theme={theme}
+          />
         )}
-      </ScrollView>
-
-      {/* FLOATING BOOK PICKUP BUTTON */}
-      <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
-        <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')} activeOpacity={0.88}>
-          <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
-            <Ionicons name="car-outline" size={s(20)} color="#fff" />
-            <Text style={styles.pickupText}>Book Pickup</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-
-      {drawerVisible && (
-        <SideDrawer
-          visible={drawerVisible}
-          onClose={() => setDrawerVisible(false)}
-          theme={theme}
-        />
-      )}
       </AppBackground>
     </SafeAreaView>
   );
@@ -261,13 +288,11 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) 
   );
 }
 
-// Styles – add new ones and keep existing
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f4f6f5",
   },
-  // Order card
   cardWrap: { paddingHorizontal: PH, marginTop: vs(8) },
   orderCard: {
     borderRadius: R, padding: s(18),
@@ -377,5 +402,16 @@ const styles = StyleSheet.create({
     color: "#888",
     marginTop: vs(20),
     fontSize: ms(14),
+  },
+  badge: {
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: s(12),
+    paddingHorizontal: s(8),
+    paddingVertical: s(2),
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: ms(10),
+    fontWeight: "600",
   },
 });

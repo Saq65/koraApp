@@ -56,3 +56,7 @@ export const createOrder = async (
     token || undefined
   );
 };
+export const getOrderHistory = async () => {
+  const token = await getToken();
+  return apiClient("/orders/history", "GET", undefined, token || undefined);
+};
