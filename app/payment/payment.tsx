@@ -3,19 +3,23 @@ import { clearCart } from "@/src/redux/store/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/hooks";
 import { router } from "expo-router";
 import { useState } from "react";
-
 import {
-    View,
-    Text,
-    TouchableOpacity,
-    TextInput,
-    ScrollView,
-    StyleSheet,
-    StatusBar,
-    Alert,
-    ActivityIndicator,
+  selectPickupAddress,
+  selectDropoffAddress,
+  selectPickupCoordinates,   // ✅ import
+  selectDropoffCoordinates,  // ✅ import
+} from "@/src/redux/store/addressSlice";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  StatusBar,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -30,294 +34,148 @@ const TEXT_MID = "#666666";
 
 /* UPI options */
 const UPI_OPTIONS = [
-    {
-        id: "gpay",
-        label: "Google Pay",
-        icon: "google",
-        iconColor: "#4285F4",
-        iconBg: "#E8F0FE",
-    },
-    {
-        id: "phonepe",
-        label: "PhonePe",
-        icon: "phone",
-        iconColor: "#6739B7",
-        iconBg: "#EDE7F6",
-    },
-    {
-        id: "paytm",
-        label: "Paytm",
-        icon: "wallet",
-        iconColor: "#00BAF2",
-        iconBg: "#E3F7FE",
-    },
-    {
-        id: "otherupi",
-        label: "Other UPI",
-        icon: "dots-grid",
-        iconColor: GRAY_TEXT,
-        iconBg: "#F0F0EA",
-    },
+  { id: "gpay", label: "Google Pay", icon: "google", iconColor: "#4285F4", iconBg: "#E8F0FE" },
+  { id: "phonepe", label: "PhonePe", icon: "phone", iconColor: "#6739B7", iconBg: "#EDE7F6" },
+  { id: "paytm", label: "Paytm", icon: "wallet", iconColor: "#00BAF2", iconBg: "#E3F7FE" },
+  { id: "otherupi", label: "Other UPI", icon: "dots-grid", iconColor: GRAY_TEXT, iconBg: "#F0F0EA" },
 ];
 
 export default function Payment() {
-    const dispatch = useAppDispatch();
+  const pickupAddress = useAppSelector(selectPickupAddress);
+  const dropoffAddress = useAppSelector(selectDropoffAddress);
+  const dispatch = useAppDispatch();
+  const cartItems = useAppSelector((state) => state.cart.items);
+  const [selected, setSelected] = useState("gpay");
+  const [upiId, setUpiId] = useState("");
+  const [loading, setLoading] = useState(false);
+ const pickupCoordinates = useAppSelector(selectPickupCoordinates);   // ✅ use
+  const dropoffCoordinates = useAppSelector(selectDropoffCoordinates); // ✅ use
+  const handlePayment = async () => {
+    try {
+      if (cartItems.length === 0) {
+        Alert.alert("Cart Empty", "Please add items first");
+        return;
+      }
+      setLoading(true);
 
-    const cartItems = useAppSelector(
-        (state) => state.cart.items
-    );
+      const formattedItems = cartItems.map(item => ({
+        serviceId: item.serviceId,
+        serviceName: item.serviceName,
+        categoryName: item.categoryName,
+        subCategoryName: item.subCategoryName,
+        quantity: item.quantity,
+        price: item.price,
+        totalPrice: item.price * item.quantity
+      }));
 
-    const [selected, setSelected] = useState("gpay");
-    const [upiId, setUpiId] = useState("");
-    const [loading, setLoading] = useState(false);
-
-   const handlePayment = async () => {
-  try {
-    if (cartItems.length === 0) {
-      Alert.alert(
-        "Cart Empty",
-        "Please add items first"
-      );
-      return;
-    }
-
-    setLoading(true);
-
-    const formattedItems = cartItems.map(item => ({
-      serviceId: item.serviceId,
-      serviceName: item.serviceName,
-      categoryName: item.categoryName,
-      subCategoryName: item.subCategoryName,
-      quantity: item.quantity,
-      price: item.price,
-      totalPrice: item.price * item.quantity
-    }));
-
-    const payload = {
-      items: formattedItems,
-
-      pickupAddress: {
-        address: "Home Address",
-        coordinates: [77.412, 23.259],
+      const payload = {
+        items: formattedItems,
+        pickupAddress: {
+        address: pickupAddress,
+        coordinates: pickupCoordinates,   // ✅ include (could be null)
       },
-
       deliveryAddress: {
-        address: "Home Address",
-        coordinates: [77.412, 23.259],
+        address: dropoffAddress,
+        coordinates: dropoffCoordinates,  // ✅ include
       },
+        paymentMethod: "upi" as const,
+        selectedUpiApp: selected,
+        paymentStatus: "success",
+      };
 
-      paymentMethod: "upi" as const,
+      console.log("ORDER PAYLOAD:", JSON.stringify(payload, null, 2));
+      const response = await createOrder(payload);
+      console.log("BACKEND RESPONSE:", response);
 
-  selectedUpiApp: selected, // gpay / phonepe / paytm
-
-  paymentStatus: "success",
-    };
-
-    console.log(
-      "ORDER PAYLOAD:",
-      JSON.stringify(payload, null, 2)
-    );
-
-    const response = await createOrder(payload);
-
-    console.log(
-      "BACKEND RESPONSE:",
-      response
-    );
-
-    if (response.success) {
-
-      dispatch(clearCart());
-
-      Alert.alert(
-        "Success",
-        "Order placed successfully"
-      );
-
-      router.replace("/paymentsucces");
+      if (response.success) {
+        dispatch(clearCart());
+        Alert.alert("Success", "Order placed successfully");
+        router.replace("/paymentsucces");
+      }
+    } catch (error) {
+      console.log("PAYMENT ERROR:", error);
+      Alert.alert("Error", "Failed to place order");
+    } finally {
+      setLoading(false);
     }
+  };
 
-  } catch (error) {
-    console.log("PAYMENT ERROR:", error);
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Payment</Text>
+        <View style={{ width: 36 }} />
+      </View>
 
-    Alert.alert(
-      "Error",
-      "Failed to place order"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.card}>
+          <View style={styles.upiHeader}>
+            <View style={styles.upiIconWrap}>
+              <MaterialCommunityIcons name="cellphone" size={20} color="#fff" />
+            </View>
+            <View>
+              <Text style={styles.upiTitle}>Pay via UPI</Text>
+              <Text style={styles.upiSubtitle}>Fast & secure payment</Text>
+            </View>
+          </View>
 
-    return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar
-                barStyle="dark-content"
-                backgroundColor={GRAY_LIGHT}
+          <View style={styles.grid}>
+            {UPI_OPTIONS.map((opt) => {
+              const isActive = selected === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  style={[styles.gridItem, isActive && styles.gridItemActive]}
+                  onPress={() => setSelected(opt.id)}
+                >
+                  <View style={[styles.gridIcon, { backgroundColor: opt.iconBg }]}>
+                    <MaterialCommunityIcons name={opt.icon} size={18} color={opt.iconColor} />
+                  </View>
+                  <Text style={[styles.gridLabel, isActive && styles.gridLabelActive]}>{opt.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={styles.orText}>Or enter UPI ID</Text>
+          <View style={styles.inputWrap}>
+            <TextInput
+              style={styles.input}
+              placeholder="yourname@upi"
+              placeholderTextColor={GRAY_TEXT}
+              value={upiId}
+              onChangeText={setUpiId}
             />
+          </View>
 
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backBtn}
-                    onPress={() => router.back()}
-                >
-                    <Ionicons
-                        name="arrow-back"
-                        size={20}
-                        color={TEXT_DARK}
-                    />
-                </TouchableOpacity>
+          <View style={styles.secureRow}>
+            <MaterialCommunityIcons name="shield-check-outline" size={14} color={TEAL} />
+            <Text style={styles.secureText}>Secured by 256-bit encryption</Text>
+          </View>
+        </View>
+      </ScrollView>
 
-                <Text style={styles.headerTitle}>
-                    Payment
-                </Text>
-
-                <View style={{ width: 36 }} />
-            </View>
-
-            <ScrollView
-                contentContainerStyle={
-                    styles.scrollContent
-                }
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={styles.card}>
-                    <View style={styles.upiHeader}>
-                        <View style={styles.upiIconWrap}>
-                            <MaterialCommunityIcons
-                                name="cellphone"
-                                size={20}
-                                color="#fff"
-                            />
-                        </View>
-
-                        <View>
-                            <Text style={styles.upiTitle}>
-                                Pay via UPI
-                            </Text>
-
-                            <Text
-                                style={styles.upiSubtitle}
-                            >
-                                Fast & secure payment
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.grid}>
-                        {UPI_OPTIONS.map((opt) => {
-                            const isActive =
-                                selected === opt.id;
-
-                            return (
-                                <TouchableOpacity
-                                    key={opt.id}
-                                    style={[
-                                        styles.gridItem,
-                                        isActive &&
-                                        styles.gridItemActive,
-                                    ]}
-                                    onPress={() =>
-                                        setSelected(opt.id)
-                                    }
-                                >
-                                    <View
-                                        style={[
-                                            styles.gridIcon,
-                                            {
-                                                backgroundColor:
-                                                    opt.iconBg,
-                                            },
-                                        ]}
-                                    >
-                                        <MaterialCommunityIcons
-                                            name={opt.icon}
-                                            size={18}
-                                            color={
-                                                opt.iconColor
-                                            }
-                                        />
-                                    </View>
-
-                                    <Text
-                                        style={[
-                                            styles.gridLabel,
-                                            isActive &&
-                                            styles.gridLabelActive,
-                                        ]}
-                                    >
-                                        {opt.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-
-                    <Text style={styles.orText}>
-                        Or enter UPI ID
-                    </Text>
-
-                    <View style={styles.inputWrap}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="yourname@upi"
-                            placeholderTextColor={
-                                GRAY_TEXT
-                            }
-                            value={upiId}
-                            onChangeText={setUpiId}
-                        />
-                    </View>
-
-                    <View style={styles.secureRow}>
-                        <MaterialCommunityIcons
-                            name="shield-check-outline"
-                            size={14}
-                            color={TEAL}
-                        />
-
-                        <Text
-                            style={styles.secureText}
-                        >
-                            Secured by 256-bit
-                            encryption
-                        </Text>
-                    </View>
-                </View>
-            </ScrollView>
-
-            <View style={styles.footer}>
-                <TouchableOpacity
-                    onPress={handlePayment}
-                    style={styles.payBtn}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator
-                            color="#fff"
-                        />
-                    ) : (
-                        <>
-                            <MaterialCommunityIcons
-                                name="check-circle-outline"
-                                size={20}
-                                color="#fff"
-                            />
-
-                            <Text
-                                style={styles.payBtnText}
-                            >
-                                Continue Payment
-                            </Text>
-                        </>
-                    )}
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
-    );
+      <View style={styles.footer}>
+        <TouchableOpacity onPress={handlePayment} style={styles.payBtn} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="check-circle-outline" size={20} color="#fff" />
+              <Text style={styles.payBtnText}>Continue Payment</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 }
 
+// ... styles remain exactly the same as you had ...
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,

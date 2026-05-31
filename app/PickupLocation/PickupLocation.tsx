@@ -22,8 +22,6 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { setAddress } from '../../src/redux/store/addressSlice'
 
-
-
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
 
 type LocationType = 'pickup' | 'dropoff'
@@ -72,7 +70,7 @@ const DEFAULT_REGION: Region = {
 const TEAL = '#1A6B5A'
 const TEAL_LIGHT = '#E8F4F1'
 
-// ✅ Moved OUTSIDE the main component — prevents remounting on every render
+// SearchBar component (unchanged)
 const SearchBar = ({
   isOnMap = false,
   searchText,
@@ -164,42 +162,60 @@ export default function PickupLocation() {
 
   const mapRef = useRef<MapView>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Ref to cancel pending reverse geocode timeout
+  const reverseGeocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const locationType: LocationType = type === 'dropoff' ? 'dropoff' : 'pickup'
   const title = locationType === 'pickup' ? 'Pickup Location' : 'Drop-off Location'
 
-  useEffect(() => {
-    if (viewMode === 'map') {
-      reverseGeocode(markerCoord.latitude, markerCoord.longitude)
-    }
-  }, [markerCoord, viewMode])
-
+  // Reverse geocode function (same as before, but we'll call it appropriately)
   const reverseGeocode = async (lat: number, lng: number) => {
+    // Prevent endless loading loops
+    if (resolving) return
     setResolving(true)
     try {
       const url = `${NOMINATIM_URL}/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
       const res = await fetch(url, {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'KORAApp/1.0' }
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'KORAApp/1.0' },
       })
+
+      if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`)
+
       const data = await res.json()
-      if (data.display_name) {
+      if (data?.display_name) {
         setResolvedAddress(data.display_name)
+        return
       }
-    } catch {
+      throw new Error('Nominatim: empty display_name')
+    } catch (e: any) {
       try {
         const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng })
         if (results[0]) {
           const r = results[0]
           setResolvedAddress([r.name, r.street, r.district, r.city, r.region, r.postalCode].filter(Boolean).join(', '))
+          return
         }
-      } catch {
-        setResolvedAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`)
+      } catch (error) {
+        // ignore
       }
+      // Fallback
+      setResolvedAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`)
     } finally {
       setResolving(false)
     }
   }
 
+  // Debounced version for region changes
+  const debouncedReverseGeocode = useCallback((lat: number, lng: number) => {
+    if (reverseGeocodeTimeoutRef.current) {
+      clearTimeout(reverseGeocodeTimeoutRef.current)
+    }
+    reverseGeocodeTimeoutRef.current = setTimeout(() => {
+      reverseGeocode(lat, lng)
+    }, 300)
+  }, [])
+
+  // Search places (unchanged)
   const searchPlaces = useCallback(async (text: string) => {
     if (text.trim().length < 2) {
       setPredictions([])
@@ -261,59 +277,106 @@ export default function PickupLocation() {
   }, [])
 
   const onPredictionSelect = useCallback((prediction: Prediction, confirmNow: boolean) => {
-    setSearchText(prediction.main_text)
-    setShowDropdown(false)
-    setPredictions([])
+    setSearchText(prediction.main_text);
+    setShowDropdown(false);
+    setPredictions([]);
 
-    const lat = parseFloat(prediction.lat)
-    const lng = parseFloat(prediction.lon)
+    const lat = parseFloat(prediction.lat);
+    const lng = parseFloat(prediction.lon);
+    if (isNaN(lat) || isNaN(lng)) return;
 
-    if (!isNaN(lat) && !isNaN(lng)) {
-      const newCoord = { latitude: lat, longitude: lng }
-      const newRegion = { ...newCoord, latitudeDelta: 0.008, longitudeDelta: 0.008 }
-      setMarkerCoord(newCoord)
-      setRegion(newRegion)
-      setResolvedAddress(prediction.display_name)
-      mapRef.current?.animateToRegion(newRegion, 600)
+    const newCoord = { latitude: lat, longitude: lng };
+    const newRegion = { ...newCoord, latitudeDelta: 0.008, longitudeDelta: 0.008 };
+    setMarkerCoord(newCoord);
+    setRegion(newRegion);
+    setResolvedAddress(prediction.display_name);
+    if (reverseGeocodeTimeoutRef.current) clearTimeout(reverseGeocodeTimeoutRef.current);
+    mapRef.current?.animateToRegion(newRegion, 600);
+
+    if (confirmNow) {
+      // ✅ Pass coordinates directly
+      handleSelect(prediction.display_name, newCoord);
     }
+  }, []);
 
-    if (confirmNow) handleSelect(prediction.display_name)
-  }, [])
+  const handleSelect = (address: string, coords?: { latitude: number; longitude: number }) => {
+    const finalCoords = coords || markerCoord;
+    console.log(`✅ Confirming ${locationType}:`, { address, coords: finalCoords });
 
-  const handleSelect = (address: string) => {
-    dispatch(setAddress({ type: locationType, address }))
-    router.back()
-  }
+    dispatch(
+      setAddress({
+        type: locationType,
+        address,
+        coordinates: [finalCoords.latitude, finalCoords.longitude],
+      })
+    );
+    router.back();
+  };
 
   const fetchCurrentLocation = async (confirmNow = false) => {
-    setFetchingLocation(true)
+    setFetchingLocation(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync()
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Allow location access to use this feature.')
-        return
+        Alert.alert('Permission Denied', 'Allow location access to use this feature.');
+        return;
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
-      const newCoord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude }
-      const newRegion = { ...newCoord, latitudeDelta: 0.005, longitudeDelta: 0.005 }
-      setMarkerCoord(newCoord)
-      setRegion(newRegion)
-      mapRef.current?.animateToRegion(newRegion, 800)
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const newCoord = {
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      };
+      const newRegion = { ...newCoord, latitudeDelta: 0.005, longitudeDelta: 0.005 };
+
+      setMarkerCoord(newCoord);
+      setRegion(newRegion);
+      mapRef.current?.animateToRegion(newRegion, 800);
 
       if (confirmNow) {
-        const url = `${NOMINATIM_URL}/reverse?format=json&lat=${newCoord.latitude}&lon=${newCoord.longitude}&zoom=18`
-        const res = await fetch(url, { headers: { 'User-Agent': 'KORAApp/1.0' } })
-        const data = await res.json()
-        handleSelect(data.display_name || `${newCoord.latitude}, ${newCoord.longitude}`)
+        // Get address from reverse geocoding
+        const url = `${NOMINATIM_URL}/reverse?format=json&lat=${newCoord.latitude}&lon=${newCoord.longitude}&zoom=18`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'KORAApp/1.0' } });
+        const data = await res.json();
+        const address = data.display_name || `${newCoord.latitude}, ${newCoord.longitude}`;
+        // ✅ Pass coordinates directly
+        handleSelect(address, newCoord);
+      } else {
+        await reverseGeocode(newCoord.latitude, newCoord.longitude);
       }
-    } catch {
-      Alert.alert('Error', 'Could not fetch location.')
+    } catch (e: any) {
+      Alert.alert('Error', e?.message ?? 'Could not fetch location.');
     } finally {
-      setFetchingLocation(false)
+      setFetchingLocation(false);
     }
-  }
+  };
 
-  const handleSavedSelect = (addr: SavedAddress) => handleSelect(addr.address)
+  const handleSavedSelect = (addr: SavedAddress) => {
+    const newCoord = { latitude: addr.lat, longitude: addr.lng };
+    setMarkerCoord(newCoord);
+    setResolvedAddress(addr.address);
+    // ✅ Pass coordinates directly
+    handleSelect(addr.address, newCoord);
+  };
+  // Effect to update address when marker moves (due to region change or drag)
+  // Using debounced reverse geocode to avoid excessive calls
+  useEffect(() => {
+    if (viewMode === 'map' && markerCoord.latitude && markerCoord.longitude) {
+      debouncedReverseGeocode(markerCoord.latitude, markerCoord.longitude)
+    }
+    // Cleanup timeout on unmount or when marker changes quickly
+    return () => {
+      if (reverseGeocodeTimeoutRef.current) {
+        clearTimeout(reverseGeocodeTimeoutRef.current)
+      }
+    }
+  }, [markerCoord.latitude, markerCoord.longitude, viewMode])
+
+  // When switching to map mode, ensure we fetch address for current marker
+  useEffect(() => {
+    if (viewMode === 'map' && markerCoord.latitude && markerCoord.longitude && !resolvedAddress) {
+      reverseGeocode(markerCoord.latitude, markerCoord.longitude)
+    }
+  }, [viewMode])
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -346,18 +409,45 @@ export default function PickupLocation() {
               style={StyleSheet.absoluteFillObject}
               region={region}
               onRegionChangeComplete={(r) => {
-                setMarkerCoord({ latitude: r.latitude, longitude: r.longitude })
+                // Update markerCoord to center of map
+                setMarkerCoord({
+                  latitude: r.latitude,
+                  longitude: r.longitude,
+                })
                 setRegion(r)
               }}
-              onPress={() => setShowDropdown(false)}
+              onPress={(e) => {
+                // When user taps directly on map, move marker to tapped location
+                const { coordinate } = e.nativeEvent
+                if (coordinate) {
+                  setMarkerCoord({
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude,
+                  })
+                  // Animate to new region
+                  const newRegion = {
+                    ...coordinate,
+                    latitudeDelta: region.latitudeDelta,
+                    longitudeDelta: region.longitudeDelta,
+                  }
+                  setRegion(newRegion)
+                  mapRef.current?.animateToRegion(newRegion, 300)
+                  // Reverse geocode will be triggered by useEffect due to markerCoord change
+                }
+                setShowDropdown(false)
+              }}
               showsUserLocation
               showsMyLocationButton={false}
             >
               <Marker
-                coordinate={markerCoord}
                 draggable
-                onDragEnd={(e) => { setMarkerCoord(e.nativeEvent.coordinate); setShowDropdown(false) }}
-                pinColor={TEAL}
+                coordinate={markerCoord}
+                onDragEnd={(e) => {
+                  const coord = e.nativeEvent.coordinate
+                  setMarkerCoord(coord)
+                  // Immediately reverse geocode (no debounce for drag)
+                  reverseGeocode(coord.latitude, coord.longitude)
+                }}
               />
             </MapView>
 
@@ -397,15 +487,14 @@ export default function PickupLocation() {
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16 }}>
                   <MaterialIcons name="location-on" size={18} color={TEAL} style={{ marginTop: 2 }} />
                   <Text style={styles.sheetAddress} numberOfLines={2}>
-                    {resolvedAddress || 'Drag the pin to select a location'}
+                    {resolvedAddress || 'Drag the pin or tap on map to select a location'}
                   </Text>
                 </View>
               )}
               <TouchableOpacity
                 style={[styles.confirmBtn, (!resolvedAddress || resolving) && styles.confirmDisabled]}
                 disabled={!resolvedAddress || resolving}
-                onPress={() => resolvedAddress && handleSelect(resolvedAddress)}
-                activeOpacity={0.85}
+                onPress={() => resolvedAddress && handleSelect(resolvedAddress)} // markerCoord is already up-to-date
               >
                 <MaterialIcons name="check-circle-outline" size={18} color="#fff" />
                 <Text style={styles.confirmText}>  Confirm Location</Text>
