@@ -17,6 +17,7 @@ import { useDispatch } from 'react-redux'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import MapView, { Marker, Region, PROVIDER_DEFAULT } from 'react-native-maps'
 import * as Location from 'expo-location'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -24,17 +25,19 @@ import { setAddress } from '../../src/redux/store/addressSlice'
 import AppBackground from '@/components/AppBackground'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000'
 
 type LocationType = 'pickup' | 'dropoff'
 type ViewMode = 'list' | 'map'
 
+// ✅ Matches MongoDB schema exactly
 type SavedAddress = {
-  id: string
-  label: string
+  _id: string
+  label: 'home' | 'office' | 'other'
+  customLabel?: string | null
   address: string
-  icon: 'home' | 'office'
-  lat: number
-  lng: number
+  coordinates: { lat: number; lng: number }
+  isDefault: boolean
 }
 
 type Prediction = {
@@ -58,11 +61,6 @@ type SearchBarProps = {
   onPredictionSelect: (prediction: Prediction, confirmNow: boolean) => void
 }
 
-const SAVED_ADDRESSES: SavedAddress[] = [
-  { id: '1', label: 'Home', address: 'Hazratganj, Lucknow, UP 226001', icon: 'home', lat: 19.076, lng: 72.8777 },
-  { id: '2', label: 'Office', address: '456 Business Park, Andheri, MH 400069', icon: 'office', lat: 19.1136, lng: 72.8697 },
-]
-
 const DEFAULT_REGION: Region = {
   latitude: 19.076, longitude: 72.8777,
   latitudeDelta: 0.01, longitudeDelta: 0.01,
@@ -70,6 +68,19 @@ const DEFAULT_REGION: Region = {
 
 const TEAL = '#1A6B5A'
 const TEAL_LIGHT = '#E8F4F1'
+
+// ── Icon helper ──────────────────────────────────────────────────────────────
+const SavedAddressIcon = ({ label }: { label: SavedAddress['label'] }) => {
+  if (label === 'home') return <MaterialCommunityIcons name="home" size={20} color="#555" />
+  if (label === 'office') return <MaterialCommunityIcons name="office-building" size={20} color="#555" />
+  return <MaterialIcons name="location-on" size={20} color="#555" />
+}
+
+// ── Display label helper ─────────────────────────────────────────────────────
+const getDisplayLabel = (addr: SavedAddress): string => {
+  if (addr.label === 'other' && addr.customLabel) return addr.customLabel
+  return addr.label.charAt(0).toUpperCase() + addr.label.slice(1)
+}
 
 // SearchBar component (unchanged)
 const SearchBar = ({
@@ -161,17 +172,52 @@ export default function PickupLocation() {
   const [resolvedAddress, setResolvedAddress] = useState('')
   const [resolving, setResolving] = useState(false)
 
+  // ── Saved addresses state ────────────────────────────────────────────────
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
+  const [addressesLoading, setAddressesLoading] = useState(true)
+  const [addressesError, setAddressesError] = useState(false)
+
   const mapRef = useRef<MapView>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Ref to cancel pending reverse geocode timeout
   const reverseGeocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const locationType: LocationType = type === 'dropoff' ? 'dropoff' : 'pickup'
   const title = locationType === 'pickup' ? 'Pickup Location' : 'Drop-off Location'
 
-  // Reverse geocode function (same as before, but we'll call it appropriately)
+  // ── Fetch saved addresses from API ───────────────────────────────────────
+  const fetchSavedAddresses = useCallback(async () => {
+    setAddressesLoading(true)
+    setAddressesError(false)
+    try {
+      const token = await AsyncStorage.getItem('token')
+      if (!token) {
+        setSavedAddresses([])
+        return
+      }
+      const res = await fetch(`${API_BASE_URL}/api/saved-addresses`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data: SavedAddress[] = await res.json()
+      setSavedAddresses(data)
+    } catch (e) {
+      console.error('Failed to load saved addresses:', e)
+      setAddressesError(true)
+      setSavedAddresses([])
+    } finally {
+      setAddressesLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSavedAddresses()
+  }, [fetchSavedAddresses])
+
+  // ── Reverse geocode ──────────────────────────────────────────────────────
   const reverseGeocode = async (lat: number, lng: number) => {
-    // Prevent endless loading loops
     if (resolving) return
     setResolving(true)
     try {
@@ -179,9 +225,7 @@ export default function PickupLocation() {
       const res = await fetch(url, {
         headers: { 'Accept-Language': 'en', 'User-Agent': 'KORAApp/1.0' },
       })
-
       if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`)
-
       const data = await res.json()
       if (data?.display_name) {
         setResolvedAddress(data.display_name)
@@ -196,42 +240,31 @@ export default function PickupLocation() {
           setResolvedAddress([r.name, r.street, r.district, r.city, r.region, r.postalCode].filter(Boolean).join(', '))
           return
         }
-      } catch (error) {
+      } catch {
         // ignore
       }
-      // Fallback
       setResolvedAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`)
     } finally {
       setResolving(false)
     }
   }
 
-  // Debounced version for region changes
   const debouncedReverseGeocode = useCallback((lat: number, lng: number) => {
-    if (reverseGeocodeTimeoutRef.current) {
-      clearTimeout(reverseGeocodeTimeoutRef.current)
-    }
-    reverseGeocodeTimeoutRef.current = setTimeout(() => {
-      reverseGeocode(lat, lng)
-    }, 300)
+    if (reverseGeocodeTimeoutRef.current) clearTimeout(reverseGeocodeTimeoutRef.current)
+    reverseGeocodeTimeoutRef.current = setTimeout(() => reverseGeocode(lat, lng), 300)
   }, [])
 
-  // Search places (unchanged)
+  // ── Search places ────────────────────────────────────────────────────────
   const searchPlaces = useCallback(async (text: string) => {
     if (text.trim().length < 2) {
-      setPredictions([])
-      setShowDropdown(false)
-      setSearchLoading(false)
+      setPredictions([]); setShowDropdown(false); setSearchLoading(false)
       return
     }
     setSearchLoading(true)
     try {
       const url = `${NOMINATIM_URL}/search?format=json&q=${encodeURIComponent(text)}&countrycodes=in&limit=6&addressdetails=1`
-      const res = await fetch(url, {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'KORAApp/1.0' }
-      })
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'KORAApp/1.0' } })
       const data = await res.json()
-
       if (data && data.length > 0) {
         const formatted: Prediction[] = data.map((item: any) => {
           const parts = item.display_name.split(', ')
@@ -244,15 +277,12 @@ export default function PickupLocation() {
             lon: item.lon,
           }
         })
-        setPredictions(formatted)
-        setShowDropdown(true)
+        setPredictions(formatted); setShowDropdown(true)
       } else {
-        setPredictions([])
-        setShowDropdown(false)
+        setPredictions([]); setShowDropdown(false)
       }
     } catch {
-      setPredictions([])
-      setShowDropdown(false)
+      setPredictions([]); setShowDropdown(false)
     } finally {
       setSearchLoading(false)
     }
@@ -262,9 +292,7 @@ export default function PickupLocation() {
     setSearchText(text)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (text.trim().length < 2) {
-      setPredictions([])
-      setShowDropdown(false)
-      setSearchLoading(false)
+      setPredictions([]); setShowDropdown(false); setSearchLoading(false)
       return
     }
     setSearchLoading(true)
@@ -272,317 +300,309 @@ export default function PickupLocation() {
   }, [searchPlaces])
 
   const handleClear = useCallback(() => {
-    setSearchText('')
-    setPredictions([])
-    setShowDropdown(false)
+    setSearchText(''); setPredictions([]); setShowDropdown(false)
   }, [])
 
   const onPredictionSelect = useCallback((prediction: Prediction, confirmNow: boolean) => {
-    setSearchText(prediction.main_text);
-    setShowDropdown(false);
-    setPredictions([]);
-
-    const lat = parseFloat(prediction.lat);
-    const lng = parseFloat(prediction.lon);
-    if (isNaN(lat) || isNaN(lng)) return;
-
-    const newCoord = { latitude: lat, longitude: lng };
-    const newRegion = { ...newCoord, latitudeDelta: 0.008, longitudeDelta: 0.008 };
-    setMarkerCoord(newCoord);
-    setRegion(newRegion);
-    setResolvedAddress(prediction.display_name);
-    if (reverseGeocodeTimeoutRef.current) clearTimeout(reverseGeocodeTimeoutRef.current);
-    mapRef.current?.animateToRegion(newRegion, 600);
-
-    if (confirmNow) {
-      // ✅ Pass coordinates directly
-      handleSelect(prediction.display_name, newCoord);
-    }
-  }, []);
+    setSearchText(prediction.main_text)
+    setShowDropdown(false)
+    setPredictions([])
+    const lat = parseFloat(prediction.lat)
+    const lng = parseFloat(prediction.lon)
+    if (isNaN(lat) || isNaN(lng)) return
+    const newCoord = { latitude: lat, longitude: lng }
+    const newRegion = { ...newCoord, latitudeDelta: 0.008, longitudeDelta: 0.008 }
+    setMarkerCoord(newCoord)
+    setRegion(newRegion)
+    setResolvedAddress(prediction.display_name)
+    if (reverseGeocodeTimeoutRef.current) clearTimeout(reverseGeocodeTimeoutRef.current)
+    mapRef.current?.animateToRegion(newRegion, 600)
+    if (confirmNow) handleSelect(prediction.display_name, newCoord)
+  }, [])
 
   const handleSelect = (address: string, coords?: { latitude: number; longitude: number }) => {
-    const finalCoords = coords || markerCoord;
-    console.log(`✅ Confirming ${locationType}:`, { address, coords: finalCoords });
-
-    dispatch(
-      setAddress({
-        type: locationType,
-        address,
-        coordinates: [finalCoords.latitude, finalCoords.longitude],
-      })
-    );
-    router.back();
-  };
+    const finalCoords = coords || markerCoord
+    dispatch(setAddress({ type: locationType, address, coordinates: [finalCoords.latitude, finalCoords.longitude] }))
+    router.back()
+  }
 
   const fetchCurrentLocation = async (confirmNow = false) => {
-    setFetchingLocation(true);
+    setFetchingLocation(true)
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Allow location access to use this feature.');
-        return;
+        Alert.alert('Permission Denied', 'Allow location access to use this feature.')
+        return
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      const newCoord = {
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      };
-      const newRegion = { ...newCoord, latitudeDelta: 0.005, longitudeDelta: 0.005 };
-
-      setMarkerCoord(newCoord);
-      setRegion(newRegion);
-      mapRef.current?.animateToRegion(newRegion, 800);
-
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+      const newCoord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude }
+      const newRegion = { ...newCoord, latitudeDelta: 0.005, longitudeDelta: 0.005 }
+      setMarkerCoord(newCoord)
+      setRegion(newRegion)
+      mapRef.current?.animateToRegion(newRegion, 800)
       if (confirmNow) {
-        // Get address from reverse geocoding
-        const url = `${NOMINATIM_URL}/reverse?format=json&lat=${newCoord.latitude}&lon=${newCoord.longitude}&zoom=18`;
-        const res = await fetch(url, { headers: { 'User-Agent': 'KORAApp/1.0' } });
-        const data = await res.json();
-        const address = data.display_name || `${newCoord.latitude}, ${newCoord.longitude}`;
-        // ✅ Pass coordinates directly
-        handleSelect(address, newCoord);
+        const url = `${NOMINATIM_URL}/reverse?format=json&lat=${newCoord.latitude}&lon=${newCoord.longitude}&zoom=18`
+        const res = await fetch(url, { headers: { 'User-Agent': 'KORAApp/1.0' } })
+        const data = await res.json()
+        const address = data.display_name || `${newCoord.latitude}, ${newCoord.longitude}`
+        handleSelect(address, newCoord)
       } else {
-        await reverseGeocode(newCoord.latitude, newCoord.longitude);
+        await reverseGeocode(newCoord.latitude, newCoord.longitude)
       }
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Could not fetch location.');
+      Alert.alert('Error', e?.message ?? 'Could not fetch location.')
     } finally {
-      setFetchingLocation(false);
+      setFetchingLocation(false)
     }
-  };
+  }
 
+  // ✅ Uses coordinates.lat / coordinates.lng from schema
   const handleSavedSelect = (addr: SavedAddress) => {
-    const newCoord = { latitude: addr.lat, longitude: addr.lng };
-    setMarkerCoord(newCoord);
-    setResolvedAddress(addr.address);
-    // ✅ Pass coordinates directly
-    handleSelect(addr.address, newCoord);
-  };
-  // Effect to update address when marker moves (due to region change or drag)
-  // Using debounced reverse geocode to avoid excessive calls
+    const newCoord = {
+      latitude: addr.coordinates.lat,
+      longitude: addr.coordinates.lng,
+    }
+    setMarkerCoord(newCoord)
+    setResolvedAddress(addr.address)
+    handleSelect(addr.address, newCoord)
+  }
+
   useEffect(() => {
     if (viewMode === 'map' && markerCoord.latitude && markerCoord.longitude) {
       debouncedReverseGeocode(markerCoord.latitude, markerCoord.longitude)
     }
-    // Cleanup timeout on unmount or when marker changes quickly
-    return () => {
-      if (reverseGeocodeTimeoutRef.current) {
-        clearTimeout(reverseGeocodeTimeoutRef.current)
-      }
-    }
+    return () => { if (reverseGeocodeTimeoutRef.current) clearTimeout(reverseGeocodeTimeoutRef.current) }
   }, [markerCoord.latitude, markerCoord.longitude, viewMode])
 
-  // When switching to map mode, ensure we fetch address for current marker
   useEffect(() => {
     if (viewMode === 'map' && markerCoord.latitude && markerCoord.longitude && !resolvedAddress) {
       reverseGeocode(markerCoord.latitude, markerCoord.longitude)
     }
   }, [viewMode])
 
+  // ── Saved Addresses Section ──────────────────────────────────────────────
+  const renderSavedAddresses = () => {
+    if (addressesLoading) {
+      return (
+        <View style={styles.savedFeedback}>
+          <ActivityIndicator size="small" color={TEAL} />
+          <Text style={styles.savedFeedbackText}>Loading saved addresses...</Text>
+        </View>
+      )
+    }
+    if (addressesError) {
+      return (
+        <TouchableOpacity style={styles.savedFeedback} onPress={fetchSavedAddresses}>
+          <MaterialIcons name="refresh" size={18} color={TEAL} />
+          <Text style={[styles.savedFeedbackText, { color: TEAL }]}>Failed to load. Tap to retry.</Text>
+        </TouchableOpacity>
+      )
+    }
+    if (savedAddresses.length === 0) {
+      return (
+        <View style={styles.savedFeedback}>
+          <MaterialIcons name="bookmark-border" size={18} color="#bbb" />
+          <Text style={styles.savedFeedbackText}>No saved addresses yet.</Text>
+        </View>
+      )
+    }
+    return savedAddresses.map((addr, idx) => (
+      <React.Fragment key={addr._id}>
+        <TouchableOpacity style={styles.listRow} activeOpacity={0.8} onPress={() => handleSavedSelect(addr)}>
+          <View style={styles.savedIcon}>
+            <SavedAddressIcon label={addr.label} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.listRowTitle}>{getDisplayLabel(addr)}</Text>
+              {addr.isDefault && (
+                <View style={styles.defaultBadge}>
+                  <Text style={styles.defaultBadgeText}>Default</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.listRowSub} numberOfLines={1}>{addr.address}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#ccc" />
+        </TouchableOpacity>
+        {idx < savedAddresses.length - 1 && <View style={styles.innerDivider} />}
+      </React.Fragment>
+    ))
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <AppBackground>
-      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={20} color="#1A1A1A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{title}</Text>
-          <TouchableOpacity
-            style={styles.toggleBtn}
-            onPress={() => { setShowDropdown(false); setViewMode(viewMode === 'list' ? 'map' : 'list') }}
-            activeOpacity={0.8}
-          >
-            {viewMode === 'list'
-              ? <><MaterialIcons name="map" size={15} color={TEAL} /><Text style={styles.toggleText}> Map</Text></>
-              : <><MaterialIcons name="list" size={15} color={TEAL} /><Text style={styles.toggleText}> List</Text></>
-            }
-          </TouchableOpacity>
-        </View>
-
-        {/* ══ MAP VIEW ══ */}
-        {viewMode === 'map' ? (
-          <View style={{ flex: 1 }}>
-            <MapView
-              ref={mapRef}
-              provider={PROVIDER_DEFAULT}
-              style={StyleSheet.absoluteFillObject}
-              region={region}
-              onRegionChangeComplete={(r) => {
-                // Update markerCoord to center of map
-                setMarkerCoord({
-                  latitude: r.latitude,
-                  longitude: r.longitude,
-                })
-                setRegion(r)
-              }}
-              onPress={(e) => {
-                // When user taps directly on map, move marker to tapped location
-                const { coordinate } = e.nativeEvent
-                if (coordinate) {
-                  setMarkerCoord({
-                    latitude: coordinate.latitude,
-                    longitude: coordinate.longitude,
-                  })
-                  // Animate to new region
-                  const newRegion = {
-                    ...coordinate,
-                    latitudeDelta: region.latitudeDelta,
-                    longitudeDelta: region.longitudeDelta,
-                  }
-                  setRegion(newRegion)
-                  mapRef.current?.animateToRegion(newRegion, 300)
-                  // Reverse geocode will be triggered by useEffect due to markerCoord change
-                }
-                setShowDropdown(false)
-              }}
-              showsUserLocation
-              showsMyLocationButton={false}
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+              <Ionicons name="arrow-back" size={20} color="#1A1A1A" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{title}</Text>
+            <TouchableOpacity
+              style={styles.toggleBtn}
+              onPress={() => { setShowDropdown(false); setViewMode(viewMode === 'list' ? 'map' : 'list') }}
+              activeOpacity={0.8}
             >
-              <Marker
-                draggable
-                coordinate={markerCoord}
-                onDragEnd={(e) => {
-                  const coord = e.nativeEvent.coordinate
-                  setMarkerCoord(coord)
-                  // Immediately reverse geocode (no debounce for drag)
-                  reverseGeocode(coord.latitude, coord.longitude)
-                }}
-              />
-            </MapView>
-
-            {/* Floating search on map */}
-            <View style={styles.mapSearchFloat}>
-              <SearchBar
-                isOnMap
-                searchText={searchText}
-                searchLoading={searchLoading}
-                showDropdown={showDropdown}
-                predictions={predictions}
-                locationType={locationType}
-                onSearchChange={onSearchChange}
-                onClear={handleClear}
-                onPredictionSelect={onPredictionSelect}
-              />
-            </View>
-
-            {/* GPS FAB */}
-            <TouchableOpacity style={styles.fab} onPress={() => fetchCurrentLocation(false)} activeOpacity={0.85}>
-              {fetchingLocation
-                ? <ActivityIndicator size="small" color={TEAL} />
-                : <MaterialIcons name="my-location" size={22} color={TEAL} />
+              {viewMode === 'list'
+                ? <><MaterialIcons name="map" size={15} color={TEAL} /><Text style={styles.toggleText}> Map</Text></>
+                : <><MaterialIcons name="list" size={15} color={TEAL} /><Text style={styles.toggleText}> List</Text></>
               }
             </TouchableOpacity>
-
-            {/* Bottom confirm sheet */}
-            <View style={styles.mapSheet}>
-              <View style={styles.sheetHandle} />
-              <Text style={styles.sheetLabel}>{locationType === 'pickup' ? 'PICKUP FROM' : 'DROP-OFF AT'}</Text>
-              {resolving ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <ActivityIndicator size="small" color={TEAL} />
-                  <Text style={{ fontSize: 14, color: '#888' }}>Fetching address...</Text>
-                </View>
-              ) : (
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16 }}>
-                  <MaterialIcons name="location-on" size={18} color={TEAL} style={{ marginTop: 2 }} />
-                  <Text style={styles.sheetAddress} numberOfLines={2}>
-                    {resolvedAddress || 'Drag the pin or tap on map to select a location'}
-                  </Text>
-                </View>
-              )}
-              <TouchableOpacity
-                style={[styles.confirmBtn, (!resolvedAddress || resolving) && styles.confirmDisabled]}
-                disabled={!resolvedAddress || resolving}
-                onPress={() => resolvedAddress && handleSelect(resolvedAddress)} // markerCoord is already up-to-date
-              >
-                <MaterialIcons name="check-circle-outline" size={18} color="#fff" />
-                <Text style={styles.confirmText}>  Confirm Location</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
-        ) : (
-
-          /* ══ LIST VIEW ══ */
-          <View style={{ flex: 1 }}>
-            <View style={styles.listSearchWrap}>
-              <SearchBar
-                isOnMap={false}
-                searchText={searchText}
-                searchLoading={searchLoading}
-                showDropdown={showDropdown}
-                predictions={predictions}
-                locationType={locationType}
-                onSearchChange={onSearchChange}
-                onClear={handleClear}
-                onPredictionSelect={onPredictionSelect}
-              />
-            </View>
-
-            <ScrollView
-              contentContainerStyle={{ paddingBottom: 40 }}
-              keyboardShouldPersistTaps="handled"
-              onScrollBeginDrag={() => setShowDropdown(false)}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Pick on Map */}
-              <TouchableOpacity style={styles.mapRow} activeOpacity={0.85} onPress={() => setViewMode('map')}>
-                <View style={styles.mapRowIcon}>
-                  <MaterialCommunityIcons name="map-marker-radius" size={22} color="#fff" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.mapRowTitle}>Pick on Map</Text>
-                  <Text style={styles.mapRowSub}>Tap or drag the pin to choose</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#c8e8e4" />
-              </TouchableOpacity>
-
-              <View style={styles.divider} />
-
-              {/* Current Location */}
-              <TouchableOpacity style={styles.listRow} activeOpacity={0.85} onPress={() => fetchCurrentLocation(true)}>
-                <View style={styles.listRowIcon}>
-                  {fetchingLocation
-                    ? <ActivityIndicator size="small" color={TEAL} />
-                    : <MaterialIcons name="my-location" size={20} color={TEAL} />
+          {/* ══ MAP VIEW ══ */}
+          {viewMode === 'map' ? (
+            <View style={{ flex: 1 }}>
+              <MapView
+                ref={mapRef}
+                provider={PROVIDER_DEFAULT}
+                style={StyleSheet.absoluteFillObject}
+                region={region}
+                onRegionChangeComplete={(r) => {
+                  setMarkerCoord({ latitude: r.latitude, longitude: r.longitude })
+                  setRegion(r)
+                }}
+                onPress={(e) => {
+                  const { coordinate } = e.nativeEvent
+                  if (coordinate) {
+                    setMarkerCoord({ latitude: coordinate.latitude, longitude: coordinate.longitude })
+                    const newRegion = { ...coordinate, latitudeDelta: region.latitudeDelta, longitudeDelta: region.longitudeDelta }
+                    setRegion(newRegion)
+                    mapRef.current?.animateToRegion(newRegion, 300)
                   }
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.listRowTitle}>Use Current Location</Text>
-                  <Text style={styles.listRowSub}>Detect using GPS</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#ccc" />
+                  setShowDropdown(false)
+                }}
+                showsUserLocation
+                showsMyLocationButton={false}
+              >
+                <Marker
+                  draggable
+                  coordinate={markerCoord}
+                  onDragEnd={(e) => {
+                    const coord = e.nativeEvent.coordinate
+                    setMarkerCoord(coord)
+                    reverseGeocode(coord.latitude, coord.longitude)
+                  }}
+                />
+              </MapView>
+
+              {/* Floating search on map */}
+              <View style={styles.mapSearchFloat}>
+                <SearchBar
+                  isOnMap
+                  searchText={searchText}
+                  searchLoading={searchLoading}
+                  showDropdown={showDropdown}
+                  predictions={predictions}
+                  locationType={locationType}
+                  onSearchChange={onSearchChange}
+                  onClear={handleClear}
+                  onPredictionSelect={onPredictionSelect}
+                />
+              </View>
+
+              {/* GPS FAB */}
+              <TouchableOpacity style={styles.fab} onPress={() => fetchCurrentLocation(false)} activeOpacity={0.85}>
+                {fetchingLocation
+                  ? <ActivityIndicator size="small" color={TEAL} />
+                  : <MaterialIcons name="my-location" size={22} color={TEAL} />
+                }
               </TouchableOpacity>
 
-              <View style={styles.divider} />
+              {/* Bottom confirm sheet */}
+              <View style={styles.mapSheet}>
+                <View style={styles.sheetHandle} />
+                <Text style={styles.sheetLabel}>{locationType === 'pickup' ? 'PICKUP FROM' : 'DROP-OFF AT'}</Text>
+                {resolving ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                    <ActivityIndicator size="small" color={TEAL} />
+                    <Text style={{ fontSize: 14, color: '#888' }}>Fetching address...</Text>
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16 }}>
+                    <MaterialIcons name="location-on" size={18} color={TEAL} style={{ marginTop: 2 }} />
+                    <Text style={styles.sheetAddress} numberOfLines={2}>
+                      {resolvedAddress || 'Drag the pin or tap on map to select a location'}
+                    </Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={[styles.confirmBtn, (!resolvedAddress || resolving) && styles.confirmDisabled]}
+                  disabled={!resolvedAddress || resolving}
+                  onPress={() => resolvedAddress && handleSelect(resolvedAddress)}
+                >
+                  <MaterialIcons name="check-circle-outline" size={18} color="#fff" />
+                  <Text style={styles.confirmText}>  Confirm Location</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
-              {/* Saved Addresses */}
-              <Text style={styles.sectionLabel}>Saved Addresses</Text>
-              {SAVED_ADDRESSES.map((addr, idx) => (
-                <React.Fragment key={addr.id}>
-                  <TouchableOpacity style={styles.listRow} activeOpacity={0.8} onPress={() => handleSavedSelect(addr)}>
-                    <View style={styles.savedIcon}>
-                      {addr.icon === 'home'
-                        ? <MaterialCommunityIcons name="home" size={20} color="#555" />
-                        : <MaterialCommunityIcons name="office-building" size={20} color="#555" />
-                      }
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.listRowTitle}>{addr.label}</Text>
-                      <Text style={styles.listRowSub} numberOfLines={1}>{addr.address}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#ccc" />
-                  </TouchableOpacity>
-                  {idx < SAVED_ADDRESSES.length - 1 && <View style={styles.innerDivider} />}
-                </React.Fragment>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </KeyboardAvoidingView>
+          ) : (
+
+            /* ══ LIST VIEW ══ */
+            <View style={{ flex: 1 }}>
+              <View style={styles.listSearchWrap}>
+                <SearchBar
+                  isOnMap={false}
+                  searchText={searchText}
+                  searchLoading={searchLoading}
+                  showDropdown={showDropdown}
+                  predictions={predictions}
+                  locationType={locationType}
+                  onSearchChange={onSearchChange}
+                  onClear={handleClear}
+                  onPredictionSelect={onPredictionSelect}
+                />
+              </View>
+
+              <ScrollView
+                contentContainerStyle={{ paddingBottom: 40 }}
+                keyboardShouldPersistTaps="handled"
+                onScrollBeginDrag={() => setShowDropdown(false)}
+                showsVerticalScrollIndicator={false}
+              >
+                {/* Pick on Map */}
+                <TouchableOpacity style={styles.mapRow} activeOpacity={0.85} onPress={() => setViewMode('map')}>
+                  <View style={styles.mapRowIcon}>
+                    <MaterialCommunityIcons name="map-marker-radius" size={22} color="#fff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.mapRowTitle}>Pick on Map</Text>
+                    <Text style={styles.mapRowSub}>Tap or drag the pin to choose</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#c8e8e4" />
+                </TouchableOpacity>
+
+                <View style={styles.divider} />
+
+                {/* Current Location */}
+                <TouchableOpacity style={styles.listRow} activeOpacity={0.85} onPress={() => fetchCurrentLocation(true)}>
+                  <View style={styles.listRowIcon}>
+                    {fetchingLocation
+                      ? <ActivityIndicator size="small" color={TEAL} />
+                      : <MaterialIcons name="my-location" size={20} color={TEAL} />
+                    }
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.listRowTitle}>Use Current Location</Text>
+                    <Text style={styles.listRowSub}>Detect using GPS</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#ccc" />
+                </TouchableOpacity>
+
+                <View style={styles.divider} />
+
+                {/* ✅ Dynamic Saved Addresses */}
+                <Text style={styles.sectionLabel}>Saved Addresses</Text>
+                {renderSavedAddresses()}
+
+              </ScrollView>
+            </View>
+          )}
+        </KeyboardAvoidingView>
       </AppBackground>
     </SafeAreaView>
   )
@@ -691,6 +711,21 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
     borderWidth: 1, borderColor: '#e8e8e8',
   },
+
+  // ── Feedback states (loading / error / empty) ──
+  savedFeedback: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 16, paddingVertical: 14,
+  },
+  savedFeedbackText: { fontSize: 13, color: '#aaa' },
+
+  // ── Default badge ──
+  defaultBadge: {
+    backgroundColor: TEAL_LIGHT, borderRadius: 6,
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderWidth: 1, borderColor: '#c8e8e4',
+  },
+  defaultBadgeText: { fontSize: 10, color: TEAL, fontWeight: '700' },
 
   divider: { height: 8, backgroundColor: '#f5f5f5', marginVertical: 4 },
   innerDivider: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 70, marginRight: 16 },
