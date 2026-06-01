@@ -21,14 +21,16 @@ import {
 import { addToCart, removeFromCart, deleteFromCart } from "../../src/redux/store/cartSlice";
 import type { CartItem } from "../../src/redux/store/cartSlice";
 import AppBackground from "@/components/AppBackground";
+import { useTheme } from "../../src/theme/ThemeProvider";
 
 export default function Cart() {
   const dispatch = useAppDispatch();
+  const { theme } = useTheme();
   const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const subtotal = useAppSelector(selectCartTotal);
 
-  const handleIncrement = (item: CartItem) => {
+const handleIncrement = (item: CartItem) => {
   dispatch(
     addToCart({
       id: item.id,
@@ -51,7 +53,7 @@ export default function Cart() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppBackground>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F0" />
+      <StatusBar barStyle="dark-content" backgroundColor={theme.background} />
 
       {/* Header */}
       <View style={styles.header}>
