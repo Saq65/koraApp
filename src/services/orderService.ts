@@ -12,26 +12,26 @@ export type ServiceType = 'wash' | 'iron' | 'both';
 
 // Matches OrderItemSchema
 export interface OrderItem {
-  _id?:          string;
-  category?:     string;
-  subCategory?:  string;
-  productName:   string;
-  service:       ServiceType;
-  quantity:      number;
-  price:         number;
+  _id?: string;
+  category?: string;
+  subCategory?: string;
+  productName: string;
+  service: ServiceType;
+  quantity: number;
+  price: number;
 }
 
 // Matches pickupAddress / deliveryAddress in OrderSchema
 export interface OrderAddress {
   coordinates?: [number, number]; // [lng, lat]
-  address:      string;
+  address: string;
 }
 
 // Tracking step shape (built server-side from STATUS_TIMELINE)
 export interface TrackingStep {
-  label:     string;
+  label: string;
   completed: boolean;
-  time:      string | null;
+  time: string | null;
 }
 
 // Raw DB statuses from the schema enum
@@ -52,69 +52,86 @@ export type UIStatus = 'In Process' | 'Delivered' | 'Cancelled';
 
 // Full order shape returned by the API (after formatOrder())
 export interface Order {
-  id:                  string;
-  customerId:          string;
-  items:               OrderItem[];
-  totalAmount:         number;
-  totalItems:          number;
-  status:              OrderStatus;   // raw DB value
-  uiStatus:            UIStatus;      // simplified label for tabs/badges
-  trackingSteps:       TrackingStep[];
-  pickupAddress:       OrderAddress;
-  deliveryAddress:     OrderAddress;
-  serviceProvider:     { _id: string; name: string; phone?: string } | null;
-  riderPickup:         { _id: string; name: string; phone?: string } | null;
-  riderDelivery:       { _id: string; name: string; phone?: string } | null;
-  pickupScheduledAt:   string | null;
+  id: string;
+  customerId: string;
+  items: OrderItem[];
+  totalAmount: number;
+  totalItems: number;
+  status: OrderStatus;   // raw DB value
+  uiStatus: UIStatus;      // simplified label for tabs/badges
+  trackingSteps: TrackingStep[];
+  pickupAddress: OrderAddress;
+  deliveryAddress: OrderAddress;
+  serviceProvider: { _id: string; name: string; phone?: string } | null;
+  riderPickup: { _id: string; name: string; phone?: string } | null;
+  riderDelivery: { _id: string; name: string; phone?: string } | null;
+  pickupScheduledAt: string | null;
   deliveryScheduledAt: string | null;
-  paymentMethod:       string | null;
-  paymentStatus:       string;
-  createdAt:           string;
+  paymentMethod: string | null;
+  paymentStatus: string;
+  createdAt: string;
 }
 
 // ─── Payload for creating an order ───────────────────────────────────────────
 // items come straight from your Redux cartSlice; we map them here.
 
 export interface CartItem {
-  id:              string;
-  serviceId:       string;       // 'wash' | 'iron' | 'combo' (from Redux)
-  serviceName:     string;       // 'Wash' | 'Iron' | 'Wash+Iron'
-  categoryId:      string;
-  categoryName:    string;
-  subCategoryId:   string;
+  id: string;
+  serviceId: string;       // 'wash' | 'iron' | 'combo' (from Redux)
+  serviceName: string;       // 'Wash' | 'Iron' | 'Wash+Iron'
+  categoryId: string;
+  categoryName: string;
+  subCategoryId: string;
   subCategoryName: string;
-  price:           number;
-  quantity:        number;
+  price: number;
+  quantity: number;
 }
 
 export interface CreateOrderPayload {
-  customerId:          string;
-  cartItems:           CartItem[];
-  pickupAddress:       OrderAddress;
-  deliveryAddress:     OrderAddress;
-  pickupScheduledAt?:  string;        // ISO string, optional
+  customerId: string;
+  cartItems: CartItem[];
+  pickupAddress: OrderAddress;
+  deliveryAddress: OrderAddress;
+  pickupScheduledAt?: string;        // ISO string, optional
   deliveryScheduledAt?: string;
-  paymentMethod?:      string;
+  paymentMethod?: string;
 }
 
 // ─── Cart → OrderItem mapper ──────────────────────────────────────────────────
 // Maps your Redux cart shape to what the backend OrderItemSchema expects.
 function SERVICE_ID_MAP(serviceId: string): ServiceType {
-  if (serviceId === 'wash')  return 'wash';
-  if (serviceId === 'iron')  return 'iron';
+  if (serviceId === 'wash') return 'wash';
+  if (serviceId === 'iron') return 'iron';
   if (serviceId === 'combo') return 'both';
   return 'wash'; // safe fallback
 }
 
 function cartItemsToOrderItems(cartItems: CartItem[]): OrderItem[] {
   return cartItems.map(item => ({
-    category:    item.categoryName,
+    category: item.categoryName,
     subCategory: item.subCategoryName,
     productName: item.subCategoryName,           // e.g. "Shirt"
-    service:     SERVICE_ID_MAP(item.serviceId),
-    quantity:    item.quantity,
-    price:       item.price,
+    service: SERVICE_ID_MAP(item.serviceId),
+    quantity: item.quantity,
+    price: item.price,
   }));
+}
+
+// ─── History order shape (matches getOrderHistory controller) ─
+export interface HistoryOrder {
+  id: string;
+  service: string;
+  items: number;
+  date: string;
+  price: number;
+  status: "Delivered" | "Cancelled";
+  iconName: string;
+}
+
+/** Delivered + cancelled order history. */
+export async function getOrderHistory(): Promise<HistoryOrder[]> {
+  const res = await apiRequest<{ success: boolean; data: HistoryOrder[] }>("/orders/history");
+  return res.data;
 }
 
 // ─── Generic fetch helper ─────────────────────────────────────────────────────
@@ -134,18 +151,18 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
 /** Place a new order. Converts Redux cart items → OrderItems internally. */
 export async function createOrder(payload: CreateOrderPayload): Promise<Order> {
   const body = {
-    customerId:          payload.customerId,
-    items:               cartItemsToOrderItems(payload.cartItems),
-    pickupAddress:       payload.pickupAddress,
-    deliveryAddress:     payload.deliveryAddress,
-    pickupScheduledAt:   payload.pickupScheduledAt,
+    customerId: payload.customerId,
+    items: cartItemsToOrderItems(payload.cartItems),
+    pickupAddress: payload.pickupAddress,
+    deliveryAddress: payload.deliveryAddress,
+    pickupScheduledAt: payload.pickupScheduledAt,
     deliveryScheduledAt: payload.deliveryScheduledAt,
-    paymentMethod:       payload.paymentMethod,
+    paymentMethod: payload.paymentMethod,
   };
 
   const res = await apiRequest<{ success: boolean; order: Order }>('/orders', {
     method: 'POST',
-    body:   JSON.stringify(body),
+    body: JSON.stringify(body),
   });
   return res.order;
 }
@@ -177,4 +194,8 @@ export async function cancelOrder(orderId: string, customerId: string): Promise<
     { method: 'PATCH', body: JSON.stringify({ customerId }) }
   );
   return res.order;
+}
+
+export async function getOrderDetails(orderId: string) {
+  return getOrder(orderId);
 }

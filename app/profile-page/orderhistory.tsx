@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,31 +7,36 @@ import {
   ScrollView,
   Dimensions,
   Platform,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getOrderHistory } from "@/src/services/orderService";
 
 // ─── Responsive helpers ────────────────────────────────────────
 const { width: W, height: H } = Dimensions.get("window");
-const r  = (n: number) => Math.round((W / 375) * n);
+const r = (n: number) => Math.round((W / 375) * n);
 const rv = (n: number) => Math.round((H / 812) * n);
 const rm = (n: number, f = 0.45) => n + (r(n) - n) * f;
 
 // ─── Design tokens ─────────────────────────────────────────────
 const C = {
-  teal:        "#1a7a6e",
-  tealLight:   "#e0f5f2",
-  tealXLight:  "#eef9f7",
-  tealDark:    "#0f5249",
-  surface:     "#ffffff",
-  bg:          "#f2f6f5",
-  ink:         "#0e1c1a",
-  inkMid:      "#4a6360",
-  inkLight:    "#8aa8a4",
-  border:      "#dce8e6",
-  red:         "#e53935",
-  redLight:    "#fdecea",
+  teal: "#1a7a6e",
+  tealLight: "#e0f5f2",
+  tealXLight: "#eef9f7",
+  tealDark: "#0f5249",
+  surface: "#ffffff",
+  bg: "#f2f6f5",
+  ink: "#0e1c1a",
+  inkMid: "#4a6360",
+  inkLight: "#8aa8a4",
+  border: "#dce8e6",
+  red: "#e53935",
+  redLight: "#fdecea",
+  skeletonBase: "#e2eded",
+  skeletonShine: "#f0f7f6",
 } as const;
 
 const ios_shadow = {
@@ -54,82 +59,46 @@ interface Order {
   status: OrderStatus;
 }
 
-// ─── Sample data ───────────────────────────────────────────────
-const ORDERS: Order[] = [
-  {
-    id: "1",
-    orderId: "#KOR2451",
-    date: "12 May 2026",
-    services: "Wash + Iron",
-    itemCount: 8,
-    amount: 420,
-    status: "Delivered",
-  },
-  {
-    id: "2",
-    orderId: "#KOR2438",
-    date: "05 May 2026",
-    services: "Wash",
-    itemCount: 5,
-    amount: 250,
-    status: "Delivered",
-  },
-  {
-    id: "3",
-    orderId: "#KOR2421",
-    date: "28 Apr 2026",
-    services: "Iron",
-    itemCount: 12,
-    amount: 580,
-    status: "Delivered",
-  },
-  {
-    id: "4",
-    orderId: "#KOR2410",
-    date: "20 Apr 2026",
-    services: "Wash",
-    itemCount: 6,
-    amount: 300,
-    status: "Cancelled",
-  },
-  {
-    id: "5",
-    orderId: "#KOR2399",
-    date: "10 Apr 2026",
-    services: "Wash + Iron",
-    itemCount: 9,
-    amount: 470,
-    status: "Delivered",
-  },
-];
+// ─── Utility: normalise API response → Order ───────────────────
+function normaliseOrder(raw: any): Order {
+  return {
+    id: String(raw.id),
+    orderId: `#${raw.id}`,
+    date: raw.date ?? "",
+    services: raw.service ?? "Laundry",
+    itemCount: raw.items ?? 0,
+    amount: raw.price ?? 0,
+    status: raw.status as OrderStatus,
+  };
+}
 
 // ─── Status badge ──────────────────────────────────────────────
 function StatusBadge({ status }: { status: OrderStatus }) {
-  const isDelivered  = status === "Delivered";
-  const isCancelled  = status === "Cancelled";
-  const isProcessing = status === "Processing";
+  const cfg: Record<OrderStatus, { bg: string; text: string; icon: any; iconColor: string }> = {
+    "Delivered": {
+      bg: C.tealLight, text: C.tealDark,
+      icon: "checkmark-circle-outline", iconColor: C.teal,
+    },
+    "Cancelled": {
+      bg: C.redLight, text: C.red,
+      icon: "close-circle-outline", iconColor: C.red,
+    },
+    "Processing": {
+      bg: "#fef3c7", text: "#92400e",
+      icon: "time-outline", iconColor: "#d97706",
+    },
+    "Out for Delivery": {
+      bg: "#e0eaff", text: "#1e3a8a",
+      icon: "bicycle-outline", iconColor: "#3b5bdb",
+    },
+  };
 
-  let bgColor   = C.tealLight;
-  let textColor = C.tealDark;
-  let iconName: any = "checkmark-circle-outline";
-  let iconColor = C.teal;
-
-//   if (isCancelled) {
-//     bgColor   = C.redLight;
-//     textColor = C.red;
-//     iconName  = "alert-circle-outline";
-//     iconColor = C.red;
-//   } else if (isProcessing) {
-//     bgColor   = "#fef3c7";
-//     textColor = "#92400e";
-//     iconName  = "time-outline";
-//     iconColor = "#d97706";
-//   }
+  const { bg, text, icon, iconColor } = cfg[status] ?? cfg["Processing"];
 
   return (
-    <View style={[badgeStyles.badge, { backgroundColor: bgColor }]}>
-      <Ionicons name={iconName} size={r(12)} color={iconColor} style={{ marginRight: r(3) }} />
-      <Text style={[badgeStyles.text, { color: textColor }]}>{status}</Text>
+    <View style={[badgeStyles.badge, { backgroundColor: bg }]}>
+      <Ionicons name={icon} size={r(12)} color={iconColor} style={{ marginRight: r(3) }} />
+      <Text style={[badgeStyles.text, { color: text }]}>{status}</Text>
     </View>
   );
 }
@@ -149,20 +118,49 @@ const badgeStyles = StyleSheet.create({
   },
 });
 
+// ─── Skeleton card ─────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <View style={[styles.card, { gap: rv(12) }]}>
+      <View style={styles.cardTop}>
+        <View style={[styles.iconCircle, { backgroundColor: C.skeletonBase }]} />
+        <View style={{ flex: 1, gap: rv(6) }}>
+          <View style={[skeletonStyles.line, { width: "45%", height: rv(13) }]} />
+          <View style={[skeletonStyles.line, { width: "30%", height: rv(11) }]} />
+        </View>
+        <View style={[skeletonStyles.line, { width: r(72), height: rv(24), borderRadius: r(20) }]} />
+      </View>
+      <View style={styles.divider} />
+      <View style={[styles.cardBottom]}>
+        <View style={[skeletonStyles.line, { width: "40%", height: rv(12) }]} />
+        <View style={[skeletonStyles.line, { width: r(52), height: rv(16) }]} />
+      </View>
+    </View>
+  );
+}
+
+const skeletonStyles = StyleSheet.create({
+  line: {
+    backgroundColor: C.skeletonBase,
+    borderRadius: r(6),
+  },
+});
+
 // ─── Order Card ────────────────────────────────────────────────
 function OrderCard({ order }: { order: Order }) {
   return (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.75}
-      onPress={() => {
-        // router.push(`/order-detail/${order.id}`);
-      }}
+      onPress={() => router.push(`/order/orderDetails?id=${order.id}`)}
     >
-      {/* Top row: icon + order id + date + status badge */}
       <View style={styles.cardTop}>
         <View style={styles.iconCircle}>
-          <MaterialCommunityIcons name="package-variant-closed" size={r(20)} color={C.teal} />
+          <MaterialCommunityIcons
+            name="package-variant-closed"
+            size={r(20)}
+            color={C.teal}
+          />
         </View>
 
         <View style={styles.orderMeta}>
@@ -173,10 +171,8 @@ function OrderCard({ order }: { order: Order }) {
         <StatusBadge status={order.status} />
       </View>
 
-      {/* Divider */}
       <View style={styles.divider} />
 
-      {/* Bottom row: services + amount */}
       <View style={styles.cardBottom}>
         <Text style={styles.services}>
           {order.services} • {order.itemCount} items
@@ -189,6 +185,77 @@ function OrderCard({ order }: { order: Order }) {
 
 // ─── Main screen ───────────────────────────────────────────────
 export default function OrderHistory() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchOrders = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+      setError(null);
+
+      const data = await getOrderHistory();
+      console.log("HISTORY DATA:", data); // ← already HistoryOrder[]
+      setOrders(data.map(normaliseOrder));    // ← no .data needed
+    } catch (err: any) {
+      setError(err?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  // ── Render helpers ──
+  const renderContent = () => {
+    if (loading) {
+      return Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />);
+    }
+
+    if (error) {
+      return (
+        <View style={styles.emptyState}>
+          <View style={[styles.emptyIcon, { backgroundColor: C.redLight, borderColor: "#f5c6c4" }]}>
+            <Ionicons name="alert-circle-outline" size={r(36)} color={C.red} />
+          </View>
+          <Text style={styles.emptyTitle}>Couldn't load orders</Text>
+          <Text style={styles.emptySubtitle}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={() => fetchOrders()}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="refresh-outline" size={r(15)} color={C.surface} style={{ marginRight: r(5) }} />
+            <Text style={styles.retryText}>Try again</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (orders.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIcon}>
+            <MaterialCommunityIcons
+              name="package-variant-closed"
+              size={r(40)}
+              color={C.teal}
+            />
+          </View>
+          <Text style={styles.emptyTitle}>No orders yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Your order history will appear here
+          </Text>
+        </View>
+      );
+    }
+
+    return orders.map((order) => <OrderCard key={order.id} order={order} />);
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       {/* ── HEADER ── */}
@@ -203,8 +270,6 @@ export default function OrderHistory() {
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Order History</Text>
-
-        {/* Spacer to balance back button */}
         <View style={{ width: r(36) }} />
       </View>
 
@@ -212,26 +277,16 @@ export default function OrderHistory() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchOrders(true)}
+            tintColor={C.teal}
+            colors={[C.teal]}
+          />
+        }
       >
-        {ORDERS.length === 0 ? (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIcon}>
-              <MaterialCommunityIcons
-                name="package-variant-closed"
-                size={r(40)}
-                color={C.tealLight}
-              />
-            </View>
-            <Text style={styles.emptyTitle}>No orders yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Your order history will appear here
-            </Text>
-          </View>
-        ) : (
-          ORDERS.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))
-        )}
+        {renderContent()}
       </ScrollView>
     </SafeAreaView>
   );
@@ -244,7 +299,6 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
   },
 
-  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -273,7 +327,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // List
   listContent: {
     paddingHorizontal: r(16),
     paddingTop: rv(4),
@@ -281,14 +334,13 @@ const styles = StyleSheet.create({
     gap: r(12),
   },
 
-  // Card
   card: {
     backgroundColor: C.surface,
     borderRadius: r(16),
     padding: r(16),
     borderWidth: 1,
     borderColor: C.border,
-    ...Platform.select({ ios: ios_shadow}),
+    ...Platform.select({ ios: ios_shadow }),
   },
   cardTop: {
     flexDirection: "row",
@@ -322,14 +374,12 @@ const styles = StyleSheet.create({
     marginTop: rv(2),
   },
 
-  // Divider
   divider: {
     height: 1,
     backgroundColor: C.border,
     marginVertical: rv(12),
   },
 
-  // Card bottom
   cardBottom: {
     flexDirection: "row",
     alignItems: "center",
@@ -347,7 +397,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // Empty state
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
@@ -378,5 +427,20 @@ const styles = StyleSheet.create({
     color: C.inkMid,
     textAlign: "center",
     lineHeight: rm(19),
+  },
+
+  retryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: rv(6),
+    backgroundColor: C.teal,
+    paddingHorizontal: r(20),
+    paddingVertical: rv(10),
+    borderRadius: r(12),
+  },
+  retryText: {
+    fontSize: rm(14),
+    fontWeight: "600",
+    color: C.surface,
   },
 });
