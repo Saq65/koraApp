@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   StyleSheet,
   Text,
@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useTheme } from '../../src/theme/ThemeProvider'
 import AppBackground from '@/components/AppBackground'
-import { submitReview } from '../../src/services/review'
+import { submitReview, getMyReview } from '../../src/services/review'
 
 const CATEGORIES = [
   { id: 'pickup', label: 'Pickup', icon: 'bicycle-outline' },
@@ -36,12 +36,34 @@ const QUICK_TAGS = [
 export default function RateUs() {
   const { theme, isDarkMode } = useTheme()
 
+  const [pageLoading, setPageLoading] = useState(true)
+  const [submitLoading, setSubmitLoading] = useState(false)
+
+  // Existing review state
+  const [existingReview, setExistingReview] = useState<any>(null)
+
+  // Form state
   const [rating, setRating] = useState(0)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [review, setReview] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [categoryRatings, setCategoryRatings] = useState<Record<string, number>>({})
+
+  // On mount: check if customer already reviewed
+  useEffect(() => {
+    const fetchMyReview = async () => {
+      try {
+        const res = await getMyReview()
+        if (res.hasReviewed && res.data) {
+          setExistingReview(res.data)
+        }
+      } catch (err) {
+        // ignore — just show the form
+      } finally {
+        setPageLoading(false)
+      }
+    }
+    fetchMyReview()
+  }, [])
 
   const getRatingLabel = (r: number) => {
     switch (r) {
@@ -65,11 +87,9 @@ export default function RateUs() {
       Alert.alert('Rating required', 'Please give at least an overall star rating.')
       return
     }
-
     try {
-      setLoading(true)
-
-      await submitReview({
+      setSubmitLoading(true)
+      const res = await submitReview({
         overallRating: rating,
         categoryRatings: {
           pickup: categoryRatings['pickup'] || undefined,
@@ -80,45 +100,145 @@ export default function RateUs() {
         tags: selectedTags,
         review: review.trim(),
       })
-
-      setSubmitted(true)
-
+      setExistingReview(res.data)
     } catch (error: any) {
-      Alert.alert(
-        'Something went wrong',
-        error?.message || 'Could not submit review. Please try again.'
-      )
+      Alert.alert('Error', error?.message || 'Could not submit review. Please try again.')
     } finally {
-      setLoading(false)
+      setSubmitLoading(false)
     }
   }
 
-  // ── Success Screen ──────────────────────────
-  if (submitted) {
+  const starColor = (filled: boolean) =>
+    filled ? '#F59E0B' : (isDarkMode ? '#4B5563' : '#D1D5DB')
+
+  // ── Loading ─────────────────────────────────
+  if (pageLoading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
         <AppBackground>
-          <View style={styles.successContainer}>
-            <View style={[styles.successIcon, { backgroundColor: theme.primaryLight || '#E6F4F1' }]}>
-              <Ionicons name="checkmark-circle" size={64} color={theme.primary} />
-            </View>
-            <Text style={[styles.successTitle, { color: theme.text }]}>Thank You! 🎉</Text>
-            <Text style={[styles.successSubtitle, { color: theme.textSecondary || (isDarkMode ? '#9CA3AF' : '#6B7280') }]}>
-              Your feedback helps us serve you better. We appreciate your time!
-            </Text>
-            <TouchableOpacity
-              style={[styles.doneBtn, { backgroundColor: theme.primary }]}
-              onPress={() => router.back()}
-            >
-              <Text style={styles.doneBtnText}>Back to Profile</Text>
-            </TouchableOpacity>
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={theme.primary} />
           </View>
         </AppBackground>
       </SafeAreaView>
     )
   }
 
-  // ── Main Screen ─────────────────────────────
+  // ── Already Reviewed Screen ──────────────────
+  if (existingReview) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+        <AppBackground>
+          {/* Header */}
+          <View style={[styles.header, { backgroundColor: theme.background }]}>
+            <TouchableOpacity
+              style={[styles.backBtn, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={20} color={theme.text} />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>Your Review</Text>
+            <View style={{ width: 36 }} />
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            {/* Thank you banner */}
+            <View style={[styles.heroCard, { backgroundColor: theme.primary }]}>
+              <Text style={styles.heroEmoji}>🎉</Text>
+              <Text style={styles.heroTitle}>Thank You for your feedback!</Text>
+              <Text style={styles.heroSubtitle}>You have already submitted a review</Text>
+            </View>
+
+            {/* Review Card */}
+            <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>Overall Rating</Text>
+              <View style={styles.starsRow}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Ionicons
+                    key={s}
+                    name={existingReview.overallRating >= s ? 'star' : 'star-outline'}
+                    size={36}
+                    color={starColor(existingReview.overallRating >= s)}
+                    style={styles.star}
+                  />
+                ))}
+              </View>
+              <Text style={[styles.ratingLabel, { color: theme.primary }]}>
+                {getRatingLabel(existingReview.overallRating)}
+              </Text>
+            </View>
+
+            {/* Category ratings */}
+            {Object.values(existingReview.categoryRatings || {}).some(v => v) && (
+              <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>Category Ratings</Text>
+                {CATEGORIES.map(cat => {
+                  const val = existingReview.categoryRatings?.[cat.id]
+                  if (!val) return null
+                  return (
+                    <View key={cat.id} style={styles.categoryRow}>
+                      <View style={styles.categoryLeft}>
+                        <View style={[styles.catIconBox, { backgroundColor: theme.primaryLight || (isDarkMode ? '#374151' : '#E6F4F1') }]}>
+                          <Ionicons name={cat.icon as any} size={16} color={theme.primary} />
+                        </View>
+                        <Text style={[styles.categoryLabel, { color: theme.text }]}>{cat.label}</Text>
+                      </View>
+                      <View style={styles.miniStars}>
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <Ionicons
+                            key={s}
+                            name={val >= s ? 'star' : 'star-outline'}
+                            size={18}
+                            color={starColor(val >= s)}
+                            style={{ marginLeft: 2 }}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  )
+                })}
+              </View>
+            )}
+
+            {/* Tags */}
+            {existingReview.tags?.length > 0 && (
+              <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>What you liked</Text>
+                <View style={styles.tagsWrap}>
+                  {existingReview.tags.map((tag: string) => (
+                    <View key={tag} style={[styles.tag, { backgroundColor: theme.primary, borderColor: theme.primary }]}>
+                      <Text style={[styles.tagText, { color: '#fff' }]}>✓ {tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Written review */}
+            {existingReview.review ? (
+              <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>Your Review</Text>
+                <Text style={[styles.reviewText, { color: theme.textSecondary || (isDarkMode ? '#9CA3AF' : '#6B7280') }]}>
+                  "{existingReview.review}"
+                </Text>
+              </View>
+            ) : null}
+
+            <TouchableOpacity
+              style={[styles.submitBtn, { backgroundColor: theme.primary }]}
+              onPress={() => router.back()}
+            >
+              <Text style={[styles.submitText, { color: '#fff' }]}>Back to Profile</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 30 }} />
+          </ScrollView>
+        </AppBackground>
+      </SafeAreaView>
+    )
+  }
+
+  // ── Review Form ─────────────────────────────
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
       <AppBackground>
@@ -158,7 +278,7 @@ export default function RateUs() {
                   <Ionicons
                     name={rating >= star ? 'star' : 'star-outline'}
                     size={42}
-                    color={rating >= star ? '#F59E0B' : (isDarkMode ? '#4B5563' : '#D1D5DB')}
+                    color={starColor(rating >= star)}
                     style={styles.star}
                   />
                 </TouchableOpacity>
@@ -182,14 +302,11 @@ export default function RateUs() {
                 </View>
                 <View style={styles.miniStars}>
                   {[1, 2, 3, 4, 5].map(s => (
-                    <TouchableOpacity
-                      key={s}
-                      onPress={() => setCategoryRatings(prev => ({ ...prev, [cat.id]: s }))}
-                    >
+                    <TouchableOpacity key={s} onPress={() => setCategoryRatings(prev => ({ ...prev, [cat.id]: s }))}>
                       <Ionicons
                         name={(categoryRatings[cat.id] || 0) >= s ? 'star' : 'star-outline'}
                         size={20}
-                        color={(categoryRatings[cat.id] || 0) >= s ? '#F59E0B' : (isDarkMode ? '#4B5563' : '#D1D5DB')}
+                        color={starColor((categoryRatings[cat.id] || 0) >= s)}
                         style={{ marginLeft: 2 }}
                       />
                     </TouchableOpacity>
@@ -208,13 +325,10 @@ export default function RateUs() {
                 return (
                   <TouchableOpacity
                     key={tag}
-                    style={[
-                      styles.tag,
-                      {
-                        backgroundColor: selected ? theme.primary : 'transparent',
-                        borderColor: selected ? theme.primary : (isDarkMode ? '#374151' : '#E5E7EB'),
-                      },
-                    ]}
+                    style={[styles.tag, {
+                      backgroundColor: selected ? theme.primary : 'transparent',
+                      borderColor: selected ? theme.primary : (isDarkMode ? '#374151' : '#E5E7EB'),
+                    }]}
                     onPress={() => toggleTag(tag)}
                   >
                     <Text style={[styles.tagText, { color: selected ? '#fff' : (isDarkMode ? '#9CA3AF' : '#6B7280') }]}>
@@ -230,19 +344,14 @@ export default function RateUs() {
           <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>
               Write a Review{' '}
-              <Text style={{ color: isDarkMode ? '#6B7280' : '#9CA3AF', fontWeight: '400', fontSize: 13 }}>
-                (optional)
-              </Text>
+              <Text style={{ color: isDarkMode ? '#6B7280' : '#9CA3AF', fontWeight: '400', fontSize: 13 }}>(optional)</Text>
             </Text>
             <TextInput
-              style={[
-                styles.textInput,
-                {
-                  backgroundColor: isDarkMode ? '#111827' : '#F9FAFB',
-                  color: theme.text,
-                  borderColor: isDarkMode ? '#374151' : '#E5E7EB',
-                },
-              ]}
+              style={[styles.textInput, {
+                backgroundColor: isDarkMode ? '#111827' : '#F9FAFB',
+                color: theme.text,
+                borderColor: isDarkMode ? '#374151' : '#E5E7EB',
+              }]}
               placeholder="Share your experience with KORA laundry..."
               placeholderTextColor={isDarkMode ? '#6B7280' : '#9CA3AF'}
               multiline
@@ -256,17 +365,16 @@ export default function RateUs() {
             </Text>
           </View>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <TouchableOpacity
-            style={[
-              styles.submitBtn,
-              { backgroundColor: rating > 0 ? theme.primary : (isDarkMode ? '#374151' : '#E5E7EB') },
-            ]}
+            style={[styles.submitBtn, {
+              backgroundColor: rating > 0 ? theme.primary : (isDarkMode ? '#374151' : '#E5E7EB'),
+            }]}
             onPress={handleSubmit}
             activeOpacity={0.85}
-            disabled={loading}
+            disabled={submitLoading}
           >
-            {loading ? (
+            {submitLoading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
@@ -293,6 +401,7 @@ export default function RateUs() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
   backBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700' },
@@ -317,10 +426,5 @@ const styles = StyleSheet.create({
   charCount: { fontSize: 11, textAlign: 'right', marginTop: 6 },
   submitBtn: { marginHorizontal: 16, marginTop: 4, paddingVertical: 15, borderRadius: 14, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   submitText: { fontSize: 16, fontWeight: '700' },
-  successContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
-  successIcon: { width: 110, height: 110, borderRadius: 55, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  successTitle: { fontSize: 26, fontWeight: '800', marginBottom: 12 },
-  successSubtitle: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
-  doneBtn: { paddingVertical: 14, paddingHorizontal: 40, borderRadius: 14 },
-  doneBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  reviewText: { fontSize: 14, lineHeight: 22, fontStyle: 'italic' },
 })
