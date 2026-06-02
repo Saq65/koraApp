@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -229,90 +229,103 @@ type ServiceModalProps = {
   onClose: () => void;
 };
 
+// ─── Service Selection Modal (FIXED) ─────────────────────────
 const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName, onClose }) => {
   const dispatch = useAppDispatch();
-  const [washQty, setWashQty] = useState(0);
-  const [ironQty, setIronQty] = useState(0);
-  const [comboQty, setComboQty] = useState(0);
 
-  const resetQuantities = () => {
-    setWashQty(0);
-    setIronQty(0);
-    setComboQty(0);
-  };
+  // Quantities reset when item changes
+  const [quantities, setQuantities] = useState<Record<string, number>>({
+    Wash: 0,
+    Iron: 0,
+    'Wash+Iron': 0,
+  });
 
-  // Helper to dispatch multiple addToCart actions (one per piece)
-  const addMultipleToCart = (
-  serviceType: "Wash" | "Iron" | "Wash+Iron",
-  quantity: number
-) => {
-  const service = SERVICES[serviceType];
-  if (!service || !item) return;
+  // Reset whenever a new item opens
+  useEffect(() => {
+    if (visible) {
+      setQuantities({ Wash: 0, Iron: 0, 'Wash+Iron': 0 });
+    }
+  }, [visible, item]);
 
-  dispatch(
-    addToCart({
-      id: `${service.id}_${categoryName}_${item.label}`,
-      serviceId: service.id,
-      serviceName: service.name,
-      categoryId: categoryName,
-      categoryName,
-      subCategoryId: item.label,
-      subCategoryName: item.label,
-      price: service.price,
-      quantity, // send selected quantity directly
-    })
-  );
-};
+  const increment = (service: string) =>
+    setQuantities(prev => ({ ...prev, [service]: prev[service] + 1 }));
+
+  const decrement = (service: string) =>
+    setQuantities(prev => ({ ...prev, [service]: Math.max(0, prev[service] - 1) }));
 
   const handleAddToCart = () => {
     if (!item) return;
 
-    if (washQty > 0) addMultipleToCart("Wash", washQty);
-    if (ironQty > 0) addMultipleToCart("Iron", ironQty);
-    if (comboQty > 0) addMultipleToCart("Wash+Iron", comboQty);
+    Object.entries(quantities).forEach(([serviceType, qty]) => {
+      if (qty <= 0) return;
+      const service = SERVICES[serviceType];
+      if (!service) return;
 
-    resetQuantities();
+      dispatch(addToCart({
+        // ✅ category + item + service — teeno milake unique id
+        id: `${categoryName}_${item.label}_${service.id}`,
+        serviceId: service.id,
+        serviceName: service.name,
+        categoryId: categoryName,
+        categoryName,
+        subCategoryId: item.label,
+        subCategoryName: item.label,
+        price: service.price,
+        quantity: qty,
+      }));
+    });
+
     onClose();
   };
+
+  const totalItems = Object.values(quantities).reduce((a, b) => a + b, 0);
+  const totalPrice = Object.entries(quantities).reduce((sum, [key, qty]) => {
+    return sum + (SERVICES[key]?.price || 0) * qty;
+  }, 0);
 
   if (!item) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.modalOverlay}>
           <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
               <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>Choose Services & Quantity</Text>
+              <Text style={styles.modalTitle}>Choose Services</Text>
               <Text style={styles.modalSubtitle}>
                 {item.label} • {categoryName}
               </Text>
 
-              <ServiceRow
-                label="Wash"
-                price={SERVICES.Wash.price}
-                quantity={washQty}
-                onIncrement={() => setWashQty(washQty + 1)}
-                onDecrement={() => washQty > 0 && setWashQty(washQty - 1)}
-              />
-              <ServiceRow
-                label="Iron"
-                price={SERVICES.Iron.price}
-                quantity={ironQty}
-                onIncrement={() => setIronQty(ironQty + 1)}
-                onDecrement={() => ironQty > 0 && setIronQty(ironQty - 1)}
-              />
-              <ServiceRow
-                label="Wash + Iron"
-                price={SERVICES["Wash+Iron"].price}
-                quantity={comboQty}
-                onIncrement={() => setComboQty(comboQty + 1)}
-                onDecrement={() => comboQty > 0 && setComboQty(comboQty - 1)}
-              />
+              {(['Wash', 'Iron', 'Wash+Iron'] as const).map(serviceType => (
+                <ServiceRow
+                  key={serviceType}
+                  label={serviceType}
+                  price={SERVICES[serviceType].price}
+                  quantity={quantities[serviceType]}
+                  onIncrement={() => increment(serviceType)}
+                  onDecrement={() => decrement(serviceType)}
+                />
+              ))}
 
-              <TouchableOpacity style={styles.modalAddBtn} onPress={handleAddToCart}>
-                <Text style={styles.modalAddBtnText}>Add to Cart</Text>
+              {/* Summary row */}
+              {totalItems > 0 && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryText}>{totalItems} items • ₹{totalPrice}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[
+                  styles.modalAddBtn,
+                  { backgroundColor: totalItems > 0 ? C.teal : C.border }
+                ]}
+                onPress={handleAddToCart}
+                disabled={totalItems === 0}
+              >
+                <Text style={styles.modalAddBtnText}>
+                  {totalItems > 0 ? `Add to Cart • ₹${totalPrice}` : 'Select at least one'}
+                </Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
@@ -789,5 +802,17 @@ const styles = StyleSheet.create({
     fontSize: rm(16),
     fontWeight: "700",
     color: "#fff",
+  },
+  summaryRow: {
+    backgroundColor: C.tealXLight,
+    borderRadius: r(10),
+    padding: r(10),
+    marginTop: rv(12),
+    alignItems: 'center',
+  },
+  summaryText: {
+    fontSize: rm(13),
+    fontWeight: '600',
+    color: C.tealDark,
   },
 });

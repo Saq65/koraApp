@@ -30,7 +30,7 @@ const cartSlice = createSlice({
   const existingItem = state.items.find(
     item =>
       item.id === action.payload.id &&
-      item.serviceId === action.payload.serviceId
+      item.serviceId === action.payload.serviceId 
   );
 
   if (existingItem) {
