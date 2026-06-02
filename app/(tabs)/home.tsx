@@ -150,7 +150,7 @@ export default function HomeScreen() {
         >
           {/* ACTIVE ORDER CARD */}
           {latestActiveOrder ? (
-            <TouchableOpacity onPress={() => router.push(`/trackorder/${latestActiveOrder._id}`)}>
+            <TouchableOpacity onPress={() => router.push(`/trackorder/trackorder?orderId=${latestActiveOrder._id}`)} activeOpacity={0.8}>
               <View style={styles.cardWrap}>
                 <LinearGradient
                   colors={[TEAL, TEAL_DARK]}

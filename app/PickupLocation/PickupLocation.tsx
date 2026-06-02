@@ -194,7 +194,7 @@ export default function PickupLocation() {
         setSavedAddresses([])
         return
       }
-      const res = await fetch(`${API_BASE_URL}/api/saved-addresses`, {
+      const res = await fetch(`${API_BASE_URL}/saved-addresses`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

@@ -101,3 +101,40 @@ export const setDefaultAddress = async (
     token || undefined
   );
 };
+
+
+export const submitReview = async (payload: {
+  orderId?: string;
+  overallRating: number;
+  categoryRatings?: {
+    pickup?: number;
+    quality?: number;
+    delivery?: number;
+    packaging?: number;
+  };
+  tags?: string[];
+  review?: string;
+}) => {
+  const token = await getToken();
+ 
+  return apiClient(
+    "/reviews",
+    "POST",
+    payload,
+    token || undefined
+  );
+};
+ 
+// ─────────────────────────────────────────────
+// GET MY REVIEWS
+// ─────────────────────────────────────────────
+export const getMyReviews = async () => {
+  const token = await getToken();
+ 
+  return apiClient(
+    "/reviews/my",
+    "GET",
+    undefined,
+    token || undefined
+  );
+};

@@ -9,6 +9,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import AppBackground from "@/components/AppBackground";
 import { getActiveOrder, getOrderHistory } from "../../src/api/order";
 import { useTheme } from "../../src/theme/ThemeProvider";
+import { router } from 'expo-router';
 
 type OrderStatus = "Delivered" | "Cancelled" | "In Process";
 
@@ -133,7 +134,7 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
         <TouchableOpacity style={[styles.cancelBtn, { borderColor: "#E53935" }]} activeOpacity={0.8}>
           <Text style={styles.cancelBtnText}>Cancel Order</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.trackBtn, { backgroundColor: theme.primary }]} activeOpacity={0.8}>
+        <TouchableOpacity onPress={()=>router.push('/trackorder/trackorder')} style={[styles.trackBtn, { backgroundColor: theme.primary }]} activeOpacity={0.8}>
           <Text style={styles.trackBtnText}>Live Tracking</Text>
         </TouchableOpacity>
       </View>

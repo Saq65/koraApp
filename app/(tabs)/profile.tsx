@@ -7,7 +7,6 @@ import {
   ScrollView,
   Switch,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -16,10 +15,11 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
 import { getProfile } from "../../src/services/customer";
+import { responsiveFontSize } from "react-native-responsive-dimensions";
 
 export default function ProfileScreen() {
   const { theme, isDarkMode, toggleTheme } = useTheme();
-  
+
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
     fullName: "",
@@ -27,15 +27,19 @@ export default function ProfileScreen() {
     phone: "",
     dob: "",
   });
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<{
+    orders: number;
+    wallet: number | string;
+    rating: number;
+  }>({
     orders: 0,
-    wallet: 0,
+    wallet: 100,
     rating: 0,
   });
 
-  // Load from local storage instantly, then fetch fresh data in background
+  const formatCurrency = (amount: number) => `₹${amount}`;
+
   const loadProfile = async () => {
-    // 1. INSTANT: show stored user data (no network)
     const storedUser = await getUser();
     if (storedUser) {
       setProfile({
@@ -44,30 +48,26 @@ export default function ProfileScreen() {
         phone: storedUser.mobile || "",
         dob: storedUser.dob || "",
       });
-      setLoading(false); // show UI immediately with cached data
+      setLoading(false);
     }
 
-    // 2. BACKGROUND: fetch latest from server and update stats
     try {
-      const response = await getProfile();
-      const data = response.data;
-      
-      // Update profile with fresh data (e.g., DOB might come from API)
+      const data = await getProfile();
+      console.log("API Response:", JSON.stringify(data, null, 2));
       setProfile({
         fullName: data.fullName || storedUser?.name || "User",
         email: data.email || storedUser?.email || "",
         phone: data.mobile || storedUser?.mobile || "",
         dob: data.dob ? data.dob.split("T")[0] : "",
       });
-      
+
       setStats({
         orders: data.totalOrders || 0,
-        wallet: data.walletBalance || 0,
+        wallet: data.walletBalance ?? 0,
         rating: data.rating || 0,
       });
     } catch (error) {
       console.log("Background refresh error:", error);
-      // Don't show error alert – cached data is still shown
     } finally {
       setLoading(false);
     }
@@ -95,12 +95,23 @@ export default function ProfileScreen() {
     return name.charAt(0).toUpperCase();
   };
 
-  const formatCurrency = (amount: number) => {
-    return `₹${amount}`;
-  };
-
-  const MenuItem = ({ icon, title, subtitle, rightElement, onPress }: any) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+  const MenuItem = ({
+    icon,
+    title,
+    subtitle,
+    rightElement,
+    onPress,
+  }: {
+    icon: string;
+    title: string;
+    subtitle?: string;
+    rightElement?: React.ReactNode;
+    onPress: () => void;
+  }) => (
+    <TouchableOpacity
+      style={[styles.menuItem, { borderBottomColor: theme.border || (isDarkMode ? "#374151" : "#E5E7EB") }]}
+      onPress={onPress}
+    >
       <View style={styles.menuLeft}>
         <View
           style={[
@@ -108,7 +119,7 @@ export default function ProfileScreen() {
             { backgroundColor: theme.primaryLight || (isDarkMode ? "#1F2937" : "#E6F4F1") },
           ]}
         >
-          <Ionicons name={icon} size={18} color={theme.primary} />
+          <Ionicons name={icon as any} size={18} color={theme.primary} />
         </View>
         <View>
           <Text style={[styles.menuText, { color: theme.text }]}>{title}</Text>
@@ -119,17 +130,19 @@ export default function ProfileScreen() {
           )}
         </View>
       </View>
-      {rightElement ? (
-        rightElement
-      ) : (
-        <Ionicons name="chevron-forward" size={18} color={theme.textSecondary || (isDarkMode ? "#9CA3AF" : "#6B7280")} />
+      {rightElement ?? (
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color={theme.textSecondary || (isDarkMode ? "#9CA3AF" : "#6B7280")}
+        />
       )}
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top', 'bottom']}>
         <AppBackground>
           <View style={styles.loader}>
             <ActivityIndicator size="large" color={theme.primary} />
@@ -140,9 +153,10 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top', 'bottom']}>
       <AppBackground>
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+
           {/* HEADER CARD */}
           <View style={[styles.headerCard, { backgroundColor: theme.primary }]}>
             <View style={styles.avatar}>
@@ -158,18 +172,42 @@ export default function ProfileScreen() {
                 <Text style={styles.statLabel}>Orders</Text>
               </View>
               <View style={styles.statBox}>
-                <Text style={styles.statNumber}>{formatCurrency(stats.wallet)}</Text>
+                <Text style={styles.statNumber}>{formatCurrency(Number(stats.wallet))}</Text>
                 <Text style={styles.statLabel}>Wallet</Text>
               </View>
               <View style={styles.statBox}>
-                <Text style={styles.statNumber}>{stats.rating.toFixed(1)}</Text>
+                <Text style={styles.statNumber}>{Number(stats.rating).toFixed(1)}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
               </View>
             </View>
           </View>
 
+          {/* WALLET BANNER */}
+          <TouchableOpacity
+            onPress={() => router.push('/wallet/wallet')}
+            style={[styles.walletBanner, { backgroundColor: theme.card || (isDarkMode ? "#1F2937" : "#fff"), shadowColor: isDarkMode ? "#000" : "#ccc" }]}
+          >
+            <View style={styles.walletLeft}>
+              <View style={[styles.walletIconBox, { backgroundColor: theme.primaryLight || (isDarkMode ? "#374151" : "#E6F4F1") }]}>
+                <Ionicons name="wallet-outline" size={20} color={theme.primary} />
+              </View>
+              <View>
+                <Text style={[styles.walletLabel, { color: theme.textSecondary || (isDarkMode ? "#9CA3AF" : "#6B7280") }]}>
+                  Kora Wallet Balance
+                </Text>
+                <Text style={[styles.walletAmount, { color: theme.text, fontSize: responsiveFontSize(2.5) }]}>
+                  {formatCurrency(Number(stats.wallet))}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.walletRight}>
+              <Text style={[styles.addMoneyText, { color: theme.primary }]}>Add Money</Text>
+              <Ionicons name="add-circle" size={24} color={theme.primary} />
+            </View>
+          </TouchableOpacity>
+
           {/* MENU */}
-          <View style={styles.menuContainer}>
+          <View style={[styles.menuContainer, { backgroundColor: theme.card || (isDarkMode ? "#1F2937" : "#fff") }]}>
             <MenuItem
               icon="moon-outline"
               title="Dark Mode"
@@ -182,7 +220,7 @@ export default function ProfileScreen() {
                   thumbColor={isDarkMode ? "#fff" : "#f4f3f4"}
                 />
               }
-              onPress={() => {}}
+              onPress={() => { }}
             />
             <MenuItem
               icon="person-outline"
@@ -206,13 +244,13 @@ export default function ProfileScreen() {
               icon="star-outline"
               title="Rate Us"
               subtitle="Share your feedback"
-              onPress={() => console.log("Rate Us")}
+              onPress={() => router.push('/rateus/rateus' as any)}
             />
             <MenuItem
               icon="notifications-outline"
               title="Notifications"
               subtitle="Manage notifications"
-              onPress={() => console.log("Notifications")}
+              onPress={() => router.push('/notifications' as any)}
             />
             <MenuItem
               icon="language-outline"
@@ -228,7 +266,7 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {/* LOGOUT BUTTON */}
+          {/* LOGOUT */}
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
@@ -243,6 +281,8 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  // Header card
   headerCard: { padding: 20, borderBottomLeftRadius: 25, borderBottomRightRadius: 25, alignItems: "center" },
   avatar: { width: 70, height: 70, borderRadius: 35, backgroundColor: "#ffffff33", justifyContent: "center", alignItems: "center", marginBottom: 10 },
   avatarText: { fontSize: 28, color: "#fff", fontWeight: "700" },
@@ -253,12 +293,37 @@ const styles = StyleSheet.create({
   statBox: { alignItems: "center", flex: 1 },
   statNumber: { color: "#fff", fontSize: 18, fontWeight: "700" },
   statLabel: { color: "#fff", fontSize: 12, opacity: 0.9 },
-  menuContainer: { marginTop: 20, paddingHorizontal: 15 },
-  menuItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
+
+  // Wallet banner
+  walletBanner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 15,
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 14,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  walletLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  walletIconBox: { width: 40, height: 40, borderRadius: 10, justifyContent: "center", alignItems: "center" },
+  walletLabel: { fontSize: 12, marginBottom: 2 },
+  walletAmount: { fontWeight: "700" },
+  walletRight: { alignItems: "center", gap: 4 },
+  addMoneyText: { fontSize: 12, fontWeight: "600" },
+
+  // Menu
+  menuContainer: { marginTop: 16, marginHorizontal: 15, borderRadius: 14, paddingHorizontal: 15, overflow: "hidden", elevation: 2, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4 },
+  menuItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 15, borderBottomWidth: 1 },
   menuLeft: { flexDirection: "row", alignItems: "center" },
   iconBox: { width: 36, height: 36, borderRadius: 10, justifyContent: "center", alignItems: "center", marginRight: 12 },
   menuText: { fontSize: 15, fontWeight: "500" },
   menuSubtitle: { fontSize: 12, marginTop: 2 },
-  logoutBtn: { marginTop: 30, marginHorizontal: 20, padding: 15, borderRadius: 14, backgroundColor: "#ff4d4d", alignItems: "center" },
+
+  // Logout
+  logoutBtn: { marginTop: 20, marginHorizontal: 20, padding: 15, borderRadius: 14, backgroundColor: "#ff4d4d", alignItems: "center" },
   logoutText: { color: "#fff", fontWeight: "600", fontSize: 16 },
 });
