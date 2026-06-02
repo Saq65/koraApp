@@ -17,20 +17,19 @@ import { useDispatch } from 'react-redux'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import MapView, { Marker, Region, PROVIDER_DEFAULT } from 'react-native-maps'
 import * as Location from 'expo-location'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { setAddress } from '../../src/redux/store/addressSlice'
 import AppBackground from '@/components/AppBackground'
+import { getSavedAddresses, createSavedAddress } from '../../src/services/customer' // ✅ new imports
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000'
+// API_BASE_URL removed – using apiClient instead
 
 type LocationType = 'pickup' | 'dropoff'
 type ViewMode = 'list' | 'map'
 
-// ✅ Matches MongoDB schema exactly
 type SavedAddress = {
   _id: string
   label: 'home' | 'office' | 'other'
@@ -69,14 +68,12 @@ const DEFAULT_REGION: Region = {
 const TEAL = '#1A6B5A'
 const TEAL_LIGHT = '#E8F4F1'
 
-// ── Icon helper ──────────────────────────────────────────────────────────────
 const SavedAddressIcon = ({ label }: { label: SavedAddress['label'] }) => {
   if (label === 'home') return <MaterialCommunityIcons name="home" size={20} color="#555" />
   if (label === 'office') return <MaterialCommunityIcons name="office-building" size={20} color="#555" />
   return <MaterialIcons name="location-on" size={20} color="#555" />
 }
 
-// ── Display label helper ─────────────────────────────────────────────────────
 const getDisplayLabel = (addr: SavedAddress): string => {
   if (addr.label === 'other' && addr.customLabel) return addr.customLabel
   return addr.label.charAt(0).toUpperCase() + addr.label.slice(1)
@@ -111,16 +108,12 @@ const SearchBar = ({
         returnKeyType="search"
       />
       {searchText.length > 0 && (
-        <TouchableOpacity
-          onPress={onClear}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
+        <TouchableOpacity onPress={onClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="close-circle" size={18} color="#ccc" />
         </TouchableOpacity>
       )}
     </View>
 
-    {/* Dropdown suggestions */}
     {showDropdown && predictions.length > 0 && (
       <View style={[styles.dropdown, isOnMap && styles.dropdownMap]}>
         <FlatList
@@ -163,6 +156,7 @@ export default function PickupLocation() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [fetchingLocation, setFetchingLocation] = useState(false)
+  const [savingAddress, setSavingAddress] = useState(false) // for save button loading
 
   const [region, setRegion] = useState<Region>(DEFAULT_REGION)
   const [markerCoord, setMarkerCoord] = useState({
@@ -172,7 +166,6 @@ export default function PickupLocation() {
   const [resolvedAddress, setResolvedAddress] = useState('')
   const [resolving, setResolving] = useState(false)
 
-  // ── Saved addresses state ────────────────────────────────────────────────
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
   const [addressesLoading, setAddressesLoading] = useState(true)
   const [addressesError, setAddressesError] = useState(false)
@@ -184,24 +177,14 @@ export default function PickupLocation() {
   const locationType: LocationType = type === 'dropoff' ? 'dropoff' : 'pickup'
   const title = locationType === 'pickup' ? 'Pickup Location' : 'Drop-off Location'
 
-  // ── Fetch saved addresses from API ───────────────────────────────────────
+  // ── Fetch saved addresses using apiClient ───────────────────────────────
   const fetchSavedAddresses = useCallback(async () => {
     setAddressesLoading(true)
     setAddressesError(false)
     try {
-      const token = await AsyncStorage.getItem('token')
-      if (!token) {
-        setSavedAddresses([])
-        return
-      }
-      const res = await fetch(`${API_BASE_URL}/saved-addresses`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data: SavedAddress[] = await res.json()
+      // getSavedAddresses already handles token via apiClient
+      const data = await getSavedAddresses()
+      // Assuming apiClient returns the array directly. If it returns { data: [...] }, use data.data
       setSavedAddresses(data)
     } catch (e) {
       console.error('Failed to load saved addresses:', e)
@@ -216,7 +199,78 @@ export default function PickupLocation() {
     fetchSavedAddresses()
   }, [fetchSavedAddresses])
 
-  // ── Reverse geocode ──────────────────────────────────────────────────────
+  // ── Save current location as a saved address ───────────────────────────
+  const handleSaveCurrentLocation = async () => {
+    if (!resolvedAddress) {
+      Alert.alert('No location', 'Please select a location on the map or search first.')
+      return
+    }
+
+    Alert.alert(
+      'Save Address',
+      'Choose a label for this address',
+      [
+        { text: 'Home', onPress: () => saveAddressWithLabel('home') },
+        { text: 'Office', onPress: () => saveAddressWithLabel('office') },
+        {
+          text: 'Other',
+          onPress: () => {
+            Alert.prompt(
+              'Enter custom label',
+              'Give this address a name',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Save',
+                  onPress: (customLabel) => {
+                    if (customLabel && customLabel.trim())
+                      saveAddressWithLabel('other', customLabel.trim())
+                    else Alert.alert('Error', 'Label cannot be empty')
+                  },
+                },
+              ],
+              'plain-text'
+            )
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+      { cancelable: true }
+    )
+  }
+
+  const saveAddressWithLabel = async (
+    label: 'home' | 'office' | 'other',
+    customLabel: string | undefined,
+    addressOverride?: string,
+    coordsOverride?: { latitude: number; longitude: number }
+  ) => {
+    setSavingAddress(true)
+    try {
+      const addressToSave = addressOverride ?? resolvedAddress
+      const latToSave = coordsOverride?.latitude ?? markerCoord.latitude
+      const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude
+
+      await createSavedAddress({
+        label,
+        customLabel: label === 'other' ? customLabel : null,
+        address: resolvedAddress,
+        coordinates: {
+          lat: markerCoord.latitude,
+          lng: markerCoord.longitude,
+        },
+        isDefault: false, // optionally ask user if default
+      })
+      Alert.alert('Success', 'Address saved successfully')
+      fetchSavedAddresses() // refresh the list
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to save address')
+    } finally {
+      setSavingAddress(false)
+    }
+  }
+
+  // ── Reverse geocode (unchanged) ────────────────────────────────────────
   const reverseGeocode = async (lat: number, lng: number) => {
     if (resolving) return
     setResolving(true)
@@ -240,9 +294,7 @@ export default function PickupLocation() {
           setResolvedAddress([r.name, r.street, r.district, r.city, r.region, r.postalCode].filter(Boolean).join(', '))
           return
         }
-      } catch {
-        // ignore
-      }
+      } catch { /* ignore */ }
       setResolvedAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`)
     } finally {
       setResolving(false)
@@ -356,7 +408,6 @@ export default function PickupLocation() {
     }
   }
 
-  // ✅ Uses coordinates.lat / coordinates.lng from schema
   const handleSavedSelect = (addr: SavedAddress) => {
     const newCoord = {
       latitude: addr.coordinates.lat,
@@ -380,7 +431,6 @@ export default function PickupLocation() {
     }
   }, [viewMode])
 
-  // ── Saved Addresses Section ──────────────────────────────────────────────
   const renderSavedAddresses = () => {
     if (addressesLoading) {
       return (
@@ -434,7 +484,6 @@ export default function PickupLocation() {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <AppBackground>
         <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
@@ -453,7 +502,7 @@ export default function PickupLocation() {
             </TouchableOpacity>
           </View>
 
-          {/* ══ MAP VIEW ══ */}
+          {/* MAP VIEW */}
           {viewMode === 'map' ? (
             <View style={{ flex: 1 }}>
               <MapView
@@ -489,7 +538,6 @@ export default function PickupLocation() {
                 />
               </MapView>
 
-              {/* Floating search on map */}
               <View style={styles.mapSearchFloat}>
                 <SearchBar
                   isOnMap
@@ -504,7 +552,6 @@ export default function PickupLocation() {
                 />
               </View>
 
-              {/* GPS FAB */}
               <TouchableOpacity style={styles.fab} onPress={() => fetchCurrentLocation(false)} activeOpacity={0.85}>
                 {fetchingLocation
                   ? <ActivityIndicator size="small" color={TEAL} />
@@ -512,7 +559,7 @@ export default function PickupLocation() {
                 }
               </TouchableOpacity>
 
-              {/* Bottom confirm sheet */}
+              {/* Bottom sheet */}
               <View style={styles.mapSheet}>
                 <View style={styles.sheetHandle} />
                 <Text style={styles.sheetLabel}>{locationType === 'pickup' ? 'PICKUP FROM' : 'DROP-OFF AT'}</Text>
@@ -529,6 +576,23 @@ export default function PickupLocation() {
                     </Text>
                   </View>
                 )}
+                {/* Save button (new) */}
+                {!!resolvedAddress && !resolving && (
+                  <TouchableOpacity
+                    style={[styles.saveBtn, savingAddress && styles.saveBtnDisabled]}
+                    onPress={handleSaveCurrentLocation}
+                    disabled={savingAddress}
+                  >
+                    {savingAddress ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <MaterialIcons name="save" size={18} color="#fff" />
+                        <Text style={styles.saveBtnText}>  Save this location</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
                   style={[styles.confirmBtn, (!resolvedAddress || resolving) && styles.confirmDisabled]}
                   disabled={!resolvedAddress || resolving}
@@ -539,10 +603,8 @@ export default function PickupLocation() {
                 </TouchableOpacity>
               </View>
             </View>
-
           ) : (
-
-            /* ══ LIST VIEW ══ */
+            /* LIST VIEW */
             <View style={{ flex: 1 }}>
               <View style={styles.listSearchWrap}>
                 <SearchBar
@@ -564,7 +626,6 @@ export default function PickupLocation() {
                 onScrollBeginDrag={() => setShowDropdown(false)}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Pick on Map */}
                 <TouchableOpacity style={styles.mapRow} activeOpacity={0.85} onPress={() => setViewMode('map')}>
                   <View style={styles.mapRowIcon}>
                     <MaterialCommunityIcons name="map-marker-radius" size={22} color="#fff" />
@@ -578,7 +639,6 @@ export default function PickupLocation() {
 
                 <View style={styles.divider} />
 
-                {/* Current Location */}
                 <TouchableOpacity style={styles.listRow} activeOpacity={0.85} onPress={() => fetchCurrentLocation(true)}>
                   <View style={styles.listRowIcon}>
                     {fetchingLocation
@@ -595,10 +655,43 @@ export default function PickupLocation() {
 
                 <View style={styles.divider} />
 
-                {/* ✅ Dynamic Saved Addresses */}
                 <Text style={styles.sectionLabel}>Saved Addresses</Text>
                 {renderSavedAddresses()}
 
+                {/* Add New Address button (list view) – saves current GPS location */}
+                <TouchableOpacity
+                  style={styles.addAddressRow}
+                  onPress={async () => {
+                    setFetchingLocation(true)
+                    try {
+                      const { status } = await Location.requestForegroundPermissionsAsync()
+                      if (status !== 'granted') {
+                        Alert.alert('Permission Denied', 'Allow location access to save your current location.')
+                        return
+                      }
+                      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+                      const coord = { lat: loc.coords.latitude, lng: loc.coords.longitude }
+                      const url = `${NOMINATIM_URL}/reverse?format=json&lat=${coord.lat}&lon=${coord.lng}&zoom=18`
+                      const res = await fetch(url, { headers: { 'User-Agent': 'KORAApp/1.0' } })
+                      const data = await res.json()
+                      const address = data.display_name || `${coord.lat}, ${coord.lng}`
+                      const tmpResolvedAddress = address
+                      const tmpMarkerCoord = { latitude: coord.lat, longitude: coord.lng }
+
+                      // Save directly using computed values (avoid state timing issues)
+                      await saveAddressWithLabel('other', tmpResolvedAddress, tmpMarkerCoord)
+                      fetchSavedAddresses() // refresh list
+                      setShowDropdown(false)
+                    } catch (err: any) {
+                      Alert.alert('Error', err.message || 'Could not fetch current location')
+                    } finally {
+                      setFetchingLocation(false)
+                    }
+                  }}
+                >
+                  <MaterialIcons name="add-location" size={22} color={TEAL} />
+                  <Text style={styles.addAddressText}>Add current location as saved address</Text>
+                </TouchableOpacity>
               </ScrollView>
             </View>
           )}
@@ -611,7 +704,6 @@ export default function PickupLocation() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   root: { flex: 1, backgroundColor: '#fff' },
-
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
@@ -712,14 +804,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e8e8e8',
   },
 
-  // ── Feedback states (loading / error / empty) ──
   savedFeedback: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 16, paddingVertical: 14,
   },
   savedFeedbackText: { fontSize: 13, color: '#aaa' },
 
-  // ── Default badge ──
   defaultBadge: {
     backgroundColor: TEAL_LIGHT, borderRadius: 6,
     paddingHorizontal: 6, paddingVertical: 2,
@@ -737,7 +827,26 @@ const styles = StyleSheet.create({
   confirmBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     backgroundColor: TEAL, borderRadius: 12, paddingVertical: 15,
+    marginTop: 12,
   },
   confirmDisabled: { backgroundColor: '#ccc' },
   confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+
+  // New styles for save button
+  saveBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#2c8c7a', borderRadius: 12, paddingVertical: 12,
+    marginBottom: 8,
+  },
+  saveBtnDisabled: { backgroundColor: '#a0c4bc' },
+  saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+
+  addAddressRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    marginHorizontal: 16, marginVertical: 12,
+    paddingVertical: 12, paddingHorizontal: 16,
+    backgroundColor: TEAL_LIGHT, borderRadius: 14,
+    borderWidth: 1, borderColor: '#c8e8e4',
+  },
+  addAddressText: { fontSize: 14, fontWeight: '500', color: TEAL },
 })
