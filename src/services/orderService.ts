@@ -175,6 +175,8 @@ export async function getOrder(orderId: string): Promise<Order> {
   return res.order;
 }
 
+
+
 /**
  * Fetch all orders for a customer.
  * @param tab  "active"  → pending/in-progress statuses
@@ -199,3 +201,5 @@ export async function cancelOrder(orderId: string, customerId: string): Promise<
 export async function getOrderDetails(orderId: string) {
   return getOrder(orderId);
 }
+
+
