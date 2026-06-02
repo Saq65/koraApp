@@ -21,7 +21,7 @@ import {
 import {
   selectPickupAddress,
   selectDropoffAddress,
-} from "../../src/redux/store/addressSlice"; // ✅ Redux addresses
+} from "../../src/redux/store/addressSlice"; 
 
 /* ─── Constants ─── */
 const TEAL = "#1A6B5A";
