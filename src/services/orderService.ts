@@ -2,7 +2,7 @@
 // All order-related API calls. Matches the real Mongoose schema.
 
 const BASE_URL = __DEV__
-  ? 'http://10.0.2.2:3001/api'          // Android emulator → host localhost
+  ? 'http://192.168.1.126:5000/api'          // Android emulator → host localhost
   // ? 'http://localhost:3001/api'       // iOS simulator
   : 'https://your-production-api.com/api';
 

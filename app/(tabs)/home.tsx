@@ -150,7 +150,7 @@ export default function HomeScreen() {
         >
           {/* ACTIVE ORDER CARD */}
           {latestActiveOrder ? (
-            <TouchableOpacity onPress={() => router.push(`/trackorder/trackorder?orderId=${latestActiveOrder._id}`)} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${latestActiveOrder.orderNumber}`)} activeOpacity={0.8}>
               <View style={styles.cardWrap}>
                 <LinearGradient
                   colors={[TEAL, TEAL_DARK]}
@@ -222,7 +222,7 @@ export default function HomeScreen() {
             recentOrders.map((order) => (
               <TouchableOpacity
                 key={order._id}
-                onPress={() => router.push(`/order/${order._id}`)}
+                onPress={() => router.push(`/orderdetails/orderDetailsScreen?orderId=${order._id}`)}
                 activeOpacity={0.7}
               >
                 <View style={styles.recentCard}>
