@@ -60,3 +60,19 @@ export const getOrderHistory = async () => {
   const token = await getToken();
   return apiClient("/orders/history", "GET", undefined, token || undefined);
 };
+
+export const getOrderDetails = async (orderId: string) => {
+  const token = await getToken();
+  return apiClient(`/orders/${orderId}`, "GET", undefined, token || undefined);
+};
+
+
+export const cancelOrder = async (orderId: string) => {
+  const token = await getToken();
+  return apiClient(
+    `/orders/${orderId}/status`,
+    "PUT",
+    { status: "cancelled" },
+    token || undefined
+  );
+};

@@ -12,7 +12,7 @@ export const apiClient = async (
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       ...(body && { body: JSON.stringify(body) }),
-    });
+    }); 
 
     const data = await res.json();
 
