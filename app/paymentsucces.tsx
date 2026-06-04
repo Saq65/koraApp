@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   View,
   Text,
@@ -10,14 +10,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 /* ─── Constants ─── */
-const TEAL       = "#1A6B5A";
+const TEAL = "#1A6B5A";
 const TEAL_LIGHT = "#E8F4F1";
 const GRAY_LIGHT = "#EFEFEA";
-const GRAY_TEXT  = "#ABABAB";
-const TEXT_DARK  = "#1A1A1A";
-const TEXT_MID   = "#666666";
+const GRAY_TEXT = "#ABABAB";
+const TEXT_DARK = "#1A1A1A";
+const TEXT_MID = "#666666";
 
 export default function PaymentSuccess() {
+  const { orderNumber } = useLocalSearchParams<{ orderNumber: string }>();
+console.log('[PaymentSuccess] orderNumber:', orderNumber); 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
@@ -37,12 +39,19 @@ export default function PaymentSuccess() {
         </Text>
 
         {/* ── Track Order Button ── */}
-        <TouchableOpacity onPress={()=>router.push('/trackorder/trackorder')} style={styles.trackBtn} activeOpacity={0.85}>
+        <TouchableOpacity
+          onPress={() => {
+            if (!orderNumber) return;
+            router.replace(`/trackorder/trackOrderScreen?orderId=${orderNumber}`);
+          }}
+          style={[styles.trackBtn, !orderNumber && { opacity: 0.5 }]}
+          activeOpacity={0.85}
+        >
           <Text style={styles.trackBtnText}>Track Order</Text>
         </TouchableOpacity>
 
         {/* ── Back to Home ── */}
-        <TouchableOpacity onPress={()=>router.push('/')} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => router.push('/')} activeOpacity={0.7}>
           <Text style={styles.backText}>Back to Home</Text>
         </TouchableOpacity>
       </View>

@@ -49,7 +49,7 @@ export default function Payment() {
   const [selected, setSelected] = useState("gpay");
   const [upiId, setUpiId] = useState("");
   const [loading, setLoading] = useState(false);
- const pickupCoordinates = useAppSelector(selectPickupCoordinates);   // ✅ use
+  const pickupCoordinates = useAppSelector(selectPickupCoordinates);   // ✅ use
   const dropoffCoordinates = useAppSelector(selectDropoffCoordinates); // ✅ use
   const handlePayment = async () => {
     try {
@@ -72,13 +72,13 @@ export default function Payment() {
       const payload = {
         items: formattedItems,
         pickupAddress: {
-        address: pickupAddress,
-        coordinates: pickupCoordinates,   // ✅ include (could be null)
-      },
-      deliveryAddress: {
-        address: dropoffAddress,
-        coordinates: dropoffCoordinates,  // ✅ include
-      },
+          address: pickupAddress,
+          coordinates: pickupCoordinates,   // ✅ include (could be null)
+        },
+        deliveryAddress: {
+          address: dropoffAddress,
+          coordinates: dropoffCoordinates,  // ✅ include
+        },
         paymentMethod: "upi" as const,
         selectedUpiApp: selected,
         paymentStatus: "success",
@@ -90,9 +90,15 @@ export default function Payment() {
 
       if (response.success) {
         dispatch(clearCart());
-        Alert.alert("Success", "Order placed successfully");
-        router.replace("/paymentsucces");
+        console.log('[Payment] navigating with orderNumber:', response.data?.orderNumber);
+        Alert.alert("Success", "Order placed successfully", [
+          {
+            text: "OK",
+            onPress: () => router.replace(`/paymentsucces?orderNumber=${response.data.orderNumber}`)
+          }
+        ]);
       }
+
     } catch (error) {
       console.log("PAYMENT ERROR:", error);
       Alert.alert("Error", "Failed to place order");
@@ -103,76 +109,76 @@ export default function Payment() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-        <AppBackground>
-      <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Payment</Text>
-        <View style={{ width: 36 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          <View style={styles.upiHeader}>
-            <View style={styles.upiIconWrap}>
-              <MaterialCommunityIcons name="cellphone" size={20} color="#fff" />
-            </View>
-            <View>
-              <Text style={styles.upiTitle}>Pay via UPI</Text>
-              <Text style={styles.upiSubtitle}>Fast & secure payment</Text>
-            </View>
-          </View>
-
-          <View style={styles.grid}>
-            {UPI_OPTIONS.map((opt) => {
-              const isActive = selected === opt.id;
-              return (
-                <TouchableOpacity
-                  key={opt.id}
-                  style={[styles.gridItem, isActive && styles.gridItemActive]}
-                  onPress={() => setSelected(opt.id)}
-                >
-                  <View style={[styles.gridIcon, { backgroundColor: opt.iconBg }]}>
-                    <MaterialCommunityIcons name={opt.icon} size={18} color={opt.iconColor} />
-                  </View>
-                  <Text style={[styles.gridLabel, isActive && styles.gridLabelActive]}>{opt.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Text style={styles.orText}>Or enter UPI ID</Text>
-          <View style={styles.inputWrap}>
-            <TextInput
-              style={styles.input}
-              placeholder="yourname@upi"
-              placeholderTextColor={GRAY_TEXT}
-              value={upiId}
-              onChangeText={setUpiId}
-            />
-          </View>
-
-          <View style={styles.secureRow}>
-            <MaterialCommunityIcons name="shield-check-outline" size={14} color={TEAL} />
-            <Text style={styles.secureText}>Secured by 256-bit encryption</Text>
-          </View>
+      <AppBackground>
+        <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Payment</Text>
+          <View style={{ width: 36 }} />
         </View>
-      </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={handlePayment} style={styles.payBtn} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <MaterialCommunityIcons name="check-circle-outline" size={20} color="#fff" />
-              <Text style={styles.payBtnText}>Continue Payment</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.card}>
+            <View style={styles.upiHeader}>
+              <View style={styles.upiIconWrap}>
+                <MaterialCommunityIcons name="cellphone" size={20} color="#fff" />
+              </View>
+              <View>
+                <Text style={styles.upiTitle}>Pay via UPI</Text>
+                <Text style={styles.upiSubtitle}>Fast & secure payment</Text>
+              </View>
+            </View>
+
+            <View style={styles.grid}>
+              {UPI_OPTIONS.map((opt) => {
+                const isActive = selected === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    style={[styles.gridItem, isActive && styles.gridItemActive]}
+                    onPress={() => setSelected(opt.id)}
+                  >
+                    <View style={[styles.gridIcon, { backgroundColor: opt.iconBg }]}>
+                      <MaterialCommunityIcons name={opt.icon} size={18} color={opt.iconColor} />
+                    </View>
+                    <Text style={[styles.gridLabel, isActive && styles.gridLabelActive]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={styles.orText}>Or enter UPI ID</Text>
+            <View style={styles.inputWrap}>
+              <TextInput
+                style={styles.input}
+                placeholder="yourname@upi"
+                placeholderTextColor={GRAY_TEXT}
+                value={upiId}
+                onChangeText={setUpiId}
+              />
+            </View>
+
+            <View style={styles.secureRow}>
+              <MaterialCommunityIcons name="shield-check-outline" size={14} color={TEAL} />
+              <Text style={styles.secureText}>Secured by 256-bit encryption</Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <TouchableOpacity onPress={handlePayment} style={styles.payBtn} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="check-circle-outline" size={20} color="#fff" />
+                <Text style={styles.payBtnText}>Continue Payment</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </AppBackground>
     </SafeAreaView>
   );
@@ -180,147 +186,147 @@ export default function Payment() {
 
 // ... styles remain exactly the same as you had ...
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: GRAY_LIGHT,
-    },
+  safeArea: {
+    flex: 1,
+    backgroundColor: GRAY_LIGHT,
+  },
 
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 16,
-    },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+  },
 
-    backBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "#fff",
-        justifyContent: "center",
-        alignItems: "center",
-    },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-    },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
 
-    scrollContent: {
-        padding: 16,
-    },
+  scrollContent: {
+    padding: 16,
+  },
 
-    card: {
-        backgroundColor: "#fff",
-        borderRadius: 20,
-        padding: 16,
-        gap: 16,
-    },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    gap: 16,
+  },
 
-    upiHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-    },
+  upiHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
 
-    upiIconWrap: {
-        width: 42,
-        height: 42,
-        borderRadius: 12,
-        backgroundColor: TEAL,
-        justifyContent: "center",
-        alignItems: "center",
-    },
+  upiIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: TEAL,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    upiTitle: {
-        fontWeight: "700",
-        fontSize: 15,
-    },
+  upiTitle: {
+    fontWeight: "700",
+    fontSize: 15,
+  },
 
-    upiSubtitle: {
-        color: GRAY_TEXT,
-    },
+  upiSubtitle: {
+    color: GRAY_TEXT,
+  },
 
-    grid: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 10,
-    },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
 
-    gridItem: {
-        width: "47%",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        padding: 12,
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 12,
-    },
+  gridItem: {
+    width: "47%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+  },
 
-    gridItemActive: {
-        borderColor: TEAL,
-        backgroundColor: TEAL_LIGHT,
-    },
+  gridItemActive: {
+    borderColor: TEAL,
+    backgroundColor: TEAL_LIGHT,
+  },
 
-    gridIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        justifyContent: "center",
-        alignItems: "center",
-    },
+  gridIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    gridLabel: {
-        fontWeight: "600",
-    },
+  gridLabel: {
+    fontWeight: "600",
+  },
 
-    gridLabelActive: {
-        color: TEAL,
-    },
+  gridLabelActive: {
+    color: TEAL,
+  },
 
-    orText: {
-        color: TEXT_MID,
-    },
+  orText: {
+    color: TEXT_MID,
+  },
 
-    inputWrap: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 12,
-        padding: 12,
-    },
+  inputWrap: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    padding: 12,
+  },
 
-    input: {
-        fontSize: 14,
-    },
+  input: {
+    fontSize: 14,
+  },
 
-    secureRow: {
-        flexDirection: "row",
-        justifyContent: "center",
-        gap: 5,
-    },
+  secureRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 5,
+  },
 
-    secureText: {
-        fontSize: 12,
-        color: TEXT_MID,
-    },
+  secureText: {
+    fontSize: 12,
+    color: TEXT_MID,
+  },
 
-    footer: {
-        padding: 16,
-    },
+  footer: {
+    padding: 16,
+  },
 
-    payBtn: {
-        backgroundColor: TEAL,
-        padding: 15,
-        borderRadius: 30,
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "row",
-        gap: 8,
-    },
+  payBtn: {
+    backgroundColor: TEAL,
+    padding: 15,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
 
-    payBtnText: {
-        color: "#fff",
-        fontWeight: "700",
-    },
+  payBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
 });
