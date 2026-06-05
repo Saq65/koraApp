@@ -240,35 +240,35 @@ export default function PickupLocation() {
   }
 
   const saveAddressWithLabel = async (
-    label: 'home' | 'office' | 'other',
-    customLabel: string | undefined,
-    addressOverride?: string,
-    coordsOverride?: { latitude: number; longitude: number }
-  ) => {
-    setSavingAddress(true)
-    try {
-      const addressToSave = addressOverride ?? resolvedAddress
-      const latToSave = coordsOverride?.latitude ?? markerCoord.latitude
-      const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude
+  label: 'home' | 'office' | 'other',
+  customLabel?: string | null,
+  addressOverride?: string,
+  coordsOverride?: { latitude: number; longitude: number }
+) => {
+  setSavingAddress(true);
+  try {
+    const addressToSave = addressOverride ?? resolvedAddress;
+    const latToSave = coordsOverride?.latitude ?? markerCoord.latitude;
+    const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude;
 
-      await createSavedAddress({
-        label,
-        customLabel: label === 'other' ? customLabel : null,
-        address: resolvedAddress,
-        coordinates: {
-          lat: markerCoord.latitude,
-          lng: markerCoord.longitude,
-        },
-        isDefault: false, // optionally ask user if default
-      })
-      Alert.alert('Success', 'Address saved successfully')
-      fetchSavedAddresses() // refresh the list
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to save address')
-    } finally {
-      setSavingAddress(false)
-    }
+    await createSavedAddress({
+      label,
+      customLabel: label === 'other' ? (customLabel ?? null) : null,
+      address: addressToSave,
+      coordinates: {
+        lat: latToSave,
+        lng: lngToSave,
+      },
+      isDefault: false,
+    });
+    Alert.alert('Success', 'Address saved successfully');
+    fetchSavedAddresses();
+  } catch (error: any) {
+    Alert.alert('Error', error.message || 'Failed to save address');
+  } finally {
+    setSavingAddress(false);
   }
+};
 
   // ── Reverse geocode (unchanged) ────────────────────────────────────────
   const reverseGeocode = async (lat: number, lng: number) => {

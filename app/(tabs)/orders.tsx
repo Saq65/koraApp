@@ -134,7 +134,11 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
         <TouchableOpacity style={[styles.cancelBtn, { borderColor: "#E53935" }]} activeOpacity={0.8}>
           <Text style={styles.cancelBtnText}>Cancel Order</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={()=>router.push('/trackorder/trackorder')} style={[styles.trackBtn, { backgroundColor: theme.primary }]} activeOpacity={0.8}>
+        <TouchableOpacity 
+          onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.id ?? (order as any)?._id ?? ''}`)} 
+          style={[styles.trackBtn, { backgroundColor: theme.primary }]} 
+          activeOpacity={0.8}
+        >
           <Text style={styles.trackBtnText}>Live Tracking</Text>
         </TouchableOpacity>
       </View>
@@ -224,11 +228,14 @@ export default function Orders() {
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
         <View style={styles.header}>
-          <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.white }]}>
+          <TouchableOpacity 
+            style={[styles.backBtn, { backgroundColor: theme.card }]} 
+            onPress={() => router.back()}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Ionicons name="arrow-back" size={20} color={theme.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.text }]}>My Services</Text>
-          <View style={{ width: 36 }} />
         </View>
 
         <View style={[styles.tabRow, { backgroundColor: isDarkMode ? "#2D2D2D" : "#E2E2DA" }]}>
@@ -261,7 +268,6 @@ export default function Orders() {
                 <Text style={[styles.emptyText, { color: theme.subText }]}>No active orders</Text>
               </View>
             ) : (
-              // ✅ Render each active order using the same ActiveOrderCard component
               activeOrders.map((item) => (
                 <ActiveOrderCard
                   key={item.order.id}
@@ -273,7 +279,7 @@ export default function Orders() {
                 />
               ))
             )
-          )  : (
+          ) : (
             historyOrders.length === 0 ? (
               <View style={styles.emptyWrap}>
                 <MaterialCommunityIcons name="package-variant" size={52} color={theme.subText} />
@@ -296,7 +302,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -314,6 +319,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",
+    marginLeft:10
   },
   tabRow: {
     flexDirection: "row",

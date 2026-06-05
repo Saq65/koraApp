@@ -21,10 +21,13 @@ import {
 } from "../../src/services/customer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
-import { getUser, setUser } from "../../src/utils/storage"; // add storage helpers
+import { getUser, setUser } from "../../src/utils/storage";
 
 export default function PersonalDetailsScreen() {
     const { theme, isDarkMode } = useTheme();
+
+    // Define styles NOW (before any conditional return)
+    const styles = getStyles(theme, isDarkMode);
 
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
@@ -37,13 +40,12 @@ export default function PersonalDetailsScreen() {
         dob: "",
     });
 
-    // Load from cache instantly, then refresh from API
     const loadProfile = async () => {
         const storedUser = await getUser();
         if (storedUser) {
             setProfile({
                 fullName: storedUser.name || "",
-                username: storedUser.username || "",   // 👈
+                username: storedUser.username || "",
                 email: storedUser.email || "",
                 phone: storedUser.mobile || "",
                 dob: storedUser.dob || "",
@@ -56,7 +58,7 @@ export default function PersonalDetailsScreen() {
             const data = response.data;
             const freshProfile = {
                 fullName: data.fullName || storedUser?.name || "",
-                username: data.username || storedUser?.username || "",  // 👈
+                username: data.username || storedUser?.username || "",
                 email: data.email || storedUser?.email || "",
                 phone: data.mobile || storedUser?.mobile || "",
                 dob: data.dob ? data.dob.split("T")[0] : "",
@@ -65,7 +67,7 @@ export default function PersonalDetailsScreen() {
             await setUser({
                 ...storedUser,
                 name: freshProfile.fullName,
-                username: freshProfile.username,  // 👈 store username
+                username: freshProfile.username,
                 email: freshProfile.email,
                 mobile: freshProfile.phone,
                 dob: freshProfile.dob,
@@ -76,7 +78,6 @@ export default function PersonalDetailsScreen() {
             setLoading(false);
         }
     };
-
 
     useEffect(() => {
         loadProfile();
@@ -90,7 +91,6 @@ export default function PersonalDetailsScreen() {
             };
             await updateProfile(formattedProfile);
 
-            // After successful update, refresh stored user data
             const storedUser = await getUser();
             await setUser({
                 ...storedUser,
@@ -110,7 +110,7 @@ export default function PersonalDetailsScreen() {
 
     if (loading) {
         return (
-            <View style={styles.loader}>
+            <View style={[styles.loader, { backgroundColor: theme.background }]}>
                 <ActivityIndicator size="large" color={theme.primary} />
             </View>
         );
@@ -123,14 +123,14 @@ export default function PersonalDetailsScreen() {
                     style={styles.container}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Header with back button and edit/save */}
+                    {/* Header */}
                     <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <Ionicons name="chevron-back" size={24} color={theme.text} />
+                        <View style={styles.headerEdit}>
+                            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                            <Ionicons name="arrow-back" size={22} color={theme.text} />
                         </TouchableOpacity>
-                        <Text style={[styles.headerTitle, { color: theme.text }]}>
-                            Personal Details
-                        </Text>
+                        <Text style={styles.headerTitle}>Personal Details</Text>
+                        </View>
                         <TouchableOpacity onPress={() => editing ? handleUpdate() : setEditing(true)}>
                             <Text style={[styles.editText, { color: theme.primary }]}>
                                 {editing ? "Save" : "Edit"}
@@ -150,7 +150,7 @@ export default function PersonalDetailsScreen() {
                         <Text style={[styles.name, { color: theme.text }]}>
                             {profile.fullName || "John Doe"}
                         </Text>
-                        <Text style={[styles.username, { color: theme.textSecondary || (isDarkMode ? "#9CA3AF" : "#6B7280") }]}>
+                        <Text style={[styles.username, { color: theme.subText }]}>
                             @{profile.username || profile.fullName.toLowerCase().replace(/\s/g, '')}
                         </Text>
                     </View>
@@ -164,13 +164,15 @@ export default function PersonalDetailsScreen() {
                             theme={theme}
                             isDarkMode={isDarkMode}
                             onChangeText={(text: string) => setProfile({ ...profile, fullName: text })}
+                            styles={styles}
                         />
                         <DetailField
                             label="Username"
-                            value={`@${profile.username || profile.fullName.toLowerCase().replace(/\s/g, '')}`} 
+                            value={`@${profile.username || profile.fullName.toLowerCase().replace(/\s/g, '')}`}
                             editable={false}
                             theme={theme}
                             isDarkMode={isDarkMode}
+                            styles={styles}
                         />
                         <DetailField
                             label="Date of Birth"
@@ -179,7 +181,8 @@ export default function PersonalDetailsScreen() {
                             theme={theme}
                             isDarkMode={isDarkMode}
                             onChangeText={(text: string) => setProfile({ ...profile, dob: text })}
-                            placeholder="MM/DD/YYYY"
+                            placeholder="YYYY-MM-DD"
+                            styles={styles}
                         />
                         <DetailField
                             label="Mobile Number"
@@ -189,6 +192,7 @@ export default function PersonalDetailsScreen() {
                             isDarkMode={isDarkMode}
                             onChangeText={(text: string) => setProfile({ ...profile, phone: text })}
                             keyboardType="phone-pad"
+                            styles={styles}
                         />
                         <DetailField
                             label="Email"
@@ -198,6 +202,7 @@ export default function PersonalDetailsScreen() {
                             isDarkMode={isDarkMode}
                             onChangeText={(text: string) => setProfile({ ...profile, email: text })}
                             keyboardType="email-address"
+                            styles={styles}
                         />
                     </View>
 
@@ -208,7 +213,7 @@ export default function PersonalDetailsScreen() {
     );
 }
 
-// Detail field component (unchanged)
+// Detail field component
 function DetailField({
     label,
     value,
@@ -217,11 +222,12 @@ function DetailField({
     isDarkMode,
     onChangeText,
     keyboardType = "default",
-    placeholder = ""
+    placeholder = "",
+    styles,
 }: any) {
     return (
         <View style={styles.fieldContainer}>
-            <Text style={[styles.fieldLabel, { color: theme.textSecondary || (isDarkMode ? "#9CA3AF" : "#6B7280") }]}>
+            <Text style={[styles.fieldLabel, { color: theme.subText }]}>
                 {label}
             </Text>
             {editable ? (
@@ -232,39 +238,61 @@ function DetailField({
                             color: theme.text,
                             backgroundColor: isDarkMode ? "#1F2937" : "#F9FAFB",
                             borderWidth: 1,
-                            borderColor: theme.border || (isDarkMode ? "#374151" : "#E5E7EB"),
+                            borderColor: theme.border,
                         }
                     ]}
                     value={value}
                     onChangeText={onChangeText}
                     keyboardType={keyboardType}
                     placeholder={placeholder}
-                    placeholderTextColor={theme.textSecondary || (isDarkMode ? "#6B7280" : "#9CA3AF")}
+                    placeholderTextColor={theme.subText}
                 />
             ) : (
                 <Text style={[styles.fieldValue, { color: theme.text }]}>
-                    {value}
+                    {value || "Not provided"}
                 </Text>
             )}
-            <View style={[styles.separator, { backgroundColor: theme.border || (isDarkMode ? "#374151" : "#E5E7EB") }]} />
+            <View style={[styles.separator, { backgroundColor: theme.border }]} />
         </View>
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any, isDarkMode: boolean) => StyleSheet.create({
     container: { flex: 1 },
     loader: { flex: 1, justifyContent: "center", alignItems: "center" },
     header: {
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "center",
+        justifyContent: "space-between",
         paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 8,
+        paddingVertical: 12,
     },
-    backButton: { padding: 4 },
-    headerTitle: { fontSize: 18, fontWeight: "600" },
-    editText: { fontSize: 16, fontWeight: "500" },
+    headerEdit:{
+flexDirection: "row",
+        alignItems: "center",
+gap:10
+    },
+    backBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: theme.card,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        color: theme.text,
+    },
+    editText: {
+        fontSize: 16,
+        fontWeight: "600",
+    },
     profileSection: { alignItems: "center", paddingVertical: 24 },
     avatarContainer: { marginBottom: 12 },
     avatar: { width: 80, height: 80, borderRadius: 40, justifyContent: "center", alignItems: "center" },
