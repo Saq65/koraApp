@@ -222,7 +222,9 @@ export default function HomeScreen() {
             recentOrders.map((order) => (
               <TouchableOpacity
                 key={order._id}
-                onPress={() => router.push(`/orderdetails/orderDetailsScreen?orderId=${order._id}`)}
+                // onPress={() => router.push(`/orderdetails/orderDetailsScreen?orderId=${order._id}`)}
+onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.orderNumber}`)}
+
                 activeOpacity={0.7}
               >
                 <View style={styles.recentCard}>
@@ -244,7 +246,7 @@ export default function HomeScreen() {
 
         {/* FLOATING BOOK PICKUP BUTTON */}
         <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
-          <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')} activeOpacity={0.88}>
+          <TouchableOpacity onPress={() => router.push('/category')} activeOpacity={0.88}>
             <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
               <Ionicons name="car-outline" size={s(20)} color="#fff" />
               <Text style={styles.pickupText}>Book Pickup</Text>

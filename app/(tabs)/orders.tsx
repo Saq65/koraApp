@@ -134,7 +134,7 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
         <TouchableOpacity style={[styles.cancelBtn, { borderColor: "#E53935" }]} activeOpacity={0.8}>
           <Text style={styles.cancelBtnText}>Cancel Order</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={()=>router.push('/trackorder/trackorder')} style={[styles.trackBtn, { backgroundColor: theme.primary }]} activeOpacity={0.8}>
+<TouchableOpacity onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.id ?? (order as any)?._id ?? ''}`)} style={[styles.trackBtn, { backgroundColor: theme.primary }]} activeOpacity={0.8}>
           <Text style={styles.trackBtnText}>Live Tracking</Text>
         </TouchableOpacity>
       </View>

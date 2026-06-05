@@ -171,8 +171,7 @@ export default function LanguageScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f0f4f3",
-        paddingHorizontal: 20,
+        paddingHorizontal: 5,
     },
     header: {
         flexDirection: "row",
