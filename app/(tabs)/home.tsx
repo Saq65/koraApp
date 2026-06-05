@@ -9,7 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,6 +19,7 @@ import { router } from "expo-router";
 import { getUser } from "../../src/utils/storage";
 import { getActiveOrder, getRecentOrders } from "../../src/api/order";
 import AppBackground from "@/components/AppBackground";
+import { useTranslation } from "react-i18next"; // ← ADD
 
 const { width: W, height: H } = Dimensions.get("window");
 const s = (n: number) => Math.round((W / 375) * n);
@@ -34,9 +35,9 @@ const PH = s(16);
 
 export default function HomeScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation(); // ← ADD
   const [drawerVisible, setDrawerVisible] = useState(false);
 
-  // Dynamic state
   const [userName, setUserName] = useState("");
   const [latestActiveOrder, setLatestActiveOrder] = useState<any>(null);
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
@@ -48,42 +49,39 @@ export default function HomeScreen() {
   const BUTTON_BOTTOM = vs(16);
   const bottomPad = BUTTON_HEIGHT + BUTTON_BOTTOM + vs(12);
 
-  // Helper: format status text
+  // ← UPDATED: t() se status text
   const getStatusText = (status: string) => {
     switch (status) {
-      case "pending_sp": return "Pending";
-      case "accepted": return "In Process";
-      case "picked_up": return "Picked Up";
-      case "delivered": return "Delivered";
-      case "cancelled": return "Cancelled";
+      case "pending_sp": return t("order.status_pending");
+      case "accepted":   return t("order.status_accepted");
+      case "picked_up":  return t("order.status_picked_up");
+      case "delivered":  return t("order.status_delivered");
+      case "cancelled":  return t("order.status_cancelled");
       default: return status;
     }
   };
 
-  // Helper: format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
 
-  // Fetch all data
   const fetchAllData = useCallback(async () => {
     try {
       const user = await getUser();
       if (user?.name) setUserName(user.name);
-      else setUserName("Guest");
+      else setUserName(t("common.guest")); // ← UPDATED
 
       const [activeRes, recentRes] = await Promise.all([
         getActiveOrder(),
         getRecentOrders(),
       ]);
 
-      // activeRes.data is now an array of { order, tracking, cancellationDeadline }
-      const activeOrdersArray = activeRes.success && Array.isArray(activeRes.data) ? activeRes.data : [];
+      const activeOrdersArray =
+        activeRes.success && Array.isArray(activeRes.data) ? activeRes.data : [];
       setActiveOrdersCount(activeOrdersArray.length);
 
       if (activeOrdersArray.length > 0) {
-        // Pick the first order (most recent because backend sorted by createdAt -1)
         const first = activeOrdersArray[0];
         const orderFromApi = first.order;
         setLatestActiveOrder({
@@ -94,7 +92,7 @@ export default function HomeScreen() {
           price: orderFromApi.price,
           status: orderFromApi.status,
           date: orderFromApi.date,
-          itemCount: orderFromApi.items, // items is a number already
+          itemCount: orderFromApi.items,
         });
       } else {
         setLatestActiveOrder(null);
@@ -107,7 +105,7 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [t]); // ← t dependency add karo
 
   useEffect(() => {
     fetchAllData();
@@ -118,19 +116,43 @@ export default function HomeScreen() {
     fetchAllData();
   };
 
-  // Services list (unchanged)
+  // ← UPDATED: services labels translated
   const services = [
     {
-      icon: "water-outline", label: "Laundry", sub: "Wash, Iron &\nmore", iconBg: TEAL_LIGHT, iconColor: TEAL, soon: false, route: "/category",
+      icon: "water-outline",
+      label: t("services.laundry"),
+      sub: t("services.laundry_sub"),
+      iconBg: TEAL_LIGHT,
+      iconColor: TEAL,
+      soon: false,
+      route: "/category",
     },
-    { icon: "sparkles-outline", label: "Dry Clean", sub: "Premium care", iconBg: "#1a1a2e", iconColor: "#fff", soon: true },
-    { icon: "cube-outline", label: "Rental", sub: "Coming soon", iconBg: "#f59e0b", iconColor: "#fff", soon: true },
+    {
+      icon: "sparkles-outline",
+      label: t("services.dry_clean"),
+      sub: t("services.dry_clean_sub"),
+      iconBg: "#1a1a2e",
+      iconColor: "#fff",
+      soon: true,
+    },
+    {
+      icon: "cube-outline",
+      label: t("services.rental"),
+      sub: t("services.rental_sub"),
+      iconBg: "#f59e0b",
+      iconColor: "#fff",
+      soon: true,
+    },
   ];
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName || "Loading..."} />
+        <Header
+          theme={theme}
+          onMenuPress={() => setDrawerVisible(true)}
+          userName={t("common.loading")} // ← UPDATED
+        />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color={TEAL} />
         </View>
@@ -141,7 +163,11 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <AppBackground>
-        <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName} />
+        <Header
+          theme={theme}
+          onMenuPress={() => setDrawerVisible(true)}
+          userName={userName}
+        />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -150,7 +176,14 @@ export default function HomeScreen() {
         >
           {/* ACTIVE ORDER CARD */}
           {latestActiveOrder ? (
-            <TouchableOpacity onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${latestActiveOrder.orderNumber}`)} activeOpacity={0.8}>
+            <TouchableOpacity
+              onPress={() =>
+                router.push(
+                  `/trackorder/trackOrderScreen?orderId=${latestActiveOrder.orderNumber}`
+                )
+              }
+              activeOpacity={0.8}
+            >
               <View style={styles.cardWrap}>
                 <LinearGradient
                   colors={[TEAL, TEAL_DARK]}
@@ -163,7 +196,8 @@ export default function HomeScreen() {
 
                   <View style={{ flex: 1, zIndex: 1 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                      <Text style={styles.orderTag}>ACTIVE ORDER</Text>
+                      {/* ← UPDATED */}
+                      <Text style={styles.orderTag}>{t("home.active_order")}</Text>
                       {activeOrdersCount > 1 && (
                         <View style={styles.badge}>
                           <Text style={styles.badgeText}>+{activeOrdersCount - 1} more</Text>
@@ -174,7 +208,7 @@ export default function HomeScreen() {
                     <View style={styles.orderTimeRow}>
                       <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
                       <Text style={styles.orderTime}>
-                        {getStatusText(latestActiveOrder.status)} • {latestActiveOrder.itemCount} items
+                        {getStatusText(latestActiveOrder.status)} • {latestActiveOrder.itemCount} {t("order.items")} {/* ← UPDATED */}
                       </Text>
                     </View>
                   </View>
@@ -189,10 +223,12 @@ export default function HomeScreen() {
             <View style={styles.cardWrap}>
               <View style={styles.noOrderCard}>
                 <Ionicons name="cart-outline" size={s(32)} color={TEAL} />
-                <Text style={styles.noOrderText}>No active order</Text>
-                <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')}>
+                {/* ← UPDATED */}
+                <Text style={styles.noOrderText}>{t("home.no_active_order")}</Text>
+                <TouchableOpacity onPress={() => router.push("/placeorder/placeorder")}>
                   <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.startOrderBtn}>
-                    <Text style={styles.startOrderBtnText}>Place first order</Text>
+                    {/* ← UPDATED */}
+                    <Text style={styles.startOrderBtnText}>{t("home.place_first_order")}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -200,7 +236,8 @@ export default function HomeScreen() {
           )}
 
           {/* SERVICES */}
-          <Text style={styles.sectionTitle}>Services</Text>
+          {/* ← UPDATED */}
+          <Text style={styles.sectionTitle}>{t("home.services")}</Text>
           <View style={styles.servicesRow}>
             {services.map((svc, i) => (
               <ServiceCard key={i} {...svc} />
@@ -209,20 +246,27 @@ export default function HomeScreen() {
 
           {/* PROMO */}
           <View style={styles.promoCard}>
-            <Text style={styles.promoTag}> SPECIAL OFFER</Text>
-            <Text style={styles.promoTitle}>30% Off First Order!</Text>
-            <Text style={styles.promoSub}>Use code KORA30 at checkout</Text>
+            {/* ← UPDATED */}
+            <Text style={styles.promoTag}>{t("home.special_offer")}</Text>
+            <Text style={styles.promoTitle}>{t("home.promo_title")}</Text>
+            <Text style={styles.promoSub}>{t("home.promo_code")}</Text>
           </View>
 
           {/* RECENT ORDERS */}
-          <Text style={styles.sectionTitle}>Recent Orders</Text>
+          {/* ← UPDATED */}
+          <Text style={styles.sectionTitle}>{t("home.recent_orders")}</Text>
           {recentOrders.length === 0 ? (
-            <Text style={styles.emptyText}>No orders yet</Text>
+            // ← UPDATED
+            <Text style={styles.emptyText}>{t("home.no_orders_yet")}</Text>
           ) : (
             recentOrders.map((order) => (
               <TouchableOpacity
                 key={order._id}
-                onPress={() => router.push(`/orderdetails/orderDetailsScreen?orderId=${order._id}`)}
+                onPress={() =>
+                  router.push(
+                    `/orderdetails/orderDetailsScreen?orderId=${order._id}`
+                  )
+                }
                 activeOpacity={0.7}
               >
                 <View style={styles.recentCard}>
@@ -232,7 +276,7 @@ export default function HomeScreen() {
                   <View style={{ flex: 1, marginLeft: s(12) }}>
                     <Text style={styles.recentService}>{order.orderNumber}</Text>
                     <Text style={styles.recentMeta}>
-                      {order.items?.length || 0} items • {formatDate(order.createdAt)}
+                      {order.items?.length || 0} {t("order.items")} • {formatDate(order.createdAt)} {/* ← UPDATED */}
                     </Text>
                   </View>
                   <Text style={styles.recentStatus}>{getStatusText(order.status)}</Text>
@@ -244,10 +288,14 @@ export default function HomeScreen() {
 
         {/* FLOATING BOOK PICKUP BUTTON */}
         <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
-          <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')} activeOpacity={0.88}>
+          <TouchableOpacity
+            onPress={() => router.push("/placeorder/placeorder")}
+            activeOpacity={0.88}
+          >
             <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
               <Ionicons name="car-outline" size={s(20)} color="#fff" />
-              <Text style={styles.pickupText}>Book Pickup</Text>
+              {/* ← UPDATED */}
+              <Text style={styles.pickupText}>{t("home.book_pickup")}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -264,8 +312,9 @@ export default function HomeScreen() {
   );
 }
 
-// Service Card component (unchanged)
+// ServiceCard — label aur sub already translated pass ho rahe hain upar se
 function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) {
+  const { t } = useTranslation(); // ← ADD (sirf "SOON" badge ke liye)
   return (
     <TouchableOpacity
       onPress={() => {
@@ -276,7 +325,8 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) 
     >
       {soon && (
         <View style={styles.soonBadge}>
-          <Text style={styles.soonText}>SOON</Text>
+          {/* ← UPDATED */}
+          <Text style={styles.soonText}>{t("services.coming_soon")}</Text>
         </View>
       )}
       <View style={[styles.serviceIconCircle, { backgroundColor: iconBg }]}>
@@ -288,11 +338,9 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) 
   );
 }
 
+// styles — bilkul same, koi change nahi
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f4f6f5",
-  },
+  container: { flex: 1, backgroundColor: "#f4f6f5" },
   cardWrap: { paddingHorizontal: PH, marginTop: vs(8) },
   orderCard: {
     borderRadius: R, padding: s(18),
@@ -322,33 +370,17 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", zIndex: 1,
   },
   noOrderCard: {
-    backgroundColor: "#fff",
-    borderRadius: R,
-    padding: s(24),
-    alignItems: "center",
-    marginHorizontal: PH,
+    backgroundColor: "#fff", borderRadius: R,
+    padding: s(24), alignItems: "center", marginHorizontal: PH,
   },
-  noOrderText: {
-    fontSize: ms(14),
-    color: "#666",
-    marginTop: vs(8),
-    marginBottom: vs(16),
-  },
-  startOrderBtn: {
-    paddingVertical: vs(10),
-    paddingHorizontal: s(20),
-    borderRadius: s(25),
-  },
-  startOrderBtnText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: ms(14),
-  },
+  noOrderText: { fontSize: ms(14), color: "#666", marginTop: vs(8), marginBottom: vs(16) },
+  startOrderBtn: { paddingVertical: vs(10), paddingHorizontal: s(20), borderRadius: s(25) },
+  startOrderBtnText: { color: "#fff", fontWeight: "600", fontSize: ms(14) },
   sectionTitle: {
     fontSize: ms(17), fontWeight: "700", color: "#1a1a1a",
     paddingHorizontal: PH, marginTop: vs(22), marginBottom: vs(12),
   },
-  servicesRow: { flexDirection: "row", paddingHorizontal: PH, gap: s(12), justifyContent: 'center' },
+  servicesRow: { flexDirection: "row", paddingHorizontal: PH, gap: s(12), justifyContent: "center" },
   serviceCard: {
     flex: 1, backgroundColor: "#fff", borderRadius: R,
     padding: s(14), alignItems: "flex-start", position: "relative",
@@ -387,31 +419,16 @@ const styles = StyleSheet.create({
   recentService: { fontSize: ms(14), fontWeight: "700", color: "#1a1a1a", marginBottom: vs(3) },
   recentMeta: { fontSize: ms(12), color: "#888" },
   recentStatus: { fontSize: ms(13), fontWeight: "600", color: TEAL },
-  bottomBar: {
-    position: "absolute",
-    left: PH,
-    right: PH,
-  },
+  bottomBar: { position: "absolute", left: PH, right: PH },
   pickupBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     paddingVertical: vs(17), borderRadius: s(50), gap: s(8),
   },
   pickupText: { color: "#fff", fontSize: ms(16), fontWeight: "800" },
-  emptyText: {
-    textAlign: "center",
-    color: "#888",
-    marginTop: vs(20),
-    fontSize: ms(14),
-  },
+  emptyText: { textAlign: "center", color: "#888", marginTop: vs(20), fontSize: ms(14) },
   badge: {
     backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: s(12),
-    paddingHorizontal: s(8),
-    paddingVertical: s(2),
+    borderRadius: s(12), paddingHorizontal: s(8), paddingVertical: s(2),
   },
-  badgeText: {
-    color: "#fff",
-    fontSize: ms(10),
-    fontWeight: "600",
-  },
+  badgeText: { color: "#fff", fontSize: ms(10), fontWeight: "600" },
 });

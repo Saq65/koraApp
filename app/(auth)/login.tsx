@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { sendOtp, verifyOtp } from "../../src/api/auth";
 // Remove: import { setToken } from "../../src/utils/storage";
-import { handleSuccessfulLogin } from "../../src/utils/authHelpers"; // ✅ ADD THIS
+import { handleSuccessfulLogin } from "../../src/utils/authHelpers"; 
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";

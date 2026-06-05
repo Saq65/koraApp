@@ -1,87 +1,85 @@
 {
-  "app_name": "KORA.care",
+  "app_name": "Kora",
   "branding": {
-    "your_care": "Your care is our priority"
+    "your_care": "Your Care, Our Priority"
   },
   "auth": {
     "welcome_back": "Welcome Back",
     "sign_in_continue": "Sign in to continue",
-    "username": "Username",
-    "min_6_characters": "Min 6 characters",
-    "full_name_placeholder": "Your full name",
-    "email_placeholder": "your@email.com",
-    "email_or_username": "Email or Username",
-    "password": "Password",
-    "forgot_password": "Forgot Password?",
-    "sign_in": "Sign In",
-    "continue_google": "Continue with Google",
-    "or_continue_with": "or continue with",
-    "use_phone_instead": "Use Phone instead",
-    "dont_have_account": "Don't have an account? ",
-    "sign_up": "Sign Up",
     "phone_number": "Phone Number",
     "send_otp": "Send OTP",
     "verify_otp": "Verify OTP",
-    "please_wait": "Please wait...",
-    "enter_valid_phone": "Please enter a valid 10-digit Indian mobile number",
-    "enter_complete_otp": "Please enter complete 6-digit OTP",
-    "forgot_password_title": "Forgot Password?",
-    "forgot_password_description": "Don't worry! Enter your phone number and we'll send you a code to reset your password.",
-    "send_reset_code": "Send Reset Code",
+    "please_wait": "Please Wait...",
+    "enter_complete_otp": "Please enter complete OTP",
+    "forgot_password": "Forgot Password?",
+    "or_continue_with": "or continue with",
+    "continue_google": "Continue with Google",
     "use_email": "Use Email instead",
-    "verification_code": "Enter Verification Code",
-    "verification_description": "We've sent a 6-digit code to",
-    "verify_code": "Verify Code",
-    "verifying": "Verifying...",
-    "resend_code": "Resend Code",
-    "didnt_get_code": "Didn't get a code?",
-    "create_new_password": "Create New Password",
-    "password_reset_description": "Your new password must be different from previously used passwords.",
-    "new_password": "New Password",
-    "confirm_new_password": "Confirm New Password",
-    "reset_password": "Reset Password",
-    "password_reset_success": "Password Reset!",
-    "password_reset_success_description": "Your password has been changed successfully. You can now sign in with your new password.",
-    "continue_signin": "Continue to Sign In",
-    "create_account": "Create your account",
-    "username": "Username",
-    "choose_username": "Choose a username",
-    "mobile_number": "Mobile Number",
-    "full_name": "Full Name",
-    "email_optional": "Email (optional)",
-    "dob_optional": "Date of Birth (optional)",
-    "select_dob": "Select date of birth",
-    "create_account_btn": "Create Account",
-    "signup_google": "Sign up with Google",
-    "go_back_login": "Go back to login page",
-    "resend_code_in": "Resend code in {{seconds}}s"
+    "dont_have_account": "Don't have an account?",
+    "sign_up": "Sign Up"
   },
   "validation": {
-    "invalid_credentials": "Invalid username or password",
-    "enter_email_password": "Please enter both email/username and password",
-    "invalid_server_response": "Invalid response from server",
-    "registration_failed": "Registration failed. Please try again.",
-    "username_required": "Username is required",
-    "password_min": "Password must be at least 6 characters",
-    "fullname_required": "Full name is required",
-    "passwords_not_match": "Passwords do not match",
-     "password_min_hint": "Password must be at least 6 characters",
-       "reset_failed": "Password reset failed. Please try again.",
-        "verification_failed": "Verification failed. Please try again.",
-    "resend_failed": "Failed to resend code. Please try again."
-    
+    "valid_phone": "Please enter a valid 10-digit phone number"
   },
-  
-  "terms": {
-    "title": "Terms & Conditions",
-    "subtitle": "Please review before continuing",
-    "agreement_title": "KORA.CARE AGREEMENT",
-    "agree_checkbox_prefix": "I have read and agree to the",
-    "agree_checkbox_terms": "Terms & Conditions",
-    "agree_checkbox_and": "and",
-    "agree_checkbox_privacy": "Privacy Policy",
-    "agree_checkbox_suffix": "of KORA.care",
-    "agree_button": "Agree & Continue"
-  }
-
+  "home": {
+    "active_order": "ACTIVE ORDER",
+    "no_active_order": "No active order",
+    "place_first_order": "Place first order",
+    "services": "Services",
+    "recent_orders": "Recent Orders",
+    "no_orders_yet": "No orders yet",
+    "book_pickup": "Book Pickup",
+    "special_offer": "SPECIAL OFFER",
+    "promo_title": "30% Off First Order!",
+    "promo_code": "Use code KORA30 at checkout"
+  },
+  "services": {
+    "laundry": "Laundry",
+    "laundry_sub": "Wash, Iron & more",
+    "dry_clean": "Dry Clean",
+    "dry_clean_sub": "Premium care",
+    "rental": "Rental",
+    "rental_sub": "Coming soon",
+    "coming_soon": "SOON"
+  },
+  "order": {
+    "status_pending": "Pending",
+    "status_accepted": "In Process",
+    "status_picked_up": "Picked Up",
+    "status_delivered": "Delivered",
+    "status_cancelled": "Cancelled",
+    "items": "items"
+  },
+  "greeting": {
+    "morning": "Good Morning",
+    "afternoon": "Good Afternoon",
+    "evening": "Good Evening",
+    "night": "Good Night"
+  },
+  "common": {
+    "guest": "Guest",
+    "loading": "Loading..."
+  },
+  "category": {
+  "title": "Choose Category",
+  "laundry": "Laundry",
+  "men_desc": "Shirts, pants, kurtas & more",
+  "women_desc": "Tops, sarees, dresses & more",
+  "children_desc": "Kids clothing & uniforms",
+  "linen_desc": "Bedsheets, curtains, towels",
+  "browse": "Browse"
+},
+"subcategory": {
+  "laundry_service": "Laundry Service",
+  "premium_care": "Premium care",
+  "gentle_wash": "Gentle wash",
+  "deep_clean": "Deep clean",
+  "items_count": "items",
+  "select": "Select",
+  "basket_empty": "Your basket is empty",
+  "choose_services": "Choose Services",
+  "add_to_cart": "Add to Cart",
+  "select_at_least_one": "Select at least one",
+  "items_total": "items • Total"
+}
 }

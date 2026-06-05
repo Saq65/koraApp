@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import LanguageSelector from "./LanguageSelector";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -31,10 +32,16 @@ export default function Header({ theme, onMenuPress, userName }: any) {
         </View>
       </View>
 
-      {/* RIGHT: Bell icon */}
-      <TouchableOpacity onPress={() => router.push('/notifications')} style={styles.iconButton}>
-        <Ionicons name="notifications-outline" size={22} color={theme.text} />
-      </TouchableOpacity>
+      {/* RIGHT: Language selector + Bell icon */}
+      <View style={styles.right}>
+        <LanguageSelector />
+        <TouchableOpacity
+          onPress={() => router.push("/notifications")}
+          style={styles.iconButton}
+        >
+          <Ionicons name="notifications-outline" size={22} color={theme.text} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -56,6 +63,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  right: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   iconButton: {
     padding: 6,

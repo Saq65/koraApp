@@ -1,146 +1,63 @@
 {
-  "common": {
-    "app_name": "KORA",
-    "loading": "लोड होत आहे...",
-    "submit": "सबमिट करा",
-    "cancel": "रद्द करा",
-    "continue": "पुढे जा",
-    "back": "मागे जा",
-    "next": "पुढे",
-    "done": "पूर्ण",
-    "save": "जतन करा",
-    "edit": "संपादित करा",
-    "delete": "हटवा",
-    "search": "शोधा",
-    "yes": "होय",
-    "no": "नाही",
-    "ok": "ठीक आहे",
-    "retry": "पुन्हा प्रयत्न करा"
-  },
-
+  "app_name": "कोरा",
   "branding": {
-    "your_care": "तुमची काळजी ही आमची प्राथमिकता आहे",
-    "create_account": "तुमचे खाते तयार करा"
+    "your_care": "तुमची काळजी, आमची प्राथमिकता"
   },
-
   "auth": {
-    "welcome_back": "पुन्हा स्वागत आहे",
-    "username": "वापरकर्तानाव",
-    "min_6_characters": "किमान ६ अक्षरे",
-    "full_name_placeholder": "तुमचे पूर्ण नाव",
-    "email_placeholder": "तुमचा ईमेल",
-    "sign_in_continue": "पुढे जाण्यासाठी साइन इन करा",
-
-    "email_or_username": "ईमेल किंवा यूजरनेम",
-    "password": "पासवर्ड",
-    "new_password": "नवीन पासवर्ड",
-    "confirm_new_password": "नवीन पासवर्डची पुष्टी करा",
-
-    "forgot_password": "पासवर्ड विसरलात?",
-    "reset_password": "पासवर्ड रीसेट करा",
-    "create_new_password": "नवीन पासवर्ड तयार करा",
-
-    "password_reset_success": "पासवर्ड यशस्वीरित्या रीसेट झाला!",
-    "password_reset_success_description": "तुमचा पासवर्ड यशस्वीरित्या बदलला गेला आहे. आता तुम्ही नवीन पासवर्डने साइन इन करू शकता.",
-
-    "sign_in": "साइन इन",
-    "sign_up": "साइन अप",
-    "create_account_btn": "खाते तयार करा",
-
-    "continue_google": "Google सह पुढे जा",
-    "continue_signin": "साइन इन सुरू ठेवा",
-
-    "use_phone_instead": "त्याऐवजी फोन वापरा",
-    "use_email_instead": "त्याऐवजी ईमेल वापरा",
-
-    "dont_have_account": "खाते नाही?",
-    "already_have_account": "आधीच खाते आहे?",
-
+    "welcome_back": "परत स्वागत आहे",
+    "sign_in_continue": "सुरू ठेवण्यासाठी साइन इन करा",
     "phone_number": "फोन नंबर",
-    "mobile_number": "मोबाइल नंबर",
-
     "send_otp": "OTP पाठवा",
     "verify_otp": "OTP सत्यापित करा",
-    "verify_code": "कोड सत्यापित करा",
-
-    "verification_code": "सत्यापन कोड प्रविष्ट करा",
-    "verification_description": "आम्ही 6 अंकी कोड पाठवला आहे",
-
-    "resend_code": "कोड पुन्हा पाठवा",
-    "didnt_get_code": "कोड मिळाला नाही?",
-
-    "send_reset_code": "रीसेट कोड पाठवा",
-
-    "sending": "पाठवत आहे...",
-    "verifying": "सत्यापित करत आहे...",
-    "resetting": "रीसेट करत आहे...",
-    "creating": "तयार करत आहे...",
-    "please_wait": "कृपया थांबा...",
-
-    "full_name": "पूर्ण नाव",
-    "username": "यूजरनेम",
-
-    "email_optional": "ईमेल (पर्यायी)",
-    "dob_optional": "जन्मतारीख (पर्यायी)",
-
-    "choose_username": "यूजरनेम निवडा",
-    "enter_mobile": "10 अंकी मोबाइल नंबर प्रविष्ट करा",
-    "enter_full_name": "तुमचे पूर्ण नाव प्रविष्ट करा",
-    "enter_email": "तुमचा ईमेल प्रविष्ट करा",
-
-    "select_dob": "जन्मतारीख निवडा",
-
-    "min_password": "किमान 6 अक्षरे",
-    "password_hint": "पासवर्ड किमान 6 अक्षरांचा असावा",
-
-    "or_continue_with": "किंवा पुढे जा",
-    "or": "किंवा",
-
-    "go_back_login": "लॉगिन पेजवर परत जा",
-
-    "forgot_password_title": "पासवर्ड विसरलात?",
-
-    "forgot_password_description": "काळजी करू नका! तुमचा फोन नंबर प्रविष्ट करा आणि आम्ही पासवर्ड रीसेट करण्यासाठी कोड पाठवू.",
-
-    "reset_password_description": "तुमचा नवीन पासवर्ड पूर्वीच्या पासवर्डपेक्षा वेगळा असावा.",
-    "resend_code_in": "{{seconds}} सेकंदात कोड पुन्हा पाठवा"
+    "please_wait": "कृपया प्रतीक्षा करा...",
+    "enter_complete_otp": "कृपया संपूर्ण OTP टाका",
+    "forgot_password": "पासवर्ड विसरलात?",
+    "or_continue_with": "किंवा यासह सुरू ठेवा",
+    "continue_google": "Google सह सुरू ठेवा",
+    "use_email": "ईमेल वापरा",
+    "dont_have_account": "खाते नाही?",
+    "sign_up": "साइन अप करा"
   },
-
   "validation": {
-    "enter_email_password": "कृपया ईमेल/यूजरनेम आणि पासवर्ड दोन्ही प्रविष्ट करा",
-
-    "invalid_credentials": "अवैध यूजरनेम किंवा पासवर्ड",
-
-    "invalid_server_response": "सर्व्हरकडून अवैध प्रतिसाद",
-
-    "valid_phone": "कृपया वैध 10 अंकी मोबाइल नंबर प्रविष्ट करा",
-
-    "valid_indian_phone": "कृपया वैध भारतीय मोबाइल नंबर प्रविष्ट करा",
-
-    "enter_complete_otp": "कृपया पूर्ण 6 अंकी OTP प्रविष्ट करा",
-
-    "username_required": "यूजरनेम आवश्यक आहे",
-
-    "fullname_required": "पूर्ण नाव आवश्यक आहे",
-
-    "password_min_length": "पासवर्ड किमान 6 अक्षरांचा असावा",
-
-    "password_min": "पासवर्ड किमान 6 अक्षरांचा असावा",
-
-    "password_not_match": "पासवर्ड जुळत नाहीत",
-
-    "passwords_not_match": "पासवर्ड जुळत नाहीत",
-
-    "registration_failed": "नोंदणी अयशस्वी झाली. कृपया पुन्हा प्रयत्न करा.",
-
-    "password_reset_failed": "पासवर्ड रीसेट अयशस्वी",
-
-    "verification_failed": "सत्यापन अयशस्वी",
-
-    "resend_failed": "कोड पुन्हा पाठवण्यात अयशस्वी",
-     "password_min_hint": "पासवर्ड किमान ६ अक्षरांचा असावा",
-    "reset_failed": "पासवर्ड रीसेट अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
-    "verification_failed": "पडताळा अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
-"resend_failed": "कोड पुन्हा पाठविण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+    "valid_phone": "कृपया 10 अंकी वैध फोन नंबर टाका"
+  },
+  "home": {
+    "active_order": "सक्रिय ऑर्डर",
+    "no_active_order": "कोणताही सक्रिय ऑर्डर नाही",
+    "place_first_order": "पहिला ऑर्डर द्या",
+    "services": "सेवा",
+    "recent_orders": "अलीकडील ऑर्डर",
+    "no_orders_yet": "अद्याप कोणताही ऑर्डर नाही",
+    "book_pickup": "पिकअप बुक करा",
+    "special_offer": "विशेष ऑफर",
+    "promo_title": "पहिल्या ऑर्डरवर 30% सूट!",
+    "promo_code": "चेकआउटवर KORA30 कोड वापरा"
+  },
+  "services": {
+    "laundry": "लॉन्ड्री",
+    "laundry_sub": "धुणे, इस्त्री आणि अधिक",
+    "dry_clean": "ड्राय क्लीन",
+    "dry_clean_sub": "प्रीमियम काळजी",
+    "rental": "भाडे",
+    "rental_sub": "लवकरच येत आहे",
+    "coming_soon": "लवकरच"
+  },
+  "order": {
+    "status_pending": "प्रलंबित",
+    "status_accepted": "प्रक्रियेत",
+    "status_picked_up": "पिक अप झाले",
+    "status_delivered": "वितरित झाले",
+    "status_cancelled": "रद्द",
+    "items": "वस्तू"
+  },
+  "greeting": {
+    "morning": "सुप्रभात",
+    "afternoon": "नमस्कार",
+    "evening": "शुभ संध्याकाळ",
+    "night": "शुभ रात्री"
+  },
+  "common": {
+    "guest": "पाहुणे",
+    "loading": "लोड होत आहे..."
   }
 }
