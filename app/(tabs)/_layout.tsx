@@ -1,24 +1,24 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const TEAL = "#2d7a6e";
+import { useTheme } from "../../src/theme/ThemeProvider";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const { theme, isDarkMode } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: TEAL,
-        tabBarInactiveTintColor: "#999",
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.subText,
         tabBarStyle: {
-          backgroundColor: "#fff",
+          backgroundColor: theme.card,
           borderTopWidth: 1,
-          borderTopColor: "#f0f0f0",
-          height: 60 + insets.bottom,  
-          paddingBottom: insets.bottom || 8,  
+          borderTopColor: theme.border,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom || 8,
           paddingTop: 6,
           elevation: 8,
         },
@@ -31,7 +31,6 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-        
           title: "Home",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
@@ -45,7 +44,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cube-outline" size={size} color={color} />
           ),
-        
         }}
       />
       <Tabs.Screen

@@ -8,6 +8,7 @@ import {
   Dimensions,
   RefreshControl,
   ActivityIndicator,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -25,15 +26,11 @@ const s = (n: number) => Math.round((W / 375) * n);
 const vs = (n: number) => Math.round((H / 812) * n);
 const ms = (n: number, f = 0.4) => n + (s(n) - n) * f;
 
-const TEAL = "#2d7a6e";
-const TEAL_DARK = "#1f5c54";
-const TEAL_LIGHT = "#e8f5f3";
-
 const R = s(18);
 const PH = s(16);
 
 export default function HomeScreen() {
-  const { theme } = useTheme();
+  const { theme, isDarkMode } = useTheme();
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   // Dynamic state
@@ -78,12 +75,10 @@ export default function HomeScreen() {
         getRecentOrders(),
       ]);
 
-      // activeRes.data is now an array of { order, tracking, cancellationDeadline }
       const activeOrdersArray = activeRes.success && Array.isArray(activeRes.data) ? activeRes.data : [];
       setActiveOrdersCount(activeOrdersArray.length);
 
       if (activeOrdersArray.length > 0) {
-        // Pick the first order (most recent because backend sorted by createdAt -1)
         const first = activeOrdersArray[0];
         const orderFromApi = first.order;
         setLatestActiveOrder({
@@ -94,7 +89,7 @@ export default function HomeScreen() {
           price: orderFromApi.price,
           status: orderFromApi.status,
           date: orderFromApi.date,
-          itemCount: orderFromApi.items, // items is a number already
+          itemCount: orderFromApi.items,
         });
       } else {
         setLatestActiveOrder(null);
@@ -118,42 +113,66 @@ export default function HomeScreen() {
     fetchAllData();
   };
 
-  // Services list (unchanged)
+  // Services list – now using theme colors for first service
   const services = [
     {
-      icon: "water-outline", label: "Laundry", sub: "Wash, Iron &\nmore", iconBg: TEAL_LIGHT, iconColor: TEAL, soon: false, route: "/category",
+      icon: "water-outline",
+      label: "Laundry",
+      sub: "Wash, Iron &\nmore",
+      iconBg: theme.primaryLight,
+      iconColor: theme.primary,
+      soon: false,
+      route: "/category",
     },
-    { icon: "sparkles-outline", label: "Dry Clean", sub: "Premium care", iconBg: "#1a1a2e", iconColor: "#fff", soon: true },
-    { icon: "cube-outline", label: "Rental", sub: "Coming soon", iconBg: "#f59e0b", iconColor: "#fff", soon: true },
+    {
+      icon: "sparkles-outline",
+      label: "Dry Clean",
+      sub: "Premium care",
+      iconBg: "#1a1a2e",
+      iconColor: "#fff",
+      soon: true,
+      route: undefined,
+    },
+    {
+      icon: "cube-outline",
+      label: "Rental",
+      sub: "Coming soon",
+      iconBg: "#f59e0b",
+      iconColor: "#fff",
+      soon: true,
+      route: undefined,
+    },
   ];
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={["top"]}>
+        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
         <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName || "Loading..."} />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color={TEAL} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={["top"]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <AppBackground>
         <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName} />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: bottomPad }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
         >
           {/* ACTIVE ORDER CARD */}
           {latestActiveOrder ? (
             <TouchableOpacity onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${latestActiveOrder.orderNumber}`)} activeOpacity={0.8}>
               <View style={styles.cardWrap}>
                 <LinearGradient
-                  colors={[TEAL, TEAL_DARK]}
+                  colors={[theme.primary, theme.secondary]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.orderCard}
@@ -165,7 +184,7 @@ export default function HomeScreen() {
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                       <Text style={styles.orderTag}>ACTIVE ORDER</Text>
                       {activeOrdersCount > 1 && (
-                        <View style={styles.badge}>
+                        <View style={[styles.badge, { backgroundColor: "rgba(255,255,255,0.3)" }]}>
                           <Text style={styles.badgeText}>+{activeOrdersCount - 1} more</Text>
                         </View>
                       )}
@@ -187,11 +206,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ) : (
             <View style={styles.cardWrap}>
-              <View style={styles.noOrderCard}>
-                <Ionicons name="cart-outline" size={s(32)} color={TEAL} />
-                <Text style={styles.noOrderText}>No active order</Text>
+              <View style={[styles.noOrderCard, { backgroundColor: theme.card }]}>
+                <Ionicons name="cart-outline" size={s(32)} color={theme.primary} />
+                <Text style={[styles.noOrderText, { color: theme.subText }]}>No active order</Text>
                 <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')}>
-                  <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.startOrderBtn}>
+                  <LinearGradient colors={[theme.primary, theme.secondary]} style={styles.startOrderBtn}>
                     <Text style={styles.startOrderBtnText}>Place first order</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -200,44 +219,42 @@ export default function HomeScreen() {
           )}
 
           {/* SERVICES */}
-          <Text style={styles.sectionTitle}>Services</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Services</Text>
           <View style={styles.servicesRow}>
             {services.map((svc, i) => (
-              <ServiceCard key={i} {...svc} />
+              <ServiceCard key={i} {...svc} theme={theme} />
             ))}
           </View>
 
           {/* PROMO */}
-          <View style={styles.promoCard}>
-            <Text style={styles.promoTag}> SPECIAL OFFER</Text>
-            <Text style={styles.promoTitle}>30% Off First Order!</Text>
-            <Text style={styles.promoSub}>Use code KORA30 at checkout</Text>
+          <View style={[styles.promoCard, { backgroundColor: theme.primaryLight, borderLeftColor: theme.primary }]}>
+            <Text style={styles.promoTag}>SPECIAL OFFER</Text>
+            <Text style={[styles.promoTitle, { color: theme.text }]}>30% Off First Order!</Text>
+            <Text style={[styles.promoSub, { color: theme.subText }]}>Use code KORA30 at checkout</Text>
           </View>
 
           {/* RECENT ORDERS */}
-          <Text style={styles.sectionTitle}>Recent Orders</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Orders</Text>
           {recentOrders.length === 0 ? (
-            <Text style={styles.emptyText}>No orders yet</Text>
+            <Text style={[styles.emptyText, { color: theme.subText }]}>No orders yet</Text>
           ) : (
             recentOrders.map((order) => (
               <TouchableOpacity
                 key={order._id}
-                // onPress={() => router.push(`/orderdetails/orderDetailsScreen?orderId=${order._id}`)}
-onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.orderNumber}`)}
-
+                onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.orderNumber}`)}
                 activeOpacity={0.7}
               >
-                <View style={styles.recentCard}>
-                  <View style={styles.recentIconBox}>
-                    <Ionicons name="shirt-outline" size={s(20)} color={TEAL} />
+                <View style={[styles.recentCard, { backgroundColor: theme.card }]}>
+                  <View style={[styles.recentIconBox, { backgroundColor: theme.primaryLight }]}>
+                    <Ionicons name="shirt-outline" size={s(20)} color={theme.primary} />
                   </View>
                   <View style={{ flex: 1, marginLeft: s(12) }}>
-                    <Text style={styles.recentService}>{order.orderNumber}</Text>
-                    <Text style={styles.recentMeta}>
+                    <Text style={[styles.recentService, { color: theme.text }]}>{order.orderNumber}</Text>
+                    <Text style={[styles.recentMeta, { color: theme.subText }]}>
                       {order.items?.length || 0} items • {formatDate(order.createdAt)}
                     </Text>
                   </View>
-                  <Text style={styles.recentStatus}>{getStatusText(order.status)}</Text>
+                  <Text style={[styles.recentStatus, { color: theme.primary }]}>{getStatusText(order.status)}</Text>
                 </View>
               </TouchableOpacity>
             ))
@@ -245,9 +262,9 @@ onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.orderNu
         </ScrollView>
 
         {/* FLOATING BOOK PICKUP BUTTON */}
-        <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
+        <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM, left: PH, right: PH }]}>
           <TouchableOpacity onPress={() => router.push('/category')} activeOpacity={0.88}>
-            <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
+            <LinearGradient colors={[theme.primary, theme.secondary]} style={styles.pickupBtn}>
               <Ionicons name="car-outline" size={s(20)} color="#fff" />
               <Text style={styles.pickupText}>Book Pickup</Text>
             </LinearGradient>
@@ -266,15 +283,15 @@ onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.orderNu
   );
 }
 
-// Service Card component (unchanged)
-function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) {
+// Service Card component – updated to use theme where appropriate
+function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route, theme }: any) {
   return (
     <TouchableOpacity
       onPress={() => {
         if (!soon && route) router.push(route);
       }}
       activeOpacity={0.85}
-      style={styles.serviceCard}
+      style={[styles.serviceCard, { backgroundColor: theme.card }]}
     >
       {soon && (
         <View style={styles.soonBadge}>
@@ -284,8 +301,8 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) 
       <View style={[styles.serviceIconCircle, { backgroundColor: iconBg }]}>
         <Ionicons name={icon} size={s(24)} color={iconColor} />
       </View>
-      <Text style={styles.serviceLabel}>{label}</Text>
-      <Text style={styles.serviceSub}>{sub}</Text>
+      <Text style={[styles.serviceLabel, { color: theme.text }]}>{label}</Text>
+      <Text style={[styles.serviceSub, { color: theme.subText }]}>{sub}</Text>
     </TouchableOpacity>
   );
 }
@@ -293,7 +310,6 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route }: any) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f4f6f5",
   },
   cardWrap: { paddingHorizontal: PH, marginTop: vs(8) },
   orderCard: {
@@ -324,7 +340,6 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", zIndex: 1,
   },
   noOrderCard: {
-    backgroundColor: "#fff",
     borderRadius: R,
     padding: s(24),
     alignItems: "center",
@@ -332,7 +347,6 @@ const styles = StyleSheet.create({
   },
   noOrderText: {
     fontSize: ms(14),
-    color: "#666",
     marginTop: vs(8),
     marginBottom: vs(16),
   },
@@ -347,12 +361,12 @@ const styles = StyleSheet.create({
     fontSize: ms(14),
   },
   sectionTitle: {
-    fontSize: ms(17), fontWeight: "700", color: "#1a1a1a",
+    fontSize: ms(17), fontWeight: "700",
     paddingHorizontal: PH, marginTop: vs(22), marginBottom: vs(12),
   },
   servicesRow: { flexDirection: "row", paddingHorizontal: PH, gap: s(12), justifyContent: 'center' },
   serviceCard: {
-    flex: 1, backgroundColor: "#fff", borderRadius: R,
+    flex: 1, borderRadius: R,
     padding: s(14), alignItems: "flex-start", position: "relative",
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
@@ -367,32 +381,30 @@ const styles = StyleSheet.create({
     width: s(46), height: s(46), borderRadius: s(23),
     alignItems: "center", justifyContent: "center", marginBottom: vs(10),
   },
-  serviceLabel: { fontSize: ms(13), fontWeight: "700", color: "#1a1a1a", marginBottom: vs(3) },
-  serviceSub: { fontSize: ms(11), color: "#888", lineHeight: ms(15) },
+  serviceLabel: { fontSize: ms(13), fontWeight: "700", marginBottom: vs(3) },
+  serviceSub: { fontSize: ms(11), lineHeight: ms(15) },
   promoCard: {
-    marginHorizontal: PH, marginTop: vs(18), backgroundColor: TEAL_LIGHT,
-    borderRadius: R, padding: s(20), borderLeftWidth: 4, borderLeftColor: TEAL,
+    marginHorizontal: PH, marginTop: vs(18),
+    borderRadius: R, padding: s(20), borderLeftWidth: 4,
   },
   promoTag: { fontSize: ms(11), fontWeight: "700", color: "#c07a00", marginBottom: vs(4) },
-  promoTitle: { fontSize: ms(17), fontWeight: "800", color: "#1a1a1a", marginBottom: vs(4) },
-  promoSub: { fontSize: ms(12), color: "#555" },
+  promoTitle: { fontSize: ms(17), fontWeight: "800", marginBottom: vs(4) },
+  promoSub: { fontSize: ms(12) },
   recentCard: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#fff",
+    flexDirection: "row", alignItems: "center",
     marginHorizontal: PH, marginBottom: vs(10), padding: s(14),
     borderRadius: R, shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   recentIconBox: {
     width: s(42), height: s(42), borderRadius: s(21),
-    backgroundColor: TEAL_LIGHT, alignItems: "center", justifyContent: "center",
+    alignItems: "center", justifyContent: "center",
   },
-  recentService: { fontSize: ms(14), fontWeight: "700", color: "#1a1a1a", marginBottom: vs(3) },
-  recentMeta: { fontSize: ms(12), color: "#888" },
-  recentStatus: { fontSize: ms(13), fontWeight: "600", color: TEAL },
+  recentService: { fontSize: ms(14), fontWeight: "700", marginBottom: vs(3) },
+  recentMeta: { fontSize: ms(12) },
+  recentStatus: { fontSize: ms(13), fontWeight: "600" },
   bottomBar: {
     position: "absolute",
-    left: PH,
-    right: PH,
   },
   pickupBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
@@ -401,12 +413,10 @@ const styles = StyleSheet.create({
   pickupText: { color: "#fff", fontSize: ms(16), fontWeight: "800" },
   emptyText: {
     textAlign: "center",
-    color: "#888",
     marginTop: vs(20),
     fontSize: ms(14),
   },
   badge: {
-    backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: s(12),
     paddingHorizontal: s(8),
     paddingVertical: s(2),

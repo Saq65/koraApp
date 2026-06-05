@@ -7,12 +7,15 @@ function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
   if (hour < 17) return { text: "Good Afternoon", emoji: "☀️" };
-  if (hour < 21) return { text: "Good Evening", emoji: "🌆" };
-  return { text: "Good Night", emoji: "🌙" };
+  // For 17:00 onwards (including night), always show "Good Evening"
+  return { text: "Good Evening", emoji: "🌙" };
 }
 
 export default function Header({ theme, onMenuPress, userName }: any) {
   const { text, emoji } = getGreeting();
+
+  // Dynamic styles based on theme
+  const styles = getStyles(theme);
 
   return (
     <View style={styles.header}>
@@ -39,35 +42,36 @@ export default function Header({ theme, onMenuPress, userName }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
-    height: 60,
-    borderColor: "#f0f0f0",
-    borderBottomWidth: 1,
-    backgroundColor: "#fff",
-  },
-  left: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  iconButton: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.05)",
-  },
-  greeting: {
-    fontSize: 13,
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 24,
-  },
-});
+const getStyles = (theme: any) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingTop: 10,
+      paddingBottom: 4,
+      height: 60,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      backgroundColor: theme.card,  // matches card background like other screens
+    },
+    left: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    iconButton: {
+      padding: 6,
+      borderRadius: 8,
+      backgroundColor: theme.primaryLight,  // consistent with icon backgrounds elsewhere
+    },
+    greeting: {
+      fontSize: 13,
+    },
+    name: {
+      fontSize: 20,
+      fontWeight: "700",
+      lineHeight: 24,
+    },
+  });
