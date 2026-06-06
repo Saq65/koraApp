@@ -65,7 +65,7 @@ export default function HomeScreen() {
     return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
 
-  // ← services inside component so t() works
+  // services inside component so t() works
   const services = [
     {
       icon: "water-outline",
@@ -231,13 +231,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ) : (
             <View style={styles.cardWrap}>
-              <View style={styles.noOrderCard}>
+              <View style={[styles.noOrderCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
                 <Ionicons name="cart-outline" size={s(32)} color={TEAL} />
-                {/* ← FIXED */}
-                <Text style={styles.noOrderText}>{t("home.no_active_order")}</Text>
+                <Text style={[styles.noOrderText, { color: theme.subText }]}>{t("home.no_active_order")}</Text>
                 <TouchableOpacity onPress={() => router.push("/placeorder/placeorder")}>
                   <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.startOrderBtn}>
-                    {/* ← FIXED */}
                     <Text style={styles.startOrderBtnText}>{t("home.place_first_order")}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -246,49 +244,46 @@ export default function HomeScreen() {
           )}
 
           {/* SERVICES */}
-          {/* ← FIXED */}
-          <Text style={styles.sectionTitle}>{t("home.services")}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("home.services")}</Text>
           <View style={styles.servicesRow}>
             {services.map((svc, i) => (
               <ServiceCard key={i} {...svc} theme={theme} t={t} />
             ))}
           </View>
 
-          {/* PROMO */}
-          <View style={styles.promoCard}>
-            {/* ← FIXED */}
-            <Text style={styles.promoTag}>{t("home.special_offer")}</Text>
-            <Text style={styles.promoTitle}>{t("home.promo_title")}</Text>
-            <Text style={styles.promoSub}>{t("home.promo_code")}</Text>
+          {/* PROMO - FIXED with proper card styling */}
+          <View style={[styles.promoCard, { backgroundColor: theme.card, borderLeftColor: TEAL, shadowColor: theme.shadow }]}>
+            <View style={[styles.promoTagContainer, { backgroundColor: isDarkMode ? 'rgba(29, 158, 117, 0.15)' : TEAL_LIGHT }]}>
+              <Text style={[styles.promoTag, { color: TEAL }]}>{t("home.special_offer")}</Text>
+            </View>
+            <Text style={[styles.promoTitle, { color: theme.text }]}>{t("home.promo_title")}</Text>
+            <Text style={[styles.promoSub, { color: theme.subText }]}>{t("home.promo_code")}</Text>
           </View>
 
           {/* RECENT ORDERS */}
-          {/* ← FIXED */}
-          <Text style={styles.sectionTitle}>{t("home.recent_orders")}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t("home.recent_orders")}</Text>
           {recentOrders.length === 0 ? (
-            // ← FIXED
-            <Text style={styles.emptyText}>{t("home.no_orders_yet")}</Text>
+            <Text style={[styles.emptyText, { color: theme.subText }]}>{t("home.no_orders_yet")}</Text>
           ) : (
             recentOrders.map((order) => (
               <TouchableOpacity
                 key={order._id}
                 onPress={() =>
-                  router.push(`/orderdetails/orderDetailsScreen?orderId=${order._id}`)
+                  router.push(`/order/orderDetails?orderId=${order._id}`)
                 }
                 activeOpacity={0.7}
               >
-                <View style={[styles.recentCard, { backgroundColor: theme.card }]}>
+                <View style={[styles.recentCard, { backgroundColor: theme.card, shadowColor: theme.shadow }]}>
                   <View style={[styles.recentIconBox, { backgroundColor: theme.primaryLight }]}>
                     <Ionicons name="shirt-outline" size={s(20)} color={theme.primary} />
                   </View>
                   <View style={{ flex: 1, marginLeft: s(12) }}>
-                    <Text style={styles.recentService}>{order.orderNumber}</Text>
-                    <Text style={styles.recentMeta}>
-                      {/* ← FIXED */}
+                    <Text style={[styles.recentService, { color: theme.text }]}>{order.orderNumber}</Text>
+                    <Text style={[styles.recentMeta, { color: theme.subText }]}>
                       {order.items?.length || 0} {t("order.items")} •{" "}
                       {formatDate(order.createdAt)}
                     </Text>
-                  </View>
+                  </View> 
                   <Text style={[styles.recentStatus, { color: theme.primary }]}>
                     {getStatusText(order.status)}
                   </Text>
@@ -328,7 +323,7 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route, theme, 
     <TouchableOpacity
       onPress={() => { if (!soon && route) router.push(route); }}
       activeOpacity={0.85}
-      style={[styles.serviceCard, { backgroundColor: theme.card }]}
+      style={[styles.serviceCard, { backgroundColor: theme.card, shadowColor: theme.shadow }]}
     >
       {soon && (
         <View style={styles.soonBadge}>
@@ -374,10 +369,13 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", zIndex: 1,
   },
   noOrderCard: {
-    backgroundColor: "#fff", borderRadius: R,
-    padding: s(24), alignItems: "center", marginHorizontal: PH,
+    borderRadius: R,
+    padding: s(24),
+    alignItems: "center",
+    marginHorizontal: PH,
+    borderWidth: 1,
   },
-  noOrderText: { fontSize: ms(14), color: "#666", marginTop: vs(8), marginBottom: vs(16) },
+  noOrderText: { fontSize: ms(14), marginTop: vs(8), marginBottom: vs(16) },
   startOrderBtn: { paddingVertical: vs(10), paddingHorizontal: s(20), borderRadius: s(25) },
   startOrderBtnText: { color: "#fff", fontWeight: "600", fontSize: ms(14) },
   sectionTitle: {
@@ -388,7 +386,7 @@ const styles = StyleSheet.create({
   serviceCard: {
     flex: 1, borderRadius: R, padding: s(14),
     alignItems: "flex-start", position: "relative",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
   soonBadge: {
@@ -404,32 +402,59 @@ const styles = StyleSheet.create({
   serviceLabel: { fontSize: ms(13), fontWeight: "700", marginBottom: vs(3) },
   serviceSub: { fontSize: ms(11), lineHeight: ms(15) },
   promoCard: {
-    marginHorizontal: PH, marginTop: vs(18),
-    borderRadius: R, padding: s(20), borderLeftWidth: 4,
+    marginHorizontal: PH,
+    marginTop: vs(18),
+    borderRadius: R,
+    padding: s(10),
+    borderLeftWidth: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  promoTag: { fontSize: ms(11), fontWeight: "700", color: "#c07a00", marginBottom: vs(4) },
-  promoTitle: { fontSize: ms(17), fontWeight: "800", marginBottom: vs(4) },
-  promoSub: { fontSize: ms(12) },
+  promoTagContainer: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: s(10),
+    paddingVertical: vs(4),
+    borderRadius: s(20),
+    marginBottom: vs(10),
+  },
+  promoTag: { fontSize: ms(11), fontWeight: "700", letterSpacing: 0.5 },
+  promoTitle: { fontSize: ms(18), fontWeight: "800", marginBottom: vs(6) },
+  promoSub: { fontSize: ms(12), marginBottom: vs(12) },
+  promoCodeContainer: {
+    backgroundColor: TEAL,
+    paddingHorizontal: s(14),
+    paddingVertical: vs(6),
+    borderRadius: s(20),
+    alignSelf: 'flex-start',
+  },
+  promoCodeText: {
+    color: '#fff',
+    fontSize: ms(13),
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   recentCard: {
     flexDirection: "row", alignItems: "center",
     marginHorizontal: PH, marginBottom: vs(10), padding: s(14),
-    borderRadius: R, shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    borderRadius: R, shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   recentIconBox: {
     width: s(42), height: s(42), borderRadius: s(21),
     alignItems: "center", justifyContent: "center",
   },
-  recentService: { fontSize: ms(14), fontWeight: "700", color: "#1a1a1a", marginBottom: vs(3) },
-  recentMeta: { fontSize: ms(12), color: "#888" },
-  recentStatus: { fontSize: ms(13), fontWeight: "600", color: TEAL },
+  recentService: { fontSize: ms(14), fontWeight: "700", marginBottom: vs(3) },
+  recentMeta: { fontSize: ms(12) },
+  recentStatus: { fontSize: ms(13), fontWeight: "600" },
   bottomBar: { position: "absolute", left: PH, right: PH },
   pickupBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     paddingVertical: vs(17), borderRadius: s(50), gap: s(8),
   },
   pickupText: { color: "#fff", fontSize: ms(16), fontWeight: "800" },
-  emptyText: { textAlign: "center", color: "#888", marginTop: vs(20), fontSize: ms(14) },
+  emptyText: { textAlign: "center", marginTop: vs(20), fontSize: ms(14) },
   badge: {
     backgroundColor: "rgba(255,255,255,0.3)", borderRadius: s(12),
     paddingHorizontal: s(8), paddingVertical: s(2),
