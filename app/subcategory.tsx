@@ -17,8 +17,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 
-// Redux imports – adjust the path to match your project
 import {
   useAppDispatch,
   useAppSelector,
@@ -227,10 +227,11 @@ type ServiceModalProps = {
   item: Item | null;
   categoryName: string;
   onClose: () => void;
+  t: any;
 };
 
 // ─── Service Selection Modal (FIXED) ─────────────────────────
-const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName, onClose }) => {
+const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName, onClose, t }) => {
   const dispatch = useAppDispatch();
 
   // Quantities reset when item changes
@@ -292,11 +293,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
           <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
               <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>Choose Services</Text>
+              <Text style={styles.modalTitle}>{t("subcategory.choose_services")}</Text>
               <Text style={styles.modalSubtitle}>
                 {item.label} • {categoryName}
               </Text>
-
               {(['Wash', 'Iron', 'Wash+Iron'] as const).map(serviceType => (
                 <ServiceRow
                   key={serviceType}
@@ -305,6 +305,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
                   quantity={quantities[serviceType]}
                   onIncrement={() => increment(serviceType)}
                   onDecrement={() => decrement(serviceType)}
+                    t={t}  // ← add
                 />
               ))}
 
@@ -324,7 +325,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
                 disabled={totalItems === 0}
               >
                 <Text style={styles.modalAddBtnText}>
-                  {totalItems > 0 ? `Add to Cart • ₹${totalPrice}` : 'Select at least one'}
+                  {totalItems > 0
+                    ? `${t("common.add_to_cart")} • ₹${totalPrice}`
+                    : t("subcategory.select_one")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -341,14 +344,15 @@ type ServiceRowProps = {
   quantity: number;
   onIncrement: () => void;
   onDecrement: () => void;
+    t: any; // ← add
 };
 
-const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncrement, onDecrement }) => {
+const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncrement, onDecrement,t }) => {
   return (
     <View style={styles.serviceRow}>
       <View style={styles.serviceInfo}>
         <Text style={styles.serviceLabel}>{label}</Text>
-        <Text style={styles.servicePrice}>₹{price}/piece</Text>
+        <Text style={styles.servicePrice}>₹{price}/{t("common.piece")}</Text>
       </View>
       {quantity === 0 ? (
         <TouchableOpacity style={styles.addButton} onPress={onIncrement}>
@@ -374,9 +378,10 @@ type ItemCardProps = {
   item: Item;
   cardWidth: number;
   onPress: (item: Item) => void;
+  t:any
 };
 
-const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress }) => {
+const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress ,t}) => {
   const pressAnim = useRef(new Animated.Value(1)).current;
 
   const onPressIn = () =>
@@ -400,7 +405,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress }) => {
           {item.label}
         </Text>
         <View style={styles.addRow}>
-          <Text style={styles.addText}>Select</Text>
+          <Text style={styles.addText}>{t("common.select")}</Text>
           <View style={styles.addIcon}>
             <Ionicons name="arrow-forward" size={r(12)} color={C.teal} />
           </View>
@@ -416,7 +421,7 @@ export default function SubcategoryScreen() {
   const category = params.category ?? "Men";
   const data = DATA[category] ?? DATA["Men"];
   const meta = CATEGORY_META[category] ?? CATEGORY_META["Men"];
-
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(data.tabs[0]);
   const items = data.items[activeTab] ?? [];
   const [modalVisible, setModalVisible] = useState(false);
@@ -467,7 +472,7 @@ export default function SubcategoryScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerText}>
-          <Text style={styles.eyebrow}>Laundry Service</Text>
+          <Text style={styles.eyebrow}>{t("subcategory.laundry_service")}</Text>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{category}</Text>
             <View style={styles.tagPill}>
@@ -505,14 +510,14 @@ export default function SubcategoryScreen() {
       {/* Section heading */}
       <View style={styles.sectionRow}>
         <Text style={styles.sectionTitle}>{activeTab}</Text>
-        <Text style={styles.sectionCount}>{items.length} items</Text>
+        <Text style={styles.sectionCount}>{items.length} {t("common.items")}</Text>
       </View>
 
       {/* Grid */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.gridContent, { paddingHorizontal: H_PAD }]}>
         <View style={[styles.grid, { gap: GAP }]}>
           {items.map((item, idx) => (
-            <ItemCard key={`${activeTab}-${idx}`} item={item} cardWidth={cardWidth} onPress={openModal} />
+            <ItemCard key={`${activeTab}-${idx}`} item={item} cardWidth={cardWidth} onPress={openModal} t={t} />
           ))}
           {/* Ghost cells to align last row */}
           {Array.from({ length: (COLS - (items.length % COLS)) % COLS }).map((_, i) => (
@@ -532,7 +537,9 @@ export default function SubcategoryScreen() {
           <TouchableOpacity style={styles.ctaBtn} onPress={viewBasket} activeOpacity={0.85}>
             <View style={styles.ctaLeft}>
               <Ionicons name="cart-outline" size={r(18)} color="#fff" />
-              <Text style={styles.ctaText}>{cartCount} items • Total ₹{cartTotal}</Text>
+              <Text style={styles.ctaText}>
+                {cartCount} {t("common.items")} • {t("common.total")} ₹{cartTotal}
+              </Text>
             </View>
             <View style={styles.ctaArrow}>
               <Ionicons name="arrow-forward" size={r(15)} color={C.tealMid} />
@@ -547,6 +554,7 @@ export default function SubcategoryScreen() {
         item={selectedItem}
         categoryName={category}
         onClose={closeModal}
+        t={t}
       />
     </SafeAreaView>
   );

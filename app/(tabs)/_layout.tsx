@@ -2,10 +2,12 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/theme/ThemeProvider";
+import { useTranslation } from "react-i18next";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const { theme, isDarkMode } = useTheme();
+  const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -31,7 +33,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -40,7 +42,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="orders"
         options={{
-          title: "Order History",
+          title: t("tabs.orders"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cube-outline" size={size} color={color} />
           ),
@@ -49,7 +51,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="cart"
         options={{
-          title: "Cart",
+          title: t("tabs.cart"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cart-outline" size={size} color={color} />
           ),
@@ -58,7 +60,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("tabs.profile"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),

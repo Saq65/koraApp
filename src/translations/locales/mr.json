@@ -56,8 +56,37 @@
     "evening": "शुभ संध्याकाळ",
     "night": "शुभ रात्री"
   },
+  "category": {
+    "laundry": "लॉन्ड्री",
+    "choose_category": "श्रेणी निवडा",
+    "men": "पुरुष",
+    "men_desc": "शर्ट, पँट, कुर्ता आणि बरेच",
+    "women": "महिला",
+    "women_desc": "टॉप, साडी, ड्रेस आणि बरेच",
+    "children": "मुले",
+    "children_desc": "मुलांचे कपडे आणि गणवेश",
+    "linen": "लिनन",
+    "linen_desc": "बेडशीट, पडदे, टॉवेल"
+  },
+  "subcategory": {
+    "laundry_service": "लॉन्ड्री सेवा",
+    "choose_services": "सेवा निवडा",
+    "select_one": "किमान एक निवडा"
+  },
   "common": {
+    "browse": "पहा",
+    "select": "निवडा",
+    "items": "वस्तू",
+    "total": "एकूण",
+    "add_to_cart": "कार्टमध्ये टाका",
+    "piece": "नग",
     "guest": "पाहुणे",
     "loading": "लोड होत आहे..."
+  },
+  "tabs": {
+    "home": "होम",
+    "orders": "ऑर्डर इतिहास",
+    "cart": "कार्ट",
+    "profile": "प्रोफाइल"
   }
 }

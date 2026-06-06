@@ -56,30 +56,37 @@
     "evening": "Good Evening",
     "night": "Good Night"
   },
+  "category": {
+    "laundry": "Laundry",
+    "choose_category": "Choose Category",
+    "men": "Men",
+    "men_desc": "Shirts, pants, kurtas & more",
+    "women": "Women",
+    "women_desc": "Tops, sarees, dresses & more",
+    "children": "Children",
+    "children_desc": "Kids clothing & uniforms",
+    "linen": "Linen",
+    "linen_desc": "Bedsheets, curtains, towels"
+  },
+  "subcategory": {
+    "laundry_service": "Laundry Service",
+    "choose_services": "Choose Services",
+    "select_one": "Select at least one"
+  },
   "common": {
+    "browse": "Browse",
+    "select": "Select",
+    "items": "items",
+    "total": "Total",
+    "add_to_cart": "Add to Cart",
+    "piece": "piece",
     "guest": "Guest",
     "loading": "Loading..."
   },
-  "category": {
-  "title": "Choose Category",
-  "laundry": "Laundry",
-  "men_desc": "Shirts, pants, kurtas & more",
-  "women_desc": "Tops, sarees, dresses & more",
-  "children_desc": "Kids clothing & uniforms",
-  "linen_desc": "Bedsheets, curtains, towels",
-  "browse": "Browse"
-},
-"subcategory": {
-  "laundry_service": "Laundry Service",
-  "premium_care": "Premium care",
-  "gentle_wash": "Gentle wash",
-  "deep_clean": "Deep clean",
-  "items_count": "items",
-  "select": "Select",
-  "basket_empty": "Your basket is empty",
-  "choose_services": "Choose Services",
-  "add_to_cart": "Add to Cart",
-  "select_at_least_one": "Select at least one",
-  "items_total": "items • Total"
-}
+  "tabs": {
+    "home": "Home",
+    "orders": "Order History",
+    "cart": "Cart",
+    "profile": "Profile"
+  }
 }

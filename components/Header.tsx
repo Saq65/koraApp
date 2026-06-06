@@ -8,18 +8,22 @@ function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
   if (hour < 17) return { text: "Good Afternoon", emoji: "☀️" };
-  // For 17:00 onwards (including night), always show "Good Evening"
   return { text: "Good Evening", emoji: "🌙" };
 }
 
 export default function Header({ theme, onMenuPress, userName }: any) {
   const { text, emoji } = getGreeting();
 
-  // Dynamic styles based on theme
-  const styles = getStyles(theme);
-
   return (
-    <View style={styles.header}>
+    <View
+      style={[
+        styles.header,
+        {
+          backgroundColor: theme.background ?? "#fff",
+          borderColor: theme.border ?? "#f0f0f0",
+        },
+      ]}
+    >
       {/* LEFT: Menu icon + greeting/name */}
       <View style={styles.left}>
         <TouchableOpacity style={styles.iconButton} onPress={onMenuPress}>
@@ -58,14 +62,17 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 4,
     height: 60,
-    borderColor: "#f0f0f0",
     borderBottomWidth: 1,
-    backgroundColor: "#fff",
   },
   left: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  right: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   iconButton: {
     padding: 6,

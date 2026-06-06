@@ -1,35 +1,23 @@
 import { Stack } from "expo-router";
 import { ThemeProvider } from "../src/theme/ThemeProvider";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import "../src/translations/i18n";
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
-// import "../src/translations/i18n";
-import { loadLanguage } from "../src/translations/i18n";
 import { useEffect } from "react";
-import i18n from "../src/translations/i18n";
 import { Provider } from "react-redux";
 import { store } from "@/src/redux/store/store";
+import i18n from "../src/translations/i18n";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export default function RootLayout() {
   useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  useEffect(() => {
-    const loadLanguage = async () => {
-      const savedLanguage = await AsyncStorage.getItem("selectedLanguage");
-
-      if (savedLanguage) {
-        i18n.changeLanguage(savedLanguage);
-      }
+    const restoreLanguage = async () => {
+      const saved = await AsyncStorage.getItem("app-language");
+      if (saved) await i18n.changeLanguage(saved);
     };
-
-    loadLanguage();
+    restoreLanguage();
   }, []);
 
   return (
     <Provider store={store}>
-
       <SafeAreaProvider>
         <ThemeProvider>
           <Stack
@@ -37,9 +25,7 @@ export default function RootLayout() {
             initialRouteName="index"
           />
         </ThemeProvider>
-
       </SafeAreaProvider>
     </Provider>
-
   );
 }

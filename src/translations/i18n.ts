@@ -27,6 +27,10 @@ const initI18n = async () => {
 initI18n();
 
 export const loadLanguage = async (lang: string) => {
+  if (!lang) {
+    console.warn("[i18n] loadLanguage called with undefined/null, skipping.");
+    return;
+  }
   await AsyncStorage.setItem("app-language", lang);
   await i18n.changeLanguage(lang);
 };
