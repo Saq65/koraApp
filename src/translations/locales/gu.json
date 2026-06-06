@@ -88,5 +88,27 @@
     "orders": "ઓર્ડર ઇતિહાસ",
     "cart": "કાર્ટ",
     "profile": "પ્રોફાઇલ"
-  }
+  },
+"tabs_sub": {
+  "upper_wear": "ઉપરના વસ્ત્રો", "lower_wear": "નીચેના વસ્ત્રો", "garments": "ગારમેન્ટ્સ",
+  "winter_wear": "શિયાળુ વસ્ત્રો", "ethnic": "પરંપરાગત", "uniforms": "યુનિફોર્મ",
+  "bedding": "બિછાવ", "bath": "સ્નાન", "home": "ઘર", "others": "અન્ય"
+},
+"items": {
+  "shirt": "શર્ટ", "tshirt": "ટી-શર્ટ", "vest": "બનિયન", "kurta": "કુર્તો",
+  "jacket": "જેકેટ", "hoodie": "હૂડી", "jeans": "જીન્સ", "trousers": "ટ્રાઉઝર",
+  "shorts": "શોર્ટ્સ", "pajamas": "પાયજામો", "suit": "સૂટ", "blazer": "બ્લેઝર",
+  "sherwani": "શેરવાની", "sweater": "સ્વેટર", "coat": "કોટ", "muffler": "મફલર",
+  "top": "ટોપ", "blouse": "બ્લાઉઝ", "kurti": "કુર્તી", "leggings": "લેગિંગ્સ",
+  "skirt": "સ્કર્ટ", "saree": "સાડી", "salwar": "સલવાર", "dupatta": "દુપટ્ટો",
+  "shawl": "શાલ", "frock": "ફ્રોક", "school_uniform": "શાળા યુનિફોર્મ",
+  "sports_kit": "સ્પોર્ટ્સ કિટ", "gloves": "મોજા", "bedsheet": "બેડશીટ",
+  "pillow_cover": "ઓશિકા કવર", "blanket": "કામળો", "duvet": "રજાઈ",
+  "towel": "ટુવાલ", "bath_mat": "બાથ મેટ", "hand_towel": "હેન્ડ ટુવાલ",
+  "curtains": "પડદા", "cushion_cover": "કુશન કવર", "table_cloth": "ટેબલ કાપડ",
+  "sofa_cover": "સોફા કવર", "carpet": "કાર્પેટ"
+},
+"meta": {
+  "premium_care": "પ્રીમિયમ કેર", "gentle_wash": "નાજુક ધોલાઈ", "deep_clean": "ઊંડી સફાઈ"
+}
 }

@@ -88,5 +88,36 @@
     "orders": "Order History",
     "cart": "Cart",
     "profile": "Profile"
-  }
+  },
+"tabs_sub": {
+  "upper_wear": "Upper Wear",
+  "lower_wear": "Lower Wear",
+  "garments": "Garments",
+  "winter_wear": "Winter Wear",
+  "ethnic": "Ethnic",
+  "uniforms": "Uniforms",
+  "bedding": "Bedding",
+  "bath": "Bath",
+  "home": "Home",
+  "others": "Others"
+},
+"items": {
+  "shirt": "Shirt", "tshirt": "T-Shirt", "vest": "Vest", "kurta": "Kurta",
+  "jacket": "Jacket", "hoodie": "Hoodie", "jeans": "Jeans", "trousers": "Trousers",
+  "shorts": "Shorts", "pajamas": "Pajamas", "suit": "Suit", "blazer": "Blazer",
+  "sherwani": "Sherwani", "sweater": "Sweater", "coat": "Coat", "muffler": "Muffler",
+  "top": "Top", "blouse": "Blouse", "kurti": "Kurti", "leggings": "Leggings",
+  "skirt": "Skirt", "saree": "Saree", "salwar": "Salwar", "dupatta": "Dupatta",
+  "shawl": "Shawl", "frock": "Frock", "school_uniform": "School Uniform",
+  "sports_kit": "Sports Kit", "gloves": "Gloves", "bedsheet": "Bedsheet",
+  "pillow_cover": "Pillow Cover", "blanket": "Blanket", "duvet": "Duvet",
+  "towel": "Towel", "bath_mat": "Bath Mat", "hand_towel": "Hand Towel",
+  "curtains": "Curtains", "cushion_cover": "Cushion Cover", "table_cloth": "Table Cloth",
+  "sofa_cover": "Sofa Cover", "carpet": "Carpet"
+},
+"meta": {
+  "premium_care": "Premium care",
+  "gentle_wash": "Gentle wash",
+  "deep_clean": "Deep clean"
+}
 }

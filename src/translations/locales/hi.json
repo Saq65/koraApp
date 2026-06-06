@@ -88,5 +88,27 @@
     "orders": "ऑर्डर हिस्ट्री",
     "cart": "कार्ट",
     "profile": "प्रोफाइल"
-  }
+  },
+"tabs_sub": {
+  "upper_wear": "ऊपरी वस्त्र", "lower_wear": "निचले वस्त्र", "garments": "परिधान",
+  "winter_wear": "शीतकालीन वस्त्र", "ethnic": "पारंपरिक", "uniforms": "यूनिफॉर्म",
+  "bedding": "बिस्तर", "bath": "स्नान", "home": "घर", "others": "अन्य"
+},
+"items": {
+  "shirt": "शर्ट", "tshirt": "टी-शर्ट", "vest": "बनियान", "kurta": "कुर्ता",
+  "jacket": "जैकेट", "hoodie": "हूडी", "jeans": "जींस", "trousers": "ट्राउज़र",
+  "shorts": "शॉर्ट्स", "pajamas": "पजामा", "suit": "सूट", "blazer": "ब्लेज़र",
+  "sherwani": "शेरवानी", "sweater": "स्वेटर", "coat": "कोट", "muffler": "मफलर",
+  "top": "टॉप", "blouse": "ब्लाउज़", "kurti": "कुर्ती", "leggings": "लेगिंग्स",
+  "skirt": "स्कर्ट", "saree": "साड़ी", "salwar": "सलवार", "dupatta": "दुपट्टा",
+  "shawl": "शॉल", "frock": "फ्रॉक", "school_uniform": "स्कूल यूनिफॉर्म",
+  "sports_kit": "स्पोर्ट्स किट", "gloves": "दस्ताने", "bedsheet": "बेडशीट",
+  "pillow_cover": "तकिया कवर", "blanket": "कंबल", "duvet": "रजाई",
+  "towel": "तौलिया", "bath_mat": "बाथ मैट", "hand_towel": "हैंड टॉवेल",
+  "curtains": "पर्दे", "cushion_cover": "कुशन कवर", "table_cloth": "मेज़पोश",
+  "sofa_cover": "सोफा कवर", "carpet": "कालीन"
+},
+"meta": {
+  "premium_care": "प्रीमियम केयर", "gentle_wash": "नाज़ुक धुलाई", "deep_clean": "गहरी सफाई"
+}
 }
