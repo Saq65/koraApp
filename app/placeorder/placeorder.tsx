@@ -22,15 +22,9 @@ import {
 import {
   selectPickupAddress,
   selectDropoffAddress,
-} from "../../src/redux/store/addressSlice"; 
-
-/* ─── Constants ─── */
-const TEAL = "#1A6B5A";
-const TEAL_LIGHT = "#E8F4F1";
-const GRAY_LIGHT = "#EFEFEA";
-const GRAY_TEXT = "#ABABAB";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MID = "#666666";
+} from "../../src/redux/store/addressSlice";
+import { useTheme } from "../../src/theme/ThemeProvider";
+import AppBackground from "@/components/AppBackground";
 
 type PickupDay = "today" | "tomorrow";
 type TimeSlot = "10:00 AM" | "2:00 PM";
@@ -52,10 +46,14 @@ function LocationRow({
   label,
   address,
   onChangePress,
+  changeLabel,
+  theme,
 }: {
   label: string;
   address: string;
   onChangePress: () => void;
+  changeLabel: string;
+  theme: any;
 }) {
   const styles = getLocationRowStyles(theme);
   return (
@@ -66,8 +64,8 @@ function LocationRow({
           <View style={styles.locationTopRow}>
             <Text style={styles.locationLabel}>{label}</Text>
             <TouchableOpacity style={styles.changeBtn} onPress={onChangePress} activeOpacity={0.7}>
-              <MaterialCommunityIcons name="pencil-outline" size={12} color={TEAL} />
-              <Text style={styles.changeBtnText}>Change</Text>
+              <MaterialCommunityIcons name="pencil-outline" size={12} color={theme.primary} />
+              <Text style={[styles.changeBtnText, { color: theme.primary }]}>{changeLabel}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.addressRow}>
@@ -95,7 +93,10 @@ const getLocationRowStyles = (theme: any) =>
   });
 
 export default function PlaceOrder() {
-  const [pickupDay, setPickupDay] = useState<PickupDay>("Tomorrow");
+  const { t } = useTranslation();
+  const { theme, isDarkMode } = useTheme();
+
+  const [pickupDay, setPickupDay] = useState<PickupDay>("tomorrow");
   const [timeSlot, setTimeSlot] = useState<TimeSlot>("10:00 AM");
 
   const pickupAddress = useAppSelector(selectPickupAddress);
@@ -112,159 +113,179 @@ export default function PlaceOrder() {
     });
   };
 
-  // Redux cart
-  const cartItems = useAppSelector(selectCartItems);
-  const totalItems = useAppSelector(selectCartCount);
-  const itemsTotal = useAppSelector(selectCartTotal);
-  const total = itemsTotal + DELIVERY_CHARGE;
+  const styles = getGlobalStyles(theme);
+
+  const pickupDays: { key: PickupDay; label: string }[] = [
+    { key: "today", label: t("place_order.today") },
+    { key: "tomorrow", label: t("place_order.tomorrow") },
+  ];
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <AppBackground>
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Place Order</Text>
-        <View style={{ width: 36 }} />
-      </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="arrow-back" size={20} color={theme.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t("place_order.title")}</Text>
+          <View style={{ width: 36 }} />
+        </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* ── Your Items ── */}
-        <SectionTitle title={`Your Items (${totalItems})`} />
-        <View style={styles.card}>
-          {cartItems.map((item, idx) => (
-            <View key={item.id}>
-              <View style={styles.itemRow}>
-                <View style={styles.itemIconWrap}>
-                  <MaterialCommunityIcons name="tshirt-crew" size={20} color={TEAL} />
-                </View>
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{item.subCategoryName}</Text>
-                  <Text style={styles.itemSub}>
-                    {item.serviceName} • {item.quantity}{" "}
-                    {item.quantity > 1 ? "pieces" : "piece"}
-                  </Text>
+          {/* Your Items */}
+          <SectionTitle title={t("place_order.your_items", { count: totalItems })} theme={theme} />
+          <View style={[styles.card, { backgroundColor: theme.card }]}>
+            {cartItems.map((item, idx) => (
+              <View key={item.id}>
+                <View style={styles.itemRow}>
+                  <View style={[styles.itemIconWrap, { backgroundColor: theme.primaryLight }]}>
+                    <MaterialCommunityIcons name="tshirt-crew" size={20} color={theme.primary} />
+                  </View>
+                  <View style={styles.itemInfo}>
+                    <Text style={[styles.itemName, { color: theme.text }]}>{item.subCategoryName}</Text>
+                    <Text style={[styles.itemSub, { color: theme.subText }]}>
+                      {item.serviceName} • {item.quantity}{" "}
+                      {item.quantity > 1
+                        ? t("place_order.pieces")
+                        : t("place_order.piece")}
+                    </Text>
+                  </View>
+                  <Text style={[styles.itemPrice, { color: theme.text }]}>₹{item.price * item.quantity}</Text>
                 </View>
                 {idx < cartItems.length - 1 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
               </View>
             ))}
           </View>
 
-        {/* ── Pickup & Drop Location ── */}
-        <SectionTitle title="Pickup & Drop Location" />
-        <View style={styles.card}>
-          <LocationRow
-            label="Pickup From"
-            address={pickupAddress}
-            onChangePress={() => openLocationScreen("pickup")}
-          />
-          <View style={styles.locationDivider} />
-          <LocationRow
-            label="Drop-off At"
-            address={dropoffAddress}
-            onChangePress={() => openLocationScreen("dropoff")}
-          />
-        </View>
+          {/* Pickup & Drop Location */}
+          <SectionTitle title={t("place_order.pickup_drop_location")} theme={theme} />
+          <View style={[styles.card, { backgroundColor: theme.card }]}>
+            <LocationRow
+              label={t("place_order.pickup_from")}
+              address={pickupAddress}
+              onChangePress={() => openLocationScreen("pickup")}
+              changeLabel={t("place_order.change")}
+              theme={theme}
+            />
+            <View style={[styles.locationDivider, { backgroundColor: theme.border }]} />
+            <LocationRow
+              label={t("place_order.dropoff_at")}
+              address={dropoffAddress}
+              onChangePress={() => openLocationScreen("dropoff")}
+              changeLabel={t("place_order.change")}
+              theme={theme}
+            />
+          </View>
 
-        {/* ── Schedule ── */}
-        <SectionTitle title="Schedule" />
-        <View style={styles.card}>
-          <View style={styles.scheduleRow}>
-            <View style={styles.scheduleBlock}>
-              <View style={styles.scheduleHeader}>
-                <MaterialCommunityIcons name="calendar-outline" size={14} color={GRAY_TEXT} />
-                <Text style={styles.scheduleHeaderText}>Pickup Date</Text>
+          {/* Schedule */}
+          <SectionTitle title={t("place_order.schedule")} theme={theme} />
+          <View style={[styles.card, { backgroundColor: theme.card }]}>
+            <View style={styles.scheduleRow}>
+              <View style={styles.scheduleBlock}>
+                <View style={styles.scheduleHeader}>
+                  <MaterialCommunityIcons name="calendar-outline" size={14} color={theme.subText} />
+                  <Text style={[styles.scheduleHeaderText, { color: theme.subText }]}>{t("place_order.pickup_date")}</Text>
+                </View>
+                <View style={styles.pillRow}>
+                  {pickupDays.map(({ key, label }) => (
+                    <TouchableOpacity
+                      key={key}
+                      onPress={() => setPickupDay(key)}
+                      style={[
+                        styles.pill,
+                        pickupDay === key
+                          ? [styles.pillActive, { backgroundColor: theme.primary }]
+                          : [styles.pillInactive, { backgroundColor: theme.border }],
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pillText,
+                          pickupDay === key
+                            ? styles.pillTextActive
+                            : [styles.pillTextInactive, { color: theme.subText }],
+                        ]}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
-              <View style={styles.pillRow}>
-                {(["Today", "Tomorrow"] as PickupDay[]).map((day) => (
-                  <TouchableOpacity
-                    key={day}
-                    onPress={() => setPickupDay(day)}
-                    style={[styles.pill, pickupDay === day ? styles.pillActive : styles.pillInactive]}
-                  >
-                    <Text style={[styles.pillText, pickupDay === day ? styles.pillTextActive : styles.pillTextInactive]}>
-                      {day}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <View style={styles.scheduleBlock}>
+                <View style={styles.scheduleHeader}>
+                  <MaterialCommunityIcons name="clock-outline" size={14} color={theme.subText} />
+                  <Text style={[styles.scheduleHeaderText, { color: theme.subText }]}>{t("place_order.time_slot")}</Text>
+                </View>
+                <View style={styles.pillRow}>
+                  {(["10:00 AM", "2:00 PM"] as TimeSlot[]).map((slot) => (
+                    <TouchableOpacity
+                      key={slot}
+                      onPress={() => setTimeSlot(slot)}
+                      style={[
+                        styles.pill,
+                        timeSlot === slot
+                          ? [styles.pillActive, { backgroundColor: theme.primary }]
+                          : [styles.pillInactive, { backgroundColor: theme.border }],
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pillText,
+                          timeSlot === slot
+                            ? styles.pillTextActive
+                            : [styles.pillTextInactive, { color: theme.subText }],
+                        ]}
+                      >
+                        {slot}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </View>
-            <View style={styles.scheduleBlock}>
-              <View style={styles.scheduleHeader}>
-                <MaterialCommunityIcons name="clock-outline" size={14} color={GRAY_TEXT} />
-                <Text style={styles.scheduleHeaderText}>Time Slot</Text>
-              </View>
-              <View style={styles.pillRow}>
-                {(["10:00 AM", "2:00 PM"] as TimeSlot[]).map((slot) => (
-                  <TouchableOpacity
-                    key={slot}
-                    onPress={() => setTimeSlot(slot)}
-                    style={[styles.pill, timeSlot === slot ? styles.pillActive : styles.pillInactive]}
-                  >
-                    <Text style={[styles.pillText, timeSlot === slot ? styles.pillTextActive : styles.pillTextInactive]}>
-                      {slot}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+          </View>
+
+          {/* Bill Summary */}
+          <View style={[styles.card, { backgroundColor: theme.card }]}>
+            <View style={styles.billRow}>
+              <Text style={[styles.billLabel, { color: theme.subText }]}>{t("place_order.your_items", { count: totalItems })}</Text>
+              <Text style={[styles.billValue, { color: theme.text }]}>₹{itemsTotal}</Text>
+            </View>
+            <View style={styles.billRow}>
+              <Text style={[styles.billLabel, { color: theme.subText }]}>{t("place_order.delivery")}</Text>
+              <Text style={[styles.billFree, { color: theme.primary }]}>{t("place_order.free")}</Text>
+            </View>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <View style={styles.billRow}>
+              <Text style={[styles.billTotal, { color: theme.text }]}>{t("common.total")}</Text>
+              <Text style={[styles.billTotal, { color: theme.text }]}>₹{total}</Text>
             </View>
           </View>
+
+        </ScrollView>
+
+        {/* Sticky CTA */}
+        <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }]}>
+          <TouchableOpacity
+            style={[styles.payBtn, { backgroundColor: theme.primary }]}
+            activeOpacity={0.85}
+            onPress={() =>
+              router.push({
+                pathname: "/payment/payment",
+                params: { total: String(total), pickupDay, timeSlot },
+              })
+            }
+          >
+            <MaterialCommunityIcons name="credit-card-outline" size={18} color="#fff" />
+            <Text style={styles.payBtnText}>{t("place_order.proceed_to_pay", { total })}</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* ── Bill Summary ── */}
-        <View style={styles.card}>
-          <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Items ({totalItems})</Text>
-            <Text style={styles.billValue}>₹{itemsTotal}</Text>
-          </View>
-          <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Delivery</Text>
-            <Text style={styles.billFree}>FREE</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.billRow}>
-            <Text style={styles.billTotal}>Total</Text>
-            <Text style={styles.billTotal}>₹{total}</Text>
-          </View>
-        </View>
-
-        {/* ── T&C ── */}
-        <TouchableOpacity style={styles.tcRow} onPress={() => setAgreed(!agreed)} activeOpacity={0.7}>
-          <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
-            {agreed && <MaterialIcons name="check" size={13} color="#fff" />}
-          </View>
-          <Text style={styles.tcText}>
-            I agree to the <Text style={styles.tcLink}>Terms & Conditions</Text> of KORA.care.
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* ── Sticky CTA ── */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.payBtn, !agreed && styles.payBtnDisabled]}
-          activeOpacity={agreed ? 0.85 : 1}
-          disabled={!agreed}
-          onPress={() =>
-            router.push({
-              pathname: "/payment/payment",
-              params: { total: String(total), pickupDay, timeSlot },
-            })
-          }
-        >
-          <MaterialCommunityIcons name="credit-card-outline" size={18} color={agreed ? "#fff" : GRAY_TEXT} />
-          <Text style={[styles.payBtnText, !agreed && styles.payBtnTextDisabled]}>
-            Proceed to Pay • ₹{total}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* ✅ No modal here anymore — PickupLocation is a full screen now */}
+      </AppBackground>
     </SafeAreaView>
   );
 }
@@ -323,4 +344,4 @@ const getGlobalStyles = (theme: any) =>
       flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
     },
     payBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
-  }); 
+  });
