@@ -12,6 +12,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   useAppSelector,
   selectCartItems,
@@ -21,7 +22,7 @@ import {
 import {
   selectPickupAddress,
   selectDropoffAddress,
-} from "../../src/redux/store/addressSlice"; 
+} from "../../src/redux/store/addressSlice";
 
 /* ─── Constants ─── */
 const TEAL = "#1A6B5A";
@@ -31,7 +32,7 @@ const GRAY_TEXT = "#ABABAB";
 const TEXT_DARK = "#1A1A1A";
 const TEXT_MID = "#666666";
 
-type PickupDay = "Today" | "Tomorrow";
+type PickupDay = "today" | "tomorrow";
 type TimeSlot = "10:00 AM" | "2:00 PM";
 type LocationType = "pickup" | "dropoff";
 
@@ -45,10 +46,12 @@ function LocationRow({
   label,
   address,
   onChangePress,
+  changeLabel,
 }: {
   label: string;
   address: string;
   onChangePress: () => void;
+  changeLabel: string;
 }) {
   return (
     <View style={styles.locationRow}>
@@ -59,7 +62,7 @@ function LocationRow({
             <Text style={styles.locationLabel}>{label}</Text>
             <TouchableOpacity style={styles.changeBtn} onPress={onChangePress} activeOpacity={0.7}>
               <MaterialCommunityIcons name="pencil-outline" size={12} color={TEAL} />
-              <Text style={styles.changeBtnText}>Change</Text>
+              <Text style={styles.changeBtnText}>{changeLabel}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.addressRow}>
@@ -73,15 +76,15 @@ function LocationRow({
 }
 
 export default function PlaceOrder() {
-  const [pickupDay, setPickupDay] = useState<PickupDay>("Tomorrow");
+  const { t } = useTranslation();
+
+  const [pickupDay, setPickupDay] = useState<PickupDay>("tomorrow");
   const [timeSlot, setTimeSlot] = useState<TimeSlot>("10:00 AM");
   const [agreed, setAgreed] = useState(false);
 
-  // ✅ Addresses from Redux (updated by PickupLocation screen)
   const pickupAddress = useAppSelector(selectPickupAddress);
   const dropoffAddress = useAppSelector(selectDropoffAddress);
 
-  // ✅ Navigate to PickupLocation screen with type param
   const openLocationScreen = (type: LocationType) => {
     router.push({
       pathname: "/PickupLocation/PickupLocation",
@@ -89,11 +92,15 @@ export default function PlaceOrder() {
     });
   };
 
-  // Redux cart
   const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const itemsTotal = useAppSelector(selectCartTotal);
   const total = itemsTotal + DELIVERY_CHARGE;
+
+  const pickupDays: { key: PickupDay; label: string }[] = [
+    { key: "today", label: t("place_order.today") },
+    { key: "tomorrow", label: t("place_order.tomorrow") },
+  ];
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -104,14 +111,14 @@ export default function PlaceOrder() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Place Order</Text>
+        <Text style={styles.headerTitle}>{t("place_order.title")}</Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* ── Your Items ── */}
-        <SectionTitle title={`Your Items (${totalItems})`} />
+        <SectionTitle title={t("place_order.your_items", { count: totalItems })} />
         <View style={styles.card}>
           {cartItems.map((item, idx) => (
             <View key={item.id}>
@@ -123,7 +130,9 @@ export default function PlaceOrder() {
                   <Text style={styles.itemName}>{item.subCategoryName}</Text>
                   <Text style={styles.itemSub}>
                     {item.serviceName} • {item.quantity}{" "}
-                    {item.quantity > 1 ? "pieces" : "piece"}
+                    {item.quantity > 1
+                      ? t("place_order.pieces")
+                      : t("place_order.piece")}
                   </Text>
                 </View>
                 <Text style={styles.itemPrice}>₹{item.price * item.quantity}</Text>
@@ -134,39 +143,41 @@ export default function PlaceOrder() {
         </View>
 
         {/* ── Pickup & Drop Location ── */}
-        <SectionTitle title="Pickup & Drop Location" />
+        <SectionTitle title={t("place_order.pickup_drop_location")} />
         <View style={styles.card}>
           <LocationRow
-            label="Pickup From"
+            label={t("place_order.pickup_from")}
             address={pickupAddress}
             onChangePress={() => openLocationScreen("pickup")}
+            changeLabel={t("place_order.change")}
           />
           <View style={styles.locationDivider} />
           <LocationRow
-            label="Drop-off At"
+            label={t("place_order.dropoff_at")}
             address={dropoffAddress}
             onChangePress={() => openLocationScreen("dropoff")}
+            changeLabel={t("place_order.change")}
           />
         </View>
 
         {/* ── Schedule ── */}
-        <SectionTitle title="Schedule" />
+        <SectionTitle title={t("place_order.schedule")} />
         <View style={styles.card}>
           <View style={styles.scheduleRow}>
             <View style={styles.scheduleBlock}>
               <View style={styles.scheduleHeader}>
                 <MaterialCommunityIcons name="calendar-outline" size={14} color={GRAY_TEXT} />
-                <Text style={styles.scheduleHeaderText}>Pickup Date</Text>
+                <Text style={styles.scheduleHeaderText}>{t("place_order.pickup_date")}</Text>
               </View>
               <View style={styles.pillRow}>
-                {(["Today", "Tomorrow"] as PickupDay[]).map((day) => (
+                {pickupDays.map(({ key, label }) => (
                   <TouchableOpacity
-                    key={day}
-                    onPress={() => setPickupDay(day)}
-                    style={[styles.pill, pickupDay === day ? styles.pillActive : styles.pillInactive]}
+                    key={key}
+                    onPress={() => setPickupDay(key)}
+                    style={[styles.pill, pickupDay === key ? styles.pillActive : styles.pillInactive]}
                   >
-                    <Text style={[styles.pillText, pickupDay === day ? styles.pillTextActive : styles.pillTextInactive]}>
-                      {day}
+                    <Text style={[styles.pillText, pickupDay === key ? styles.pillTextActive : styles.pillTextInactive]}>
+                      {label}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -175,7 +186,7 @@ export default function PlaceOrder() {
             <View style={styles.scheduleBlock}>
               <View style={styles.scheduleHeader}>
                 <MaterialCommunityIcons name="clock-outline" size={14} color={GRAY_TEXT} />
-                <Text style={styles.scheduleHeaderText}>Time Slot</Text>
+                <Text style={styles.scheduleHeaderText}>{t("place_order.time_slot")}</Text>
               </View>
               <View style={styles.pillRow}>
                 {(["10:00 AM", "2:00 PM"] as TimeSlot[]).map((slot) => (
@@ -197,16 +208,16 @@ export default function PlaceOrder() {
         {/* ── Bill Summary ── */}
         <View style={styles.card}>
           <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Items ({totalItems})</Text>
+            <Text style={styles.billLabel}>{t("place_order.your_items", { count: totalItems })}</Text>
             <Text style={styles.billValue}>₹{itemsTotal}</Text>
           </View>
           <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Delivery</Text>
-            <Text style={styles.billFree}>FREE</Text>
+            <Text style={styles.billLabel}>{t("place_order.delivery")}</Text>
+            <Text style={styles.billFree}>{t("place_order.free")}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.billRow}>
-            <Text style={styles.billTotal}>Total</Text>
+            <Text style={styles.billTotal}>{t("common.total")}</Text>
             <Text style={styles.billTotal}>₹{total}</Text>
           </View>
         </View>
@@ -217,7 +228,9 @@ export default function PlaceOrder() {
             {agreed && <MaterialIcons name="check" size={13} color="#fff" />}
           </View>
           <Text style={styles.tcText}>
-            I agree to the <Text style={styles.tcLink}>Terms & Conditions</Text> of KORA.care.
+            {t("place_order.terms_text")}{" "}
+            <Text style={styles.tcLink}>{t("place_order.terms_link")}</Text>{" "}
+            {t("place_order.terms_suffix")}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -237,12 +250,10 @@ export default function PlaceOrder() {
         >
           <MaterialCommunityIcons name="credit-card-outline" size={18} color={agreed ? "#fff" : GRAY_TEXT} />
           <Text style={[styles.payBtnText, !agreed && styles.payBtnTextDisabled]}>
-            Proceed to Pay • ₹{total}
+            {t("place_order.proceed_to_pay", { total })}
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* ✅ No modal here anymore — PickupLocation is a full screen now */}
     </SafeAreaView>
   );
 }

@@ -10,6 +10,7 @@ import AppBackground from "@/components/AppBackground";
 import { getActiveOrder, getOrderHistory } from "../../src/api/order";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 type OrderStatus = "Delivered" | "Cancelled" | "In Process";
 
@@ -30,22 +31,24 @@ interface TrackingStep {
   isEstimate?: boolean;
 }
 
-/* ─── Active Order Card with Timeline (accepts props and theme) ─── */
-const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMode }: { 
-  order: Order; 
-  trackingSteps: TrackingStep[]; 
+/* ─── Active Order Card ─── */
+const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMode }: {
+  order: Order;
+  trackingSteps: TrackingStep[];
   cancelDeadline?: string | null;
   theme: any;
   isDarkMode: boolean;
 }) => {
+  const { t } = useTranslation();
+
   const getCancelNotice = () => {
-    if (!cancelDeadline) return "Free cancellation available";
+    if (!cancelDeadline) return t("orders.free_cancellation");
     const deadline = new Date(cancelDeadline);
     const now = new Date();
     const diffMs = deadline.getTime() - now.getTime();
-    if (diffMs <= 0) return "Cancellation window closed";
+    if (diffMs <= 0) return t("orders.cancellation_closed");
     const minsLeft = Math.floor(diffMs / 60000);
-    return `Free cancellation — ${minsLeft} mins left in 2hr window`;
+    return t("orders.cancellation_mins_left", { mins: minsLeft });
   };
 
   const statusColor = () => {
@@ -67,7 +70,7 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
           </View>
           <View style={styles.row}>
             <Text style={[styles.orderMeta, { color: theme.subText }]}>
-              {order.service} • {order.items} items
+              {order.service} • {order.items} {t("orders.items")}
             </Text>
           </View>
           <View style={styles.row}>
@@ -132,14 +135,14 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
 
       <View style={styles.actionRow}>
         <TouchableOpacity style={[styles.cancelBtn, { borderColor: "#E53935" }]} activeOpacity={0.8}>
-          <Text style={styles.cancelBtnText}>Cancel Order</Text>
+          <Text style={styles.cancelBtnText}>{t("orders.cancel_order")}</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.id ?? (order as any)?._id ?? ''}`)} 
-          style={[styles.trackBtn, { backgroundColor: theme.primary }]} 
+        <TouchableOpacity
+          onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.id ?? (order as any)?._id ?? ''}`)}
+          style={[styles.trackBtn, { backgroundColor: theme.primary }]}
           activeOpacity={0.8}
         >
-          <Text style={styles.trackBtnText}>Live Tracking</Text>
+          <Text style={styles.trackBtnText}>{t("orders.live_tracking")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -148,7 +151,9 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
 
 /* ─── History Order Card ─── */
 const OrderCard = ({ order, theme }: { order: Order; theme: any }) => {
+  const { t } = useTranslation();
   const statusColor = order.status === "Delivered" ? theme.primary : "#E53935";
+
   return (
     <TouchableOpacity style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]} activeOpacity={0.7}>
       <View style={[styles.iconWrap, { backgroundColor: theme.primaryLight }]}>
@@ -161,7 +166,7 @@ const OrderCard = ({ order, theme }: { order: Order; theme: any }) => {
         </View>
         <View style={styles.row}>
           <Text style={[styles.orderMeta, { color: theme.subText }]}>
-            {order.service} • {order.items} items
+            {order.service} • {order.items} {t("orders.items")}
           </Text>
           <Text style={[styles.price, { color: theme.text }]}>₹{order.price}</Text>
         </View>
@@ -175,6 +180,7 @@ const OrderCard = ({ order, theme }: { order: Order; theme: any }) => {
 /* ─── Main Screen ─── */
 export default function Orders() {
   const { theme, isDarkMode } = useTheme();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
   const [loading, setLoading] = useState(true);
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
@@ -228,14 +234,14 @@ export default function Orders() {
         <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={[styles.backBtn, { backgroundColor: theme.card }]} 
+          <TouchableOpacity
+            style={[styles.backBtn, { backgroundColor: theme.card }]}
             onPress={() => router.back()}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons name="arrow-back" size={20} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>My Services</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t("orders.my_services")}</Text>
         </View>
 
         <View style={[styles.tabRow, { backgroundColor: isDarkMode ? "#2D2D2D" : "#E2E2DA" }]}>
@@ -244,7 +250,7 @@ export default function Orders() {
             style={activeTab === "active" ? [styles.tabActive, { backgroundColor: theme.primary }] : styles.tabInactive}
           >
             <Text style={activeTab === "active" ? styles.tabActiveText : [styles.tabInactiveText, { color: theme.subText }]}>
-              Active
+              {t("orders.active")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -252,20 +258,17 @@ export default function Orders() {
             style={activeTab === "history" ? [styles.tabActive, { backgroundColor: theme.primary }] : styles.tabInactive}
           >
             <Text style={activeTab === "history" ? styles.tabActiveText : [styles.tabInactiveText, { color: theme.subText }]}>
-              History
+              {t("orders.history")}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {activeTab === "active" ? (
             activeOrders.length === 0 ? (
               <View style={styles.emptyWrap}>
                 <MaterialCommunityIcons name="package-variant" size={52} color={theme.subText} />
-                <Text style={[styles.emptyText, { color: theme.subText }]}>No active orders</Text>
+                <Text style={[styles.emptyText, { color: theme.subText }]}>{t("orders.no_active_orders")}</Text>
               </View>
             ) : (
               activeOrders.map((item) => (
@@ -283,7 +286,7 @@ export default function Orders() {
             historyOrders.length === 0 ? (
               <View style={styles.emptyWrap}>
                 <MaterialCommunityIcons name="package-variant" size={52} color={theme.subText} />
-                <Text style={[styles.emptyText, { color: theme.subText }]}>No orders found</Text>
+                <Text style={[styles.emptyText, { color: theme.subText }]}>{t("orders.no_orders_found")}</Text>
               </View>
             ) : (
               historyOrders.map((order) => <OrderCard key={order.id} order={order} theme={theme} />)
@@ -296,226 +299,72 @@ export default function Orders() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
+  safeArea: { flex: 1 },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 16, paddingVertical: 12,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: "center", justifyContent: "center",
+    elevation: 2, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 4,
   },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    marginLeft:10
-  },
+  headerTitle: { fontSize: 17, fontWeight: "700", marginLeft: 10 },
   tabRow: {
-    flexDirection: "row",
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 30,
-    padding: 4,
+    flexDirection: "row", marginHorizontal: 16,
+    marginBottom: 16, borderRadius: 30, padding: 4,
   },
-  tabActive: {
-    flex: 1,
-    borderRadius: 26,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  tabActiveText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  tabInactive: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  tabInactiveText: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    gap: 10,
-  },
+  tabActive: { flex: 1, borderRadius: 26, paddingVertical: 10, alignItems: "center" },
+  tabActiveText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  tabInactive: { flex: 1, paddingVertical: 10, alignItems: "center" },
+  tabInactiveText: { fontWeight: "600", fontSize: 14 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
   card: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-    borderWidth: 1,
+    borderRadius: 16, paddingHorizontal: 14, paddingVertical: 16,
+    flexDirection: "row", alignItems: "center",
+    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6,
+    elevation: 2, borderWidth: 1,
   },
   activeCard: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
+    borderRadius: 20, paddingHorizontal: 16, paddingVertical: 16,
+    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8,
+    elevation: 3, borderWidth: 1,
   },
-  activeSummaryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  divider: {
-    height: 1,
-    marginBottom: 16,
-  },
+  activeSummaryRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  divider: { height: 1, marginBottom: 16 },
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
+    width: 44, height: 44, borderRadius: 22,
+    alignItems: "center", justifyContent: "center", marginRight: 12,
   },
-  cardCenter: {
-    flex: 1,
-    gap: 3,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  orderId: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  orderMeta: {
-    fontSize: 12,
-    flex: 1,
-  },
-  price: {
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  orderDate: {
-    fontSize: 11,
-  },
-  timeline: {
-    marginBottom: 16,
-    paddingLeft: 4,
-  },
-  timelineRow: {
-    flexDirection: "row",
-    minHeight: 44,
-  },
-  timelineLeft: {
-    width: 28,
-    alignItems: "center",
-  },
-  dotCompleted: {
-    width: 22,
-    height: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-  },
+  cardCenter: { flex: 1, gap: 3 },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  orderId: { fontSize: 14, fontWeight: "700" },
+  statusText: { fontSize: 13, fontWeight: "700" },
+  orderMeta: { fontSize: 12, flex: 1 },
+  price: { fontSize: 14, fontWeight: "800" },
+  orderDate: { fontSize: 11 },
+  timeline: { marginBottom: 16, paddingLeft: 4 },
+  timelineRow: { flexDirection: "row", minHeight: 44 },
+  timelineLeft: { width: 28, alignItems: "center" },
+  dotCompleted: { width: 22, height: 22, alignItems: "center", justifyContent: "center", zIndex: 1 },
   dotEmpty: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    backgroundColor: "#fff",
-    marginTop: 1,
-    zIndex: 1,
+    width: 18, height: 18, borderRadius: 9, borderWidth: 2,
+    backgroundColor: "#fff", marginTop: 1, zIndex: 1,
   },
-  timelineLine: {
-    width: 2,
-    flex: 1,
-    marginTop: 2,
-    marginBottom: -2,
-  },
-  timelineContent: {
-    flex: 1,
-    paddingLeft: 10,
-    paddingBottom: 12,
-  },
-  stepLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  stepTime: {
-    fontSize: 11,
-    marginTop: 1,
-  },
+  timelineLine: { width: 2, flex: 1, marginTop: 2, marginBottom: -2 },
+  timelineContent: { flex: 1, paddingLeft: 10, paddingBottom: 12 },
+  stepLabel: { fontSize: 13, fontWeight: "600" },
+  stepTime: { fontSize: 11, marginTop: 1 },
   cancelNotice: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 14,
+    flexDirection: "row", alignItems: "center", gap: 6,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 14,
   },
-  cancelNoticeText: {
-    fontSize: 12,
-    fontWeight: "500",
-    flex: 1,
-  },
-  actionRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  cancelBtn: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderRadius: 30,
-    paddingVertical: 13,
-    alignItems: "center",
-  },
-  cancelBtnText: {
-    color: "#E53935",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  trackBtn: {
-    flex: 1,
-    borderRadius: 30,
-    paddingVertical: 13,
-    alignItems: "center",
-  },
-  trackBtnText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  emptyWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontWeight: "500",
-  },
+  cancelNoticeText: { fontSize: 12, fontWeight: "500", flex: 1 },
+  actionRow: { flexDirection: "row", gap: 10 },
+  cancelBtn: { flex: 1, borderWidth: 1.5, borderRadius: 30, paddingVertical: 13, alignItems: "center" },
+  cancelBtnText: { color: "#E53935", fontWeight: "700", fontSize: 14 },
+  trackBtn: { flex: 1, borderRadius: 30, paddingVertical: 13, alignItems: "center" },
+  trackBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  emptyWrap: { alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 12 },
+  emptyText: { fontSize: 15, fontWeight: "500" },
 });

@@ -1,15 +1,6 @@
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Alert,
-  FlatList,
+  View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
+  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, FlatList,
 } from 'react-native'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocalSearchParams, router } from 'expo-router'
@@ -22,10 +13,10 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { setAddress } from '../../src/redux/store/addressSlice'
 import AppBackground from '@/components/AppBackground'
-import { getSavedAddresses, createSavedAddress } from '../../src/services/customer' // ✅ new imports
+import { getSavedAddresses, createSavedAddress } from '../../src/services/customer'
+import { useTranslation } from 'react-i18next'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
-// API_BASE_URL removed – using apiClient instead
 
 type LocationType = 'pickup' | 'dropoff'
 type ViewMode = 'list' | 'map'
@@ -54,7 +45,7 @@ type SearchBarProps = {
   searchLoading: boolean
   showDropdown: boolean
   predictions: Prediction[]
-  locationType: LocationType
+  placeholder: string
   onSearchChange: (text: string) => void
   onClear: () => void
   onPredictionSelect: (prediction: Prediction, confirmNow: boolean) => void
@@ -74,22 +65,16 @@ const SavedAddressIcon = ({ label }: { label: SavedAddress['label'] }) => {
   return <MaterialIcons name="location-on" size={20} color="#555" />
 }
 
-const getDisplayLabel = (addr: SavedAddress): string => {
+const getDisplayLabel = (addr: SavedAddress, t: any): string => {
   if (addr.label === 'other' && addr.customLabel) return addr.customLabel
-  return addr.label.charAt(0).toUpperCase() + addr.label.slice(1)
+  return t(`location.${addr.label}`)
 }
 
-// SearchBar component (unchanged)
+/* ── SearchBar ── */
 const SearchBar = ({
   isOnMap = false,
-  searchText,
-  searchLoading,
-  showDropdown,
-  predictions,
-  locationType,
-  onSearchChange,
-  onClear,
-  onPredictionSelect,
+  searchText, searchLoading, showDropdown, predictions, placeholder,
+  onSearchChange, onClear, onPredictionSelect,
 }: SearchBarProps) => (
   <View style={{ zIndex: 999 }}>
     <View style={[styles.searchWrap, isOnMap && styles.searchWrapMap]}>
@@ -99,7 +84,7 @@ const SearchBar = ({
       }
       <TextInput
         style={styles.searchInput}
-        placeholder={`Search ${locationType === 'pickup' ? 'pickup' : 'drop-off'} location...`}
+        placeholder={placeholder}
         placeholderTextColor="#bbb"
         value={searchText}
         onChangeText={onSearchChange}
@@ -149,6 +134,7 @@ const SearchBar = ({
 export default function PickupLocation() {
   const { type } = useLocalSearchParams<{ type: LocationType }>()
   const dispatch = useDispatch()
+  const { t } = useTranslation()
 
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [searchText, setSearchText] = useState('')
@@ -156,7 +142,7 @@ export default function PickupLocation() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [fetchingLocation, setFetchingLocation] = useState(false)
-  const [savingAddress, setSavingAddress] = useState(false) // for save button loading
+  const [savingAddress, setSavingAddress] = useState(false)
 
   const [region, setRegion] = useState<Region>(DEFAULT_REGION)
   const [markerCoord, setMarkerCoord] = useState({
@@ -175,16 +161,15 @@ export default function PickupLocation() {
   const reverseGeocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const locationType: LocationType = type === 'dropoff' ? 'dropoff' : 'pickup'
-  const title = locationType === 'pickup' ? 'Pickup Location' : 'Drop-off Location'
+  const title = locationType === 'pickup' ? t('location.pickup_location') : t('location.dropoff_location')
+  const sheetLabel = locationType === 'pickup' ? t('location.pickup_from') : t('location.dropoff_at')
+  const searchPlaceholder = locationType === 'pickup' ? t('location.search_pickup') : t('location.search_dropoff')
 
-  // ── Fetch saved addresses using apiClient ───────────────────────────────
   const fetchSavedAddresses = useCallback(async () => {
     setAddressesLoading(true)
     setAddressesError(false)
     try {
-      // getSavedAddresses already handles token via apiClient
       const data = await getSavedAddresses()
-      // Assuming apiClient returns the array directly. If it returns { data: [...] }, use data.data
       setSavedAddresses(data)
     } catch (e) {
       console.error('Failed to load saved addresses:', e)
@@ -195,37 +180,33 @@ export default function PickupLocation() {
     }
   }, [])
 
-  useEffect(() => {
-    fetchSavedAddresses()
-  }, [fetchSavedAddresses])
+  useEffect(() => { fetchSavedAddresses() }, [fetchSavedAddresses])
 
-  // ── Save current location as a saved address ───────────────────────────
   const handleSaveCurrentLocation = async () => {
     if (!resolvedAddress) {
-      Alert.alert('No location', 'Please select a location on the map or search first.')
+      Alert.alert(t('location.no_location'), t('location.select_first'))
       return
     }
-
     Alert.alert(
-      'Save Address',
-      'Choose a label for this address',
+      t('location.save_address'),
+      t('location.choose_label'),
       [
-        { text: 'Home', onPress: () => saveAddressWithLabel('home') },
-        { text: 'Office', onPress: () => saveAddressWithLabel('office') },
+        { text: t('location.home'), onPress: () => saveAddressWithLabel('home') },
+        { text: t('location.office'), onPress: () => saveAddressWithLabel('office') },
         {
-          text: 'Other',
+          text: t('location.other'),
           onPress: () => {
             Alert.prompt(
-              'Enter custom label',
-              'Give this address a name',
+              t('location.enter_label'),
+              t('location.label_name'),
               [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('location.cancel'), style: 'cancel' },
                 {
-                  text: 'Save',
+                  text: t('location.save'),
                   onPress: (customLabel) => {
                     if (customLabel && customLabel.trim())
                       saveAddressWithLabel('other', customLabel.trim())
-                    else Alert.alert('Error', 'Label cannot be empty')
+                    else Alert.alert(t('location.error'), t('location.label_empty'))
                   },
                 },
               ],
@@ -233,60 +214,50 @@ export default function PickupLocation() {
             )
           },
         },
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('location.cancel'), style: 'cancel' },
       ],
       { cancelable: true }
     )
   }
 
   const saveAddressWithLabel = async (
-  label: 'home' | 'office' | 'other',
-  customLabel?: string | null,
-  addressOverride?: string,
-  coordsOverride?: { latitude: number; longitude: number }
-) => {
-  setSavingAddress(true);
-  try {
-    const addressToSave = addressOverride ?? resolvedAddress;
-    const latToSave = coordsOverride?.latitude ?? markerCoord.latitude;
-    const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude;
-
-    await createSavedAddress({
-      label,
-      customLabel: label === 'other' ? (customLabel ?? null) : null,
-      address: addressToSave,
-      coordinates: {
-        lat: latToSave,
-        lng: lngToSave,
-      },
-      isDefault: false,
-    });
-    Alert.alert('Success', 'Address saved successfully');
-    fetchSavedAddresses();
-  } catch (error: any) {
-    Alert.alert('Error', error.message || 'Failed to save address');
-  } finally {
-    setSavingAddress(false);
+    label: 'home' | 'office' | 'other',
+    customLabel?: string | null,
+    addressOverride?: string,
+    coordsOverride?: { latitude: number; longitude: number }
+  ) => {
+    setSavingAddress(true)
+    try {
+      const addressToSave = addressOverride ?? resolvedAddress
+      const latToSave = coordsOverride?.latitude ?? markerCoord.latitude
+      const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude
+      await createSavedAddress({
+        label,
+        customLabel: label === 'other' ? (customLabel ?? null) : null,
+        address: addressToSave,
+        coordinates: { lat: latToSave, lng: lngToSave },
+        isDefault: false,
+      })
+      Alert.alert('✓', t('location.saved_success'))
+      fetchSavedAddresses()
+    } catch (error: any) {
+      Alert.alert(t('location.error'), error.message || 'Failed to save address')
+    } finally {
+      setSavingAddress(false)
+    }
   }
-};
 
-  // ── Reverse geocode (unchanged) ────────────────────────────────────────
   const reverseGeocode = async (lat: number, lng: number) => {
     if (resolving) return
     setResolving(true)
     try {
       const url = `${NOMINATIM_URL}/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-      const res = await fetch(url, {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'KORAApp/1.0' },
-      })
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'KORAApp/1.0' } })
       if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`)
       const data = await res.json()
-      if (data?.display_name) {
-        setResolvedAddress(data.display_name)
-        return
-      }
-      throw new Error('Nominatim: empty display_name')
-    } catch (e: any) {
+      if (data?.display_name) { setResolvedAddress(data.display_name); return }
+      throw new Error('empty display_name')
+    } catch {
       try {
         const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng })
         if (results[0]) {
@@ -294,7 +265,7 @@ export default function PickupLocation() {
           setResolvedAddress([r.name, r.street, r.district, r.city, r.region, r.postalCode].filter(Boolean).join(', '))
           return
         }
-      } catch { /* ignore */ }
+      } catch { }
       setResolvedAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`)
     } finally {
       setResolving(false)
@@ -306,11 +277,9 @@ export default function PickupLocation() {
     reverseGeocodeTimeoutRef.current = setTimeout(() => reverseGeocode(lat, lng), 300)
   }, [])
 
-  // ── Search places ────────────────────────────────────────────────────────
   const searchPlaces = useCallback(async (text: string) => {
     if (text.trim().length < 2) {
-      setPredictions([]); setShowDropdown(false); setSearchLoading(false)
-      return
+      setPredictions([]); setShowDropdown(false); setSearchLoading(false); return
     }
     setSearchLoading(true)
     try {
@@ -325,8 +294,7 @@ export default function PickupLocation() {
             display_name: item.display_name,
             main_text: parts[0] ?? item.display_name,
             secondary_text: parts.slice(1, 3).join(', '),
-            lat: item.lat,
-            lon: item.lon,
+            lat: item.lat, lon: item.lon,
           }
         })
         setPredictions(formatted); setShowDropdown(true)
@@ -344,8 +312,7 @@ export default function PickupLocation() {
     setSearchText(text)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (text.trim().length < 2) {
-      setPredictions([]); setShowDropdown(false); setSearchLoading(false)
-      return
+      setPredictions([]); setShowDropdown(false); setSearchLoading(false); return
     }
     setSearchLoading(true)
     debounceRef.current = setTimeout(() => searchPlaces(text), 500)
@@ -357,15 +324,13 @@ export default function PickupLocation() {
 
   const onPredictionSelect = useCallback((prediction: Prediction, confirmNow: boolean) => {
     setSearchText(prediction.main_text)
-    setShowDropdown(false)
-    setPredictions([])
+    setShowDropdown(false); setPredictions([])
     const lat = parseFloat(prediction.lat)
     const lng = parseFloat(prediction.lon)
     if (isNaN(lat) || isNaN(lng)) return
     const newCoord = { latitude: lat, longitude: lng }
     const newRegion = { ...newCoord, latitudeDelta: 0.008, longitudeDelta: 0.008 }
-    setMarkerCoord(newCoord)
-    setRegion(newRegion)
+    setMarkerCoord(newCoord); setRegion(newRegion)
     setResolvedAddress(prediction.display_name)
     if (reverseGeocodeTimeoutRef.current) clearTimeout(reverseGeocodeTimeoutRef.current)
     mapRef.current?.animateToRegion(newRegion, 600)
@@ -383,14 +348,13 @@ export default function PickupLocation() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Allow location access to use this feature.')
+        Alert.alert(t('location.permission_denied'), t('location.allow_location'))
         return
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
       const newCoord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude }
       const newRegion = { ...newCoord, latitudeDelta: 0.005, longitudeDelta: 0.005 }
-      setMarkerCoord(newCoord)
-      setRegion(newRegion)
+      setMarkerCoord(newCoord); setRegion(newRegion)
       mapRef.current?.animateToRegion(newRegion, 800)
       if (confirmNow) {
         const url = `${NOMINATIM_URL}/reverse?format=json&lat=${newCoord.latitude}&lon=${newCoord.longitude}&zoom=18`
@@ -402,17 +366,14 @@ export default function PickupLocation() {
         await reverseGeocode(newCoord.latitude, newCoord.longitude)
       }
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Could not fetch location.')
+      Alert.alert(t('location.error'), e?.message ?? 'Could not fetch location.')
     } finally {
       setFetchingLocation(false)
     }
   }
 
   const handleSavedSelect = (addr: SavedAddress) => {
-    const newCoord = {
-      latitude: addr.coordinates.lat,
-      longitude: addr.coordinates.lng,
-    }
+    const newCoord = { latitude: addr.coordinates.lat, longitude: addr.coordinates.lng }
     setMarkerCoord(newCoord)
     setResolvedAddress(addr.address)
     handleSelect(addr.address, newCoord)
@@ -436,7 +397,7 @@ export default function PickupLocation() {
       return (
         <View style={styles.savedFeedback}>
           <ActivityIndicator size="small" color={TEAL} />
-          <Text style={styles.savedFeedbackText}>Loading saved addresses...</Text>
+          <Text style={styles.savedFeedbackText}>{t('location.loading_addresses')}</Text>
         </View>
       )
     }
@@ -444,7 +405,7 @@ export default function PickupLocation() {
       return (
         <TouchableOpacity style={styles.savedFeedback} onPress={fetchSavedAddresses}>
           <MaterialIcons name="refresh" size={18} color={TEAL} />
-          <Text style={[styles.savedFeedbackText, { color: TEAL }]}>Failed to load. Tap to retry.</Text>
+          <Text style={[styles.savedFeedbackText, { color: TEAL }]}>{t('location.failed_load')}</Text>
         </TouchableOpacity>
       )
     }
@@ -452,7 +413,7 @@ export default function PickupLocation() {
       return (
         <View style={styles.savedFeedback}>
           <MaterialIcons name="bookmark-border" size={18} color="#bbb" />
-          <Text style={styles.savedFeedbackText}>No saved addresses yet.</Text>
+          <Text style={styles.savedFeedbackText}>{t('location.no_saved')}</Text>
         </View>
       )
     }
@@ -464,10 +425,10 @@ export default function PickupLocation() {
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.listRowTitle}>{getDisplayLabel(addr)}</Text>
+              <Text style={styles.listRowTitle}>{getDisplayLabel(addr, t)}</Text>
               {addr.isDefault && (
                 <View style={styles.defaultBadge}>
-                  <Text style={styles.defaultBadgeText}>Default</Text>
+                  <Text style={styles.defaultBadgeText}>{t('location.default')}</Text>
                 </View>
               )}
             </View>
@@ -484,6 +445,7 @@ export default function PickupLocation() {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <AppBackground>
         <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
@@ -496,8 +458,8 @@ export default function PickupLocation() {
               activeOpacity={0.8}
             >
               {viewMode === 'list'
-                ? <><MaterialIcons name="map" size={15} color={TEAL} /><Text style={styles.toggleText}> Map</Text></>
-                : <><MaterialIcons name="list" size={15} color={TEAL} /><Text style={styles.toggleText}> List</Text></>
+                ? <><MaterialIcons name="map" size={15} color={TEAL} /><Text style={styles.toggleText}> {t('location.map')}</Text></>
+                : <><MaterialIcons name="list" size={15} color={TEAL} /><Text style={styles.toggleText}> {t('location.list')}</Text></>
               }
             </TouchableOpacity>
           </View>
@@ -510,10 +472,7 @@ export default function PickupLocation() {
                 provider={PROVIDER_DEFAULT}
                 style={StyleSheet.absoluteFillObject}
                 region={region}
-                onRegionChangeComplete={(r) => {
-                  setMarkerCoord({ latitude: r.latitude, longitude: r.longitude })
-                  setRegion(r)
-                }}
+                onRegionChangeComplete={(r) => { setMarkerCoord({ latitude: r.latitude, longitude: r.longitude }); setRegion(r) }}
                 onPress={(e) => {
                   const { coordinate } = e.nativeEvent
                   if (coordinate) {
@@ -545,7 +504,7 @@ export default function PickupLocation() {
                   searchLoading={searchLoading}
                   showDropdown={showDropdown}
                   predictions={predictions}
-                  locationType={locationType}
+                  placeholder={searchPlaceholder}
                   onSearchChange={onSearchChange}
                   onClear={handleClear}
                   onPredictionSelect={onPredictionSelect}
@@ -562,21 +521,20 @@ export default function PickupLocation() {
               {/* Bottom sheet */}
               <View style={styles.mapSheet}>
                 <View style={styles.sheetHandle} />
-                <Text style={styles.sheetLabel}>{locationType === 'pickup' ? 'PICKUP FROM' : 'DROP-OFF AT'}</Text>
+                <Text style={styles.sheetLabel}>{sheetLabel}</Text>
                 {resolving ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                     <ActivityIndicator size="small" color={TEAL} />
-                    <Text style={{ fontSize: 14, color: '#888' }}>Fetching address...</Text>
+                    <Text style={{ fontSize: 14, color: '#888' }}>{t('location.fetching_address')}</Text>
                   </View>
                 ) : (
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16 }}>
                     <MaterialIcons name="location-on" size={18} color={TEAL} style={{ marginTop: 2 }} />
                     <Text style={styles.sheetAddress} numberOfLines={2}>
-                      {resolvedAddress || 'Drag the pin or tap on map to select a location'}
+                      {resolvedAddress || t('location.drag_pin')}
                     </Text>
                   </View>
                 )}
-                {/* Save button (new) */}
                 {!!resolvedAddress && !resolving && (
                   <TouchableOpacity
                     style={[styles.saveBtn, savingAddress && styles.saveBtnDisabled]}
@@ -588,7 +546,7 @@ export default function PickupLocation() {
                     ) : (
                       <>
                         <MaterialIcons name="save" size={18} color="#fff" />
-                        <Text style={styles.saveBtnText}>  Save this location</Text>
+                        <Text style={styles.saveBtnText}>  {t('location.save_location')}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -599,7 +557,7 @@ export default function PickupLocation() {
                   onPress={() => resolvedAddress && handleSelect(resolvedAddress)}
                 >
                   <MaterialIcons name="check-circle-outline" size={18} color="#fff" />
-                  <Text style={styles.confirmText}>  Confirm Location</Text>
+                  <Text style={styles.confirmText}>  {t('location.confirm_location')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -613,7 +571,7 @@ export default function PickupLocation() {
                   searchLoading={searchLoading}
                   showDropdown={showDropdown}
                   predictions={predictions}
-                  locationType={locationType}
+                  placeholder={searchPlaceholder}
                   onSearchChange={onSearchChange}
                   onClear={handleClear}
                   onPredictionSelect={onPredictionSelect}
@@ -631,8 +589,8 @@ export default function PickupLocation() {
                     <MaterialCommunityIcons name="map-marker-radius" size={22} color="#fff" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.mapRowTitle}>Pick on Map</Text>
-                    <Text style={styles.mapRowSub}>Tap or drag the pin to choose</Text>
+                    <Text style={styles.mapRowTitle}>{t('location.pick_on_map')}</Text>
+                    <Text style={styles.mapRowSub}>{t('location.pick_on_map_sub')}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#c8e8e4" />
                 </TouchableOpacity>
@@ -647,18 +605,17 @@ export default function PickupLocation() {
                     }
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.listRowTitle}>Use Current Location</Text>
-                    <Text style={styles.listRowSub}>Detect using GPS</Text>
+                    <Text style={styles.listRowTitle}>{t('location.use_current')}</Text>
+                    <Text style={styles.listRowSub}>{t('location.use_current_sub')}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#ccc" />
                 </TouchableOpacity>
 
                 <View style={styles.divider} />
 
-                <Text style={styles.sectionLabel}>Saved Addresses</Text>
+                <Text style={styles.sectionLabel}>{t('location.saved_addresses')}</Text>
                 {renderSavedAddresses()}
 
-                {/* Add New Address button (list view) – saves current GPS location */}
                 <TouchableOpacity
                   style={styles.addAddressRow}
                   onPress={async () => {
@@ -666,7 +623,7 @@ export default function PickupLocation() {
                     try {
                       const { status } = await Location.requestForegroundPermissionsAsync()
                       if (status !== 'granted') {
-                        Alert.alert('Permission Denied', 'Allow location access to save your current location.')
+                        Alert.alert(t('location.permission_denied'), t('location.allow_location_save'))
                         return
                       }
                       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
@@ -675,22 +632,19 @@ export default function PickupLocation() {
                       const res = await fetch(url, { headers: { 'User-Agent': 'KORAApp/1.0' } })
                       const data = await res.json()
                       const address = data.display_name || `${coord.lat}, ${coord.lng}`
-                      const tmpResolvedAddress = address
                       const tmpMarkerCoord = { latitude: coord.lat, longitude: coord.lng }
-
-                      // Save directly using computed values (avoid state timing issues)
-                      await saveAddressWithLabel('other', tmpResolvedAddress, tmpMarkerCoord)
-                      fetchSavedAddresses() // refresh list
+                      await saveAddressWithLabel('other', address, address, tmpMarkerCoord)
+                      fetchSavedAddresses()
                       setShowDropdown(false)
                     } catch (err: any) {
-                      Alert.alert('Error', err.message || 'Could not fetch current location')
+                      Alert.alert(t('location.error'), err.message || 'Could not fetch current location')
                     } finally {
                       setFetchingLocation(false)
                     }
                   }}
                 >
                   <MaterialIcons name="add-location" size={22} color={TEAL} />
-                  <Text style={styles.addAddressText}>Add current location as saved address</Text>
+                  <Text style={styles.addAddressText}>{t('location.add_current')}</Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -709,10 +663,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: '#f0f0f0', backgroundColor: '#fff',
   },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#F5F5F5',
-    alignItems: 'center', justifyContent: 'center',
-  },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1a1a1a' },
   toggleBtn: {
     flexDirection: 'row', alignItems: 'center',
@@ -720,133 +671,63 @@ const styles = StyleSheet.create({
     backgroundColor: TEAL_LIGHT, borderRadius: 20, borderWidth: 1, borderColor: '#c8e8e4',
   },
   toggleText: { fontSize: 13, color: TEAL, fontWeight: '600' },
-
-  listSearchWrap: {
-    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4,
-    backgroundColor: '#fff', zIndex: 999,
-  },
+  listSearchWrap: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: '#fff', zIndex: 999 },
   searchWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 12,
-    borderWidth: 1, borderColor: '#e0e0e0',
-    paddingHorizontal: 12, height: 48,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
+    borderRadius: 12, borderWidth: 1, borderColor: '#e0e0e0', paddingHorizontal: 12, height: 48,
   },
-  searchWrapMap: {
-    elevation: 10, shadowColor: '#000', shadowOpacity: 0.18,
-    shadowRadius: 10, shadowOffset: { width: 0, height: 3 },
-    borderColor: '#fff',
-  },
+  searchWrapMap: { elevation: 10, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, borderColor: '#fff' },
   searchInput: { flex: 1, fontSize: 14, color: '#222', paddingVertical: 0 },
-
   dropdown: {
-    marginTop: 4, backgroundColor: '#fff',
-    borderRadius: 12, borderWidth: 1, borderColor: '#e8e8e8',
-    maxHeight: 300, overflow: 'hidden',
-    elevation: 12, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12,
+    marginTop: 4, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e8e8e8',
+    maxHeight: 300, overflow: 'hidden', elevation: 12, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12,
   },
   dropdownMap: { elevation: 20, shadowOpacity: 0.2 },
-  dropdownRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 13,
-  },
-  dropdownIcon: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: TEAL_LIGHT,
-    alignItems: 'center', justifyContent: 'center', marginRight: 12,
-  },
+  dropdownRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13 },
+  dropdownIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: TEAL_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   dropdownMain: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
   dropdownSub: { fontSize: 12, color: '#999', marginTop: 1 },
   dropdownSep: { height: 1, backgroundColor: '#f5f5f5', marginLeft: 58 },
-
-  mapSearchFloat: {
-    position: 'absolute', top: 12, left: 12, right: 12, zIndex: 999,
-  },
+  mapSearchFloat: { position: 'absolute', top: 12, left: 12, right: 12, zIndex: 999 },
   fab: {
-    position: 'absolute', right: 16, bottom: 240,
-    width: 48, height: 48, borderRadius: 24,
+    position: 'absolute', right: 16, bottom: 240, width: 48, height: 48, borderRadius: 24,
     backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
     elevation: 6, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8,
   },
   mapSheet: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingBottom: 28, paddingTop: 12,
     elevation: 20, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 16,
   },
   sheetHandle: { width: 40, height: 4, backgroundColor: '#e0e0e0', borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
   sheetLabel: { fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1, marginBottom: 8 },
   sheetAddress: { flex: 1, fontSize: 15, fontWeight: '600', color: '#1a1a1a', lineHeight: 22 },
-
   mapRow: {
-    flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: 16, marginTop: 14, marginBottom: 2,
-    backgroundColor: TEAL_LIGHT, borderRadius: 14,
-    borderWidth: 1, borderColor: '#c8e8e4', padding: 14,
+    flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, marginBottom: 2,
+    backgroundColor: TEAL_LIGHT, borderRadius: 14, borderWidth: 1, borderColor: '#c8e8e4', padding: 14,
   },
-  mapRowIcon: {
-    width: 44, height: 44, borderRadius: 12, backgroundColor: TEAL,
-    alignItems: 'center', justifyContent: 'center', marginRight: 14,
-  },
+  mapRowIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: TEAL, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   mapRowTitle: { fontSize: 15, fontWeight: '700', color: TEAL },
   mapRowSub: { fontSize: 12, color: '#6aada6', marginTop: 2 },
-
   listRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
-  listRowIcon: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#f0fafa',
-    alignItems: 'center', justifyContent: 'center', marginRight: 14,
-    borderWidth: 1, borderColor: '#d0eeea',
-  },
+  listRowIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f0fafa', alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: '#d0eeea' },
   listRowTitle: { fontSize: 14, fontWeight: '600', color: '#1a1a1a', marginBottom: 2 },
   listRowSub: { fontSize: 12, color: '#888' },
-
-  savedIcon: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#f5f5f5',
-    alignItems: 'center', justifyContent: 'center', marginRight: 14,
-    borderWidth: 1, borderColor: '#e8e8e8',
-  },
-
-  savedFeedback: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 16, paddingVertical: 14,
-  },
+  savedIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f5f5f5', alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: '#e8e8e8' },
+  savedFeedback: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 14 },
   savedFeedbackText: { fontSize: 13, color: '#aaa' },
-
-  defaultBadge: {
-    backgroundColor: TEAL_LIGHT, borderRadius: 6,
-    paddingHorizontal: 6, paddingVertical: 2,
-    borderWidth: 1, borderColor: '#c8e8e4',
-  },
+  defaultBadge: { backgroundColor: TEAL_LIGHT, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#c8e8e4' },
   defaultBadgeText: { fontSize: 10, color: TEAL, fontWeight: '700' },
-
   divider: { height: 8, backgroundColor: '#f5f5f5', marginVertical: 4 },
   innerDivider: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 70, marginRight: 16 },
-  sectionLabel: {
-    fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1,
-    textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6,
-  },
-
-  confirmBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: TEAL, borderRadius: 12, paddingVertical: 15,
-    marginTop: 12,
-  },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
+  confirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: TEAL, borderRadius: 12, paddingVertical: 15, marginTop: 12 },
   confirmDisabled: { backgroundColor: '#ccc' },
   confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-
-  // New styles for save button
-  saveBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#2c8c7a', borderRadius: 12, paddingVertical: 12,
-    marginBottom: 8,
-  },
+  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2c8c7a', borderRadius: 12, paddingVertical: 12, marginBottom: 8 },
   saveBtnDisabled: { backgroundColor: '#a0c4bc' },
   saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-
-  addAddressRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    marginHorizontal: 16, marginVertical: 12,
-    paddingVertical: 12, paddingHorizontal: 16,
-    backgroundColor: TEAL_LIGHT, borderRadius: 14,
-    borderWidth: 1, borderColor: '#c8e8e4',
-  },
+  addAddressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginVertical: 12, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: TEAL_LIGHT, borderRadius: 14, borderWidth: 1, borderColor: '#c8e8e4' },
   addAddressText: { fontSize: 14, fontWeight: '500', color: TEAL },
 })
