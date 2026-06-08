@@ -1,6 +1,15 @@
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, FlatList,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+  FlatList,
 } from 'react-native'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocalSearchParams, router } from 'expo-router'
@@ -13,8 +22,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { setAddress } from '../../src/redux/store/addressSlice'
 import AppBackground from '@/components/AppBackground'
-import { getSavedAddresses, createSavedAddress } from '../../src/services/customer'
-import { useTranslation } from 'react-i18next'
+import { getSavedAddresses, createSavedAddress } from '../../src/services/customer' // ✅ new imports
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
 
@@ -49,6 +57,7 @@ type SearchBarProps = {
   onSearchChange: (text: string) => void
   onClear: () => void
   onPredictionSelect: (prediction: Prediction, confirmNow: boolean) => void
+  theme: any
 }
 
 const DEFAULT_REGION: Region = {
@@ -56,13 +65,11 @@ const DEFAULT_REGION: Region = {
   latitudeDelta: 0.01, longitudeDelta: 0.01,
 }
 
-const TEAL = '#1A6B5A'
-const TEAL_LIGHT = '#E8F4F1'
-
-const SavedAddressIcon = ({ label }: { label: SavedAddress['label'] }) => {
-  if (label === 'home') return <MaterialCommunityIcons name="home" size={20} color="#555" />
-  if (label === 'office') return <MaterialCommunityIcons name="office-building" size={20} color="#555" />
-  return <MaterialIcons name="location-on" size={20} color="#555" />
+const SavedAddressIcon = ({ label, theme }: { label: SavedAddress['label']; theme: any }) => {
+  const color = theme.subText
+  if (label === 'home') return <MaterialCommunityIcons name="home" size={20} color={color} />
+  if (label === 'office') return <MaterialCommunityIcons name="office-building" size={20} color={color} />
+  return <MaterialIcons name="location-on" size={20} color={color} />
 }
 
 const getDisplayLabel = (addr: SavedAddress, t: any): string => {
@@ -70,11 +77,17 @@ const getDisplayLabel = (addr: SavedAddress, t: any): string => {
   return t(`location.${addr.label}`)
 }
 
-/* ── SearchBar ── */
+// SearchBar component (unchanged)
 const SearchBar = ({
   isOnMap = false,
-  searchText, searchLoading, showDropdown, predictions, placeholder,
-  onSearchChange, onClear, onPredictionSelect,
+  searchText,
+  searchLoading,
+  showDropdown,
+  predictions,
+  locationType,
+  onSearchChange,
+  onClear,
+  onPredictionSelect,
 }: SearchBarProps) => (
   <View style={{ zIndex: 999 }}>
     <View style={[styles.searchWrap, isOnMap && styles.searchWrapMap]}>
@@ -84,7 +97,7 @@ const SearchBar = ({
       }
       <TextInput
         style={styles.searchInput}
-        placeholder={placeholder}
+        placeholder={`Search ${locationType === 'pickup' ? 'pickup' : 'drop-off'} location...`}
         placeholderTextColor="#bbb"
         value={searchText}
         onChangeText={onSearchChange}
@@ -99,42 +112,42 @@ const SearchBar = ({
       )}
     </View>
 
-    {showDropdown && predictions.length > 0 && (
-      <View style={[styles.dropdown, isOnMap && styles.dropdownMap]}>
-        <FlatList
-          data={predictions}
-          keyExtractor={(item) => item.place_id}
-          keyboardShouldPersistTaps="always"
-          scrollEnabled={predictions.length > 4}
-          ItemSeparatorComponent={() => <View style={styles.dropdownSep} />}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.dropdownRow}
-              activeOpacity={0.7}
-              onPress={() => onPredictionSelect(item, !isOnMap)}
-            >
-              <View style={styles.dropdownIcon}>
-                <MaterialIcons name="location-on" size={16} color={TEAL} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.dropdownMain} numberOfLines={1}>{item.main_text}</Text>
-                {!!item.secondary_text && (
-                  <Text style={styles.dropdownSub} numberOfLines={1}>{item.secondary_text}</Text>
-                )}
-              </View>
-              <Ionicons name="chevron-forward" size={14} color="#ddd" />
-            </TouchableOpacity>
-          )}
-        />
-      </View>
-    )}
-  </View>
-)
+      {showDropdown && predictions.length > 0 && (
+        <View style={[styles.dropdown, isOnMap && styles.dropdownMap]}>
+          <FlatList
+            data={predictions}
+            keyExtractor={(item) => item.place_id}
+            keyboardShouldPersistTaps="always"
+            scrollEnabled={predictions.length > 4}
+            ItemSeparatorComponent={() => <View style={[styles.dropdownSep, { backgroundColor: theme.border }]} />}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.dropdownRow}
+                activeOpacity={0.7}
+                onPress={() => onPredictionSelect(item, !isOnMap)}
+              >
+                <View style={[styles.dropdownIcon, { backgroundColor: theme.primaryLight }]}>
+                  <MaterialIcons name="location-on" size={16} color={theme.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.dropdownMain, { color: theme.text }]} numberOfLines={1}>{item.main_text}</Text>
+                  {!!item.secondary_text && (
+                    <Text style={[styles.dropdownSub, { color: theme.subText }]} numberOfLines={1}>{item.secondary_text}</Text>
+                  )}
+                </View>
+                <Ionicons name="chevron-forward" size={14} color={theme.subText} />
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+    </View>
+  )
+}
 
 export default function PickupLocation() {
   const { type } = useLocalSearchParams<{ type: LocationType }>()
   const dispatch = useDispatch()
-  const { t } = useTranslation()
 
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [searchText, setSearchText] = useState('')
@@ -165,6 +178,7 @@ export default function PickupLocation() {
   const sheetLabel = locationType === 'pickup' ? t('location.pickup_from') : t('location.dropoff_at')
   const searchPlaceholder = locationType === 'pickup' ? t('location.search_pickup') : t('location.search_dropoff')
 
+  // ── Fetch saved addresses using apiClient ───────────────────────────────
   const fetchSavedAddresses = useCallback(async () => {
     setAddressesLoading(true)
     setAddressesError(false)
@@ -182,6 +196,7 @@ export default function PickupLocation() {
 
   useEffect(() => { fetchSavedAddresses() }, [fetchSavedAddresses])
 
+  // ── Save current location as a saved address ───────────────────────────
   const handleSaveCurrentLocation = async () => {
     if (!resolvedAddress) {
       Alert.alert(t('location.no_location'), t('location.select_first'))
@@ -221,32 +236,37 @@ export default function PickupLocation() {
   }
 
   const saveAddressWithLabel = async (
-    label: 'home' | 'office' | 'other',
-    customLabel?: string | null,
-    addressOverride?: string,
-    coordsOverride?: { latitude: number; longitude: number }
-  ) => {
-    setSavingAddress(true)
-    try {
-      const addressToSave = addressOverride ?? resolvedAddress
-      const latToSave = coordsOverride?.latitude ?? markerCoord.latitude
-      const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude
-      await createSavedAddress({
-        label,
-        customLabel: label === 'other' ? (customLabel ?? null) : null,
-        address: addressToSave,
-        coordinates: { lat: latToSave, lng: lngToSave },
-        isDefault: false,
-      })
-      Alert.alert('✓', t('location.saved_success'))
-      fetchSavedAddresses()
-    } catch (error: any) {
-      Alert.alert(t('location.error'), error.message || 'Failed to save address')
-    } finally {
-      setSavingAddress(false)
-    }
-  }
+  label: 'home' | 'office' | 'other',
+  customLabel?: string | null,
+  addressOverride?: string,
+  coordsOverride?: { latitude: number; longitude: number }
+) => {
+  setSavingAddress(true);
+  try {
+    const addressToSave = addressOverride ?? resolvedAddress;
+    const latToSave = coordsOverride?.latitude ?? markerCoord.latitude;
+    const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude;
 
+    await createSavedAddress({
+      label,
+      customLabel: label === 'other' ? (customLabel ?? null) : null,
+      address: addressToSave,
+      coordinates: {
+        lat: latToSave,
+        lng: lngToSave,
+      },
+      isDefault: false,
+    });
+    Alert.alert('Success', 'Address saved successfully');
+    fetchSavedAddresses();
+  } catch (error: any) {
+    Alert.alert('Error', error.message || 'Failed to save address');
+  } finally {
+    setSavingAddress(false);
+  }
+};
+
+  // ── Reverse geocode (unchanged) ────────────────────────────────────────
   const reverseGeocode = async (lat: number, lng: number) => {
     if (resolving) return
     setResolving(true)
@@ -277,6 +297,7 @@ export default function PickupLocation() {
     reverseGeocodeTimeoutRef.current = setTimeout(() => reverseGeocode(lat, lng), 300)
   }, [])
 
+  // ── Search places ────────────────────────────────────────────────────────
   const searchPlaces = useCallback(async (text: string) => {
     if (text.trim().length < 2) {
       setPredictions([]); setShowDropdown(false); setSearchLoading(false); return
@@ -397,7 +418,7 @@ export default function PickupLocation() {
       return (
         <View style={styles.savedFeedback}>
           <ActivityIndicator size="small" color={TEAL} />
-          <Text style={styles.savedFeedbackText}>{t('location.loading_addresses')}</Text>
+          <Text style={styles.savedFeedbackText}>Loading saved addresses...</Text>
         </View>
       )
     }
@@ -405,7 +426,7 @@ export default function PickupLocation() {
       return (
         <TouchableOpacity style={styles.savedFeedback} onPress={fetchSavedAddresses}>
           <MaterialIcons name="refresh" size={18} color={TEAL} />
-          <Text style={[styles.savedFeedbackText, { color: TEAL }]}>{t('location.failed_load')}</Text>
+          <Text style={[styles.savedFeedbackText, { color: TEAL }]}>Failed to load. Tap to retry.</Text>
         </TouchableOpacity>
       )
     }
@@ -413,53 +434,54 @@ export default function PickupLocation() {
       return (
         <View style={styles.savedFeedback}>
           <MaterialIcons name="bookmark-border" size={18} color="#bbb" />
-          <Text style={styles.savedFeedbackText}>{t('location.no_saved')}</Text>
+          <Text style={styles.savedFeedbackText}>No saved addresses yet.</Text>
         </View>
       )
     }
     return savedAddresses.map((addr, idx) => (
       <React.Fragment key={addr._id}>
         <TouchableOpacity style={styles.listRow} activeOpacity={0.8} onPress={() => handleSavedSelect(addr)}>
-          <View style={styles.savedIcon}>
-            <SavedAddressIcon label={addr.label} />
+          <View style={[styles.savedIcon, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}>
+            <SavedAddressIcon label={addr.label} theme={theme} />
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.listRowTitle}>{getDisplayLabel(addr, t)}</Text>
+              <Text style={styles.listRowTitle}>{getDisplayLabel(addr)}</Text>
               {addr.isDefault && (
                 <View style={styles.defaultBadge}>
-                  <Text style={styles.defaultBadgeText}>{t('location.default')}</Text>
+                  <Text style={styles.defaultBadgeText}>Default</Text>
                 </View>
               )}
             </View>
-            <Text style={styles.listRowSub} numberOfLines={1}>{addr.address}</Text>
+            <Text style={[styles.listRowSub, { color: theme.subText }]} numberOfLines={1}>{addr.address}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#ccc" />
+          <Ionicons name="chevron-forward" size={18} color={theme.subText} />
         </TouchableOpacity>
-        {idx < savedAddresses.length - 1 && <View style={styles.innerDivider} />}
+        {idx < savedAddresses.length - 1 && <View style={[styles.innerDivider, { backgroundColor: theme.border }]} />}
       </React.Fragment>
     ))
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
       <AppBackground>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <Ionicons name="arrow-back" size={20} color="#1A1A1A" />
+              <Ionicons name="arrow-back" size={20} color={theme.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{title}</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>{title}</Text>
             <TouchableOpacity
-              style={styles.toggleBtn}
+              style={[styles.toggleBtn, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}
               onPress={() => { setShowDropdown(false); setViewMode(viewMode === 'list' ? 'map' : 'list') }}
               activeOpacity={0.8}
             >
               {viewMode === 'list'
-                ? <><MaterialIcons name="map" size={15} color={TEAL} /><Text style={styles.toggleText}> {t('location.map')}</Text></>
-                : <><MaterialIcons name="list" size={15} color={TEAL} /><Text style={styles.toggleText}> {t('location.list')}</Text></>
+                ? <><MaterialIcons name="map" size={15} color={TEAL} /><Text style={styles.toggleText}> Map</Text></>
+                : <><MaterialIcons name="list" size={15} color={TEAL} /><Text style={styles.toggleText}> List</Text></>
               }
             </TouchableOpacity>
           </View>
@@ -508,36 +530,37 @@ export default function PickupLocation() {
                   onSearchChange={onSearchChange}
                   onClear={handleClear}
                   onPredictionSelect={onPredictionSelect}
+                  theme={theme}
                 />
               </View>
 
-              <TouchableOpacity style={styles.fab} onPress={() => fetchCurrentLocation(false)} activeOpacity={0.85}>
+              <TouchableOpacity style={[styles.fab, { backgroundColor: theme.card }]} onPress={() => fetchCurrentLocation(false)} activeOpacity={0.85}>
                 {fetchingLocation
-                  ? <ActivityIndicator size="small" color={TEAL} />
-                  : <MaterialIcons name="my-location" size={22} color={TEAL} />
+                  ? <ActivityIndicator size="small" color={theme.primary} />
+                  : <MaterialIcons name="my-location" size={22} color={theme.primary} />
                 }
               </TouchableOpacity>
 
               {/* Bottom sheet */}
               <View style={styles.mapSheet}>
                 <View style={styles.sheetHandle} />
-                <Text style={styles.sheetLabel}>{sheetLabel}</Text>
+                <Text style={styles.sheetLabel}>{locationType === 'pickup' ? 'PICKUP FROM' : 'DROP-OFF AT'}</Text>
                 {resolving ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                     <ActivityIndicator size="small" color={TEAL} />
-                    <Text style={{ fontSize: 14, color: '#888' }}>{t('location.fetching_address')}</Text>
+                    <Text style={{ fontSize: 14, color: '#888' }}>Fetching address...</Text>
                   </View>
                 ) : (
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16 }}>
                     <MaterialIcons name="location-on" size={18} color={TEAL} style={{ marginTop: 2 }} />
                     <Text style={styles.sheetAddress} numberOfLines={2}>
-                      {resolvedAddress || t('location.drag_pin')}
+                      {resolvedAddress || 'Drag the pin or tap on map to select a location'}
                     </Text>
                   </View>
                 )}
                 {!!resolvedAddress && !resolving && (
                   <TouchableOpacity
-                    style={[styles.saveBtn, savingAddress && styles.saveBtnDisabled]}
+                    style={[styles.saveBtn, { backgroundColor: theme.secondary || theme.primary }, savingAddress && styles.saveBtnDisabled]}
                     onPress={handleSaveCurrentLocation}
                     disabled={savingAddress}
                   >
@@ -575,6 +598,7 @@ export default function PickupLocation() {
                   onSearchChange={onSearchChange}
                   onClear={handleClear}
                   onPredictionSelect={onPredictionSelect}
+                  theme={theme}
                 />
               </View>
 
@@ -584,40 +608,41 @@ export default function PickupLocation() {
                 onScrollBeginDrag={() => setShowDropdown(false)}
                 showsVerticalScrollIndicator={false}
               >
-                <TouchableOpacity style={styles.mapRow} activeOpacity={0.85} onPress={() => setViewMode('map')}>
-                  <View style={styles.mapRowIcon}>
+                <TouchableOpacity style={[styles.mapRow, { backgroundColor: theme.primaryLight, borderColor: theme.border }]} activeOpacity={0.85} onPress={() => setViewMode('map')}>
+                  <View style={[styles.mapRowIcon, { backgroundColor: theme.primary }]}>
                     <MaterialCommunityIcons name="map-marker-radius" size={22} color="#fff" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.mapRowTitle}>{t('location.pick_on_map')}</Text>
-                    <Text style={styles.mapRowSub}>{t('location.pick_on_map_sub')}</Text>
+                    <Text style={styles.mapRowTitle}>Pick on Map</Text>
+                    <Text style={styles.mapRowSub}>Tap or drag the pin to choose</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="#c8e8e4" />
+                  <Ionicons name="chevron-forward" size={18} color={theme.subText} />
                 </TouchableOpacity>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
                 <TouchableOpacity style={styles.listRow} activeOpacity={0.85} onPress={() => fetchCurrentLocation(true)}>
-                  <View style={styles.listRowIcon}>
+                  <View style={[styles.listRowIcon, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}>
                     {fetchingLocation
-                      ? <ActivityIndicator size="small" color={TEAL} />
-                      : <MaterialIcons name="my-location" size={20} color={TEAL} />
+                      ? <ActivityIndicator size="small" color={theme.primary} />
+                      : <MaterialIcons name="my-location" size={20} color={theme.primary} />
                     }
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.listRowTitle}>{t('location.use_current')}</Text>
-                    <Text style={styles.listRowSub}>{t('location.use_current_sub')}</Text>
+                    <Text style={styles.listRowTitle}>Use Current Location</Text>
+                    <Text style={styles.listRowSub}>Detect using GPS</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="#ccc" />
+                  <Ionicons name="chevron-forward" size={18} color={theme.subText} />
                 </TouchableOpacity>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-                <Text style={styles.sectionLabel}>{t('location.saved_addresses')}</Text>
+                <Text style={styles.sectionLabel}>Saved Addresses</Text>
                 {renderSavedAddresses()}
 
+                {/* Add New Address button (list view) – saves current GPS location */}
                 <TouchableOpacity
-                  style={styles.addAddressRow}
+                  style={[styles.addAddressRow, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}
                   onPress={async () => {
                     setFetchingLocation(true)
                     try {
@@ -632,9 +657,12 @@ export default function PickupLocation() {
                       const res = await fetch(url, { headers: { 'User-Agent': 'KORAApp/1.0' } })
                       const data = await res.json()
                       const address = data.display_name || `${coord.lat}, ${coord.lng}`
+                      const tmpResolvedAddress = address
                       const tmpMarkerCoord = { latitude: coord.lat, longitude: coord.lng }
-                      await saveAddressWithLabel('other', address, address, tmpMarkerCoord)
-                      fetchSavedAddresses()
+
+                      // Save directly using computed values (avoid state timing issues)
+                      await saveAddressWithLabel('other', tmpResolvedAddress, tmpMarkerCoord)
+                      fetchSavedAddresses() // refresh list
                       setShowDropdown(false)
                     } catch (err: any) {
                       Alert.alert(t('location.error'), err.message || 'Could not fetch current location')
@@ -644,7 +672,7 @@ export default function PickupLocation() {
                   }}
                 >
                   <MaterialIcons name="add-location" size={22} color={TEAL} />
-                  <Text style={styles.addAddressText}>{t('location.add_current')}</Text>
+                  <Text style={styles.addAddressText}>Add current location as saved address</Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -663,7 +691,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: '#f0f0f0', backgroundColor: '#fff',
   },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: '#F5F5F5',
+    alignItems: 'center', justifyContent: 'center',
+  },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1a1a1a' },
   toggleBtn: {
     flexDirection: 'row', alignItems: 'center',
@@ -671,63 +702,133 @@ const styles = StyleSheet.create({
     backgroundColor: TEAL_LIGHT, borderRadius: 20, borderWidth: 1, borderColor: '#c8e8e4',
   },
   toggleText: { fontSize: 13, color: TEAL, fontWeight: '600' },
-  listSearchWrap: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: '#fff', zIndex: 999 },
-  searchWrap: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderRadius: 12, borderWidth: 1, borderColor: '#e0e0e0', paddingHorizontal: 12, height: 48,
+
+  listSearchWrap: {
+    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4,
+    backgroundColor: '#fff', zIndex: 999,
   },
-  searchWrapMap: { elevation: 10, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, borderColor: '#fff' },
+  searchWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff', borderRadius: 12,
+    borderWidth: 1, borderColor: '#e0e0e0',
+    paddingHorizontal: 12, height: 48,
+  },
+  searchWrapMap: {
+    elevation: 10, shadowColor: '#000', shadowOpacity: 0.18,
+    shadowRadius: 10, shadowOffset: { width: 0, height: 3 },
+    borderColor: '#fff',
+  },
   searchInput: { flex: 1, fontSize: 14, color: '#222', paddingVertical: 0 },
+
   dropdown: {
-    marginTop: 4, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e8e8e8',
-    maxHeight: 300, overflow: 'hidden', elevation: 12, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12,
+    marginTop: 4, backgroundColor: '#fff',
+    borderRadius: 12, borderWidth: 1, borderColor: '#e8e8e8',
+    maxHeight: 300, overflow: 'hidden',
+    elevation: 12, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12,
   },
   dropdownMap: { elevation: 20, shadowOpacity: 0.2 },
-  dropdownRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13 },
-  dropdownIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: TEAL_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  dropdownRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, paddingVertical: 13,
+  },
+  dropdownIcon: {
+    width: 32, height: 32, borderRadius: 16, backgroundColor: TEAL_LIGHT,
+    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+  },
   dropdownMain: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
   dropdownSub: { fontSize: 12, color: '#999', marginTop: 1 },
   dropdownSep: { height: 1, backgroundColor: '#f5f5f5', marginLeft: 58 },
-  mapSearchFloat: { position: 'absolute', top: 12, left: 12, right: 12, zIndex: 999 },
+
+  mapSearchFloat: {
+    position: 'absolute', top: 12, left: 12, right: 12, zIndex: 999,
+  },
   fab: {
-    position: 'absolute', right: 16, bottom: 240, width: 48, height: 48, borderRadius: 24,
+    position: 'absolute', right: 16, bottom: 240,
+    width: 48, height: 48, borderRadius: 24,
     backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
     elevation: 6, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8,
   },
   mapSheet: {
-    position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff',
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingBottom: 28, paddingTop: 12,
     elevation: 20, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 16,
   },
   sheetHandle: { width: 40, height: 4, backgroundColor: '#e0e0e0', borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
   sheetLabel: { fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1, marginBottom: 8 },
   sheetAddress: { flex: 1, fontSize: 15, fontWeight: '600', color: '#1a1a1a', lineHeight: 22 },
+
   mapRow: {
-    flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, marginBottom: 2,
-    backgroundColor: TEAL_LIGHT, borderRadius: 14, borderWidth: 1, borderColor: '#c8e8e4', padding: 14,
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: 16, marginTop: 14, marginBottom: 2,
+    backgroundColor: TEAL_LIGHT, borderRadius: 14,
+    borderWidth: 1, borderColor: '#c8e8e4', padding: 14,
   },
-  mapRowIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: TEAL, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  mapRowIcon: {
+    width: 44, height: 44, borderRadius: 12, backgroundColor: TEAL,
+    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+  },
   mapRowTitle: { fontSize: 15, fontWeight: '700', color: TEAL },
   mapRowSub: { fontSize: 12, color: '#6aada6', marginTop: 2 },
+
   listRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
-  listRowIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f0fafa', alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: '#d0eeea' },
+  listRowIcon: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: '#f0fafa',
+    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+    borderWidth: 1, borderColor: '#d0eeea',
+  },
   listRowTitle: { fontSize: 14, fontWeight: '600', color: '#1a1a1a', marginBottom: 2 },
   listRowSub: { fontSize: 12, color: '#888' },
-  savedIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f5f5f5', alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: '#e8e8e8' },
-  savedFeedback: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 14 },
+
+  savedIcon: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: '#f5f5f5',
+    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+    borderWidth: 1, borderColor: '#e8e8e8',
+  },
+
+  savedFeedback: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 16, paddingVertical: 14,
+  },
   savedFeedbackText: { fontSize: 13, color: '#aaa' },
-  defaultBadge: { backgroundColor: TEAL_LIGHT, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#c8e8e4' },
+
+  defaultBadge: {
+    backgroundColor: TEAL_LIGHT, borderRadius: 6,
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderWidth: 1, borderColor: '#c8e8e4',
+  },
   defaultBadgeText: { fontSize: 10, color: TEAL, fontWeight: '700' },
+
   divider: { height: 8, backgroundColor: '#f5f5f5', marginVertical: 4 },
   innerDivider: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 70, marginRight: 16 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
-  confirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: TEAL, borderRadius: 12, paddingVertical: 15, marginTop: 12 },
+  sectionLabel: {
+    fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1,
+    textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6,
+  },
+
+  confirmBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: TEAL, borderRadius: 12, paddingVertical: 15,
+    marginTop: 12,
+  },
   confirmDisabled: { backgroundColor: '#ccc' },
   confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2c8c7a', borderRadius: 12, paddingVertical: 12, marginBottom: 8 },
+
+  // New styles for save button
+  saveBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#2c8c7a', borderRadius: 12, paddingVertical: 12,
+    marginBottom: 8,
+  },
   saveBtnDisabled: { backgroundColor: '#a0c4bc' },
   saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  addAddressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginVertical: 12, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: TEAL_LIGHT, borderRadius: 14, borderWidth: 1, borderColor: '#c8e8e4' },
+
+  addAddressRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    marginHorizontal: 16, marginVertical: 12,
+    paddingVertical: 12, paddingHorizontal: 16,
+    backgroundColor: TEAL_LIGHT, borderRadius: 14,
+    borderWidth: 1, borderColor: '#c8e8e4',
+  },
   addAddressText: { fontSize: 14, fontWeight: '500', color: TEAL },
 })

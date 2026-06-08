@@ -2,143 +2,125 @@ import React, { useEffect, useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity,
   ScrollView, Dimensions, Platform, ActivityIndicator,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { getOrderDetails } from "@/src/services/orderService";
+import AppBackground from "@/components/AppBackground";
+import { useTheme } from "../../src/theme/ThemeProvider";
 
 const { width: W, height: H } = Dimensions.get("window");
-const r  = (n: number) => Math.round((W / 375) * n);
+const r = (n: number) => Math.round((W / 375) * n);
 const rv = (n: number) => Math.round((H / 812) * n);
 const rm = (n: number, f = 0.45) => n + (r(n) - n) * f;
 
-const C = {
-  teal:       "#1a7a6e",
-  tealLight:  "#e0f5f2",
-  tealXLight: "#eef9f7",
-  tealDark:   "#0f5249",
-  surface:    "#ffffff",
-  bg:         "#f2f6f5",
-  ink:        "#0e1c1a",
-  inkMid:     "#4a6360",
-  inkLight:   "#8aa8a4",
-  border:     "#dce8e6",
-  red:        "#e53935",
-  redLight:   "#fdecea",
-} as const;
-
-const ios_shadow = {
-  shadowColor: "#0a3530",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.08,
-  shadowRadius: 8,
-};
-
+// ─── Status labels (static) ─────────────────────────────────────
 const STATUS_LABEL: Record<string, string> = {
-  pending_sp:              "Order Placed",
-  sp_assigned:             "SP Assigned",
-  sp_accepted:             "SP Accepted",
-  rider_pickup_assigned:   "Rider Assigned for Pickup",
-  picked_up:               "Order Picked Up",
-  at_sp:                   "At Service Provider",
-  cleaned:                 "Cleaned",
+  pending_sp: "Order Placed",
+  sp_assigned: "SP Assigned",
+  sp_accepted: "SP Accepted",
+  rider_pickup_assigned: "Rider Assigned for Pickup",
+  picked_up: "Order Picked Up",
+  at_sp: "At Service Provider",
+  cleaned: "Cleaned",
   rider_delivery_assigned: "Out for Delivery",
-  delivered:               "Delivered",
-  cancelled:               "Cancelled",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
 };
 
-const STATUS_BADGE: Record<string, { bg: string; text: string; icon: any; iconColor: string }> = {
-  delivered: { bg: C.tealLight,  text: C.tealDark, icon: "checkmark-circle-outline", iconColor: C.teal },
-  cancelled: { bg: C.redLight,   text: C.red,      icon: "close-circle-outline",     iconColor: C.red  },
-  default:   { bg: "#fef3c7",    text: "#92400e",  icon: "time-outline",             iconColor: "#d97706" },
-};
-
-// ─── Section wrapper ───────────────────────────────────────────
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+// ─── Section wrapper (theme‑aware) ─────────────────────────────
+function Section({ title, children, theme }: { title: string; children: React.ReactNode; theme: any }) {
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: theme.card,
+      borderRadius: r(16),
+      padding: r(16),
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: rv(10),
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        },
+        android: { elevation: 2 },
+      }),
+    },
+    title: {
+      fontSize: rm(13),
+      fontWeight: "600",
+      color: theme.subText,
+      letterSpacing: 0.4,
+      textTransform: "uppercase",
+      marginBottom: rv(2),
+    },
+  });
   return (
-    <View style={sectionStyles.container}>
-      <Text style={sectionStyles.title}>{title}</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>{title}</Text>
       {children}
     </View>
   );
 }
 
-const sectionStyles = StyleSheet.create({
-  container: {
-    backgroundColor: C.surface,
-    borderRadius: r(16),
-    padding: r(16),
-    borderWidth: 1,
-    borderColor: C.border,
-    gap: rv(10),
-    ...Platform.select({ ios: ios_shadow }),
-  },
-  title: {
-    fontSize: rm(13),
-    fontWeight: "600",
-    color: C.inkLight,
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-    marginBottom: rv(2),
-  },
-});
-
 // ─── Row inside a section ──────────────────────────────────────
-function Row({ label, value, valueStyle }: { label: string; value: string; valueStyle?: any }) {
+function Row({ label, value, valueStyle, theme }: { label: string; value: string; valueStyle?: any; theme: any }) {
+  const styles = StyleSheet.create({
+    row: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      gap: r(12),
+    },
+    label: {
+      fontSize: rm(13.5),
+      color: theme.subText,
+      fontWeight: "400",
+      flex: 1,
+    },
+    value: {
+      fontSize: rm(13.5),
+      color: theme.text,
+      fontWeight: "600",
+      textAlign: "right",
+      flex: 1.2,
+    },
+  });
   return (
-    <View style={rowStyles.row}>
-      <Text style={rowStyles.label}>{label}</Text>
-      <Text style={[rowStyles.value, valueStyle]}>{value}</Text>
+    <View style={styles.row}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.value, valueStyle]}>{value}</Text>
     </View>
   );
 }
 
-const rowStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: r(12),
-  },
-  label: {
-    fontSize: rm(13.5),
-    color: C.inkMid,
-    fontWeight: "400",
-    flex: 1,
-  },
-  value: {
-    fontSize: rm(13.5),
-    color: C.ink,
-    fontWeight: "600",
-    textAlign: "right",
-    flex: 1.2,
-  },
-});
-
-// ─── Tracking timeline ─────────────────────────────────────────
-function TrackingTimeline({ statusHistory, currentStatus }: {
+// ─── Tracking timeline (theme‑aware) ───────────────────────────
+function TrackingTimeline({ statusHistory, currentStatus, theme }: {
   statusHistory: { status: string; updatedAt?: string }[];
   currentStatus: string;
+  theme: any;
 }) {
   const stepOrder = [
     "pending_sp", "sp_assigned", "sp_accepted", "rider_pickup_assigned",
     "picked_up", "at_sp", "cleaned", "rider_delivery_assigned", "delivered", "cancelled",
   ];
 
-  // Build visible steps — completed + next one
   const steps = stepOrder.map((s) => {
     const entry = statusHistory.find((h) => h.status === s);
     return {
-      key:       s,
-      label:     STATUS_LABEL[s] ?? s,
+      key: s,
+      label: STATUS_LABEL[s] ?? s,
       completed: !!entry,
-      time:      entry?.updatedAt
-                   ? new Date(entry.updatedAt).toLocaleString("en-IN", {
-                       day: "2-digit", month: "short",
-                       hour: "2-digit", minute: "2-digit",
-                     })
-                   : null,
+      time: entry?.updatedAt
+        ? new Date(entry.updatedAt).toLocaleString("en-IN", {
+            day: "2-digit", month: "short",
+            hour: "2-digit", minute: "2-digit",
+          })
+        : null,
     };
   });
 
@@ -151,42 +133,50 @@ function TrackingTimeline({ statusHistory, currentStatus }: {
     visible = steps.slice(0, idx + 2);
   }
 
+  const styles = StyleSheet.create({
+    row: { flexDirection: "row", gap: r(12), minHeight: rv(44) },
+    lineCol: { alignItems: "center", width: r(20) },
+    dot: {
+      width: r(20), height: r(20), borderRadius: r(10), borderWidth: 2,
+      alignItems: "center", justifyContent: "center",
+    },
+    line: { width: 2, flex: 1, marginVertical: rv(2) },
+    textCol: { flex: 1, paddingBottom: rv(12), gap: rv(2) },
+    label: { fontSize: rm(13.5), fontWeight: "500" },
+    time: { fontSize: rm(11.5), fontWeight: "400" },
+  });
+
   return (
     <View style={{ gap: 0 }}>
       {visible.map((step, i) => {
         const isLast = i === visible.length - 1;
         return (
-          <View key={step.key} style={trackStyles.row}>
-            {/* Line + dot column */}
-            <View style={trackStyles.lineCol}>
+          <View key={step.key} style={styles.row}>
+            <View style={styles.lineCol}>
               <View style={[
-                trackStyles.dot,
+                styles.dot,
                 step.completed
-                  ? { backgroundColor: C.teal, borderColor: C.teal }
-                  : { backgroundColor: C.surface, borderColor: C.border },
+                  ? { backgroundColor: theme.primary, borderColor: theme.primary }
+                  : { backgroundColor: theme.card, borderColor: theme.border },
               ]}>
-                {step.completed && (
-                  <Ionicons name="checkmark" size={r(9)} color="#fff" />
-                )}
+                {step.completed && <Ionicons name="checkmark" size={r(9)} color="#fff" />}
               </View>
               {!isLast && (
                 <View style={[
-                  trackStyles.line,
-                  { backgroundColor: step.completed ? C.teal : C.border },
+                  styles.line,
+                  { backgroundColor: step.completed ? theme.primary : theme.border },
                 ]} />
               )}
             </View>
-
-            {/* Label + time */}
-            <View style={trackStyles.textCol}>
+            <View style={styles.textCol}>
               <Text style={[
-                trackStyles.label,
-                { color: step.completed ? C.ink : C.inkLight },
+                styles.label,
+                { color: step.completed ? theme.text : theme.subText },
               ]}>
                 {step.label}
               </Text>
               {step.time && (
-                <Text style={trackStyles.time}>{step.time}</Text>
+                <Text style={[styles.time, { color: theme.subText }]}>{step.time}</Text>
               )}
             </View>
           </View>
@@ -196,52 +186,14 @@ function TrackingTimeline({ statusHistory, currentStatus }: {
   );
 }
 
-const trackStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    gap: r(12),
-    minHeight: rv(44),
-  },
-  lineCol: {
-    alignItems: "center",
-    width: r(20),
-  },
-  dot: {
-    width: r(20),
-    height: r(20),
-    borderRadius: r(10),
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  line: {
-    width: 2,
-    flex: 1,
-    marginVertical: rv(2),
-  },
-  textCol: {
-    flex: 1,
-    paddingBottom: rv(12),
-    gap: rv(2),
-  },
-  label: {
-    fontSize: rm(13.5),
-    fontWeight: "500",
-  },
-  time: {
-    fontSize: rm(11.5),
-    color: C.inkLight,
-    fontWeight: "400",
-  },
-});
-
 // ─── Main screen ───────────────────────────────────────────────
 export default function OrderDetailsScreen() {
+  const { theme, isDarkMode } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const [order, setOrder]     = useState<any>(null);
+  const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -257,148 +209,200 @@ export default function OrderDetailsScreen() {
     })();
   }, [id]);
 
-  // ── Loading ──
+  const styles = getGlobalStyles(theme);
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
-        <Header />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={C.teal} />
-        </View>
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={["top"]}>
+        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
+        <AppBackground>
+          <Header theme={theme} />
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={theme.primary} />
+          </View>
+        </AppBackground>
       </SafeAreaView>
     );
   }
 
-  // ── Error ──
   if (error || !order) {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
-        <Header />
-        <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={r(40)} color={C.red} />
-          <Text style={styles.errorText}>{error ?? "Order not found"}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => router.back()}>
-            <Text style={styles.retryText}>Go back</Text>
-          </TouchableOpacity>
-        </View>
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={["top"]}>
+        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
+        <AppBackground>
+          <Header theme={theme} />
+          <View style={styles.centered}>
+            <Ionicons name="alert-circle-outline" size={r(40)} color="#E53935" />
+            <Text style={[styles.errorText, { color: theme.subText }]}>{error ?? "Order not found"}</Text>
+            <TouchableOpacity style={[styles.retryBtn, { backgroundColor: theme.primary }]} onPress={() => router.back()}>
+              <Text style={styles.retryText}>Go back</Text>
+            </TouchableOpacity>
+          </View>
+        </AppBackground>
       </SafeAreaView>
     );
   }
 
-  const badgeCfg = STATUS_BADGE[order.status] ?? STATUS_BADGE.default;
+  const totalQty = order.items?.reduce((sum: number, i: any) => sum + (i.quantity ?? 0), 0) ?? 0;
 
-  // Items total quantity
-  const totalQty = order.items?.reduce(
-    (sum: number, i: any) => sum + (i.quantity ?? 0), 0
-  ) ?? 0;
+  // Status badge config (uses theme for delivered, static for others – but readable in dark mode)
+  const getBadgeConfig = (status: string) => {
+    if (status === "delivered") return { bg: theme.primaryLight, text: theme.primary, icon: "checkmark-circle-outline", iconColor: theme.primary };
+    if (status === "cancelled") return { bg: "#FDEAEA", text: "#E53935", icon: "close-circle-outline", iconColor: "#E53935" };
+    return { bg: "#FEF3C7", text: "#92400E", icon: "time-outline", iconColor: "#D97706" };
+  };
+  const badgeCfg = getBadgeConfig(order.status);
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      <Header />
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={["top", "left", "right"]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
+      <AppBackground>
+        <Header theme={theme} />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        {/* ── Order summary card ── */}
-        <View style={styles.summaryCard}>
-          {/* Icon + order number + status */}
-          <View style={styles.summaryTop}>
-            <View style={styles.iconCircle}>
-              <MaterialCommunityIcons name="package-variant-closed" size={r(22)} color={C.teal} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
-              <Text style={styles.orderDate}>
-                {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                  day: "2-digit", month: "short", year: "numeric",
-                })}
-              </Text>
-            </View>
-            <View style={[styles.badge, { backgroundColor: badgeCfg.bg }]}>
-              <Ionicons name={badgeCfg.icon} size={r(12)} color={badgeCfg.iconColor} style={{ marginRight: r(3) }} />
-              <Text style={[styles.badgeText, { color: badgeCfg.text }]}>
-                {STATUS_LABEL[order.status] ?? order.status}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Summary rows */}
-          <Row label="Service"      value={order.items?.[0]?.serviceName ?? "Laundry"} />
-          <Row label="Total items"  value={`${totalQty} items`} />
-          <Row label="Payment"      value={order.paymentMethod ?? "—"} />
-        </View>
-
-        {/* ── Items breakdown ── */}
-        <Section title="Items">
-          {order.items?.map((item: any, i: number) => (
-            <View key={i} style={itemStyles.row}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          {/* Order summary card */}
+          <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={styles.summaryTop}>
+              <View style={[styles.iconCircle, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}>
+                <MaterialCommunityIcons name="package-variant-closed" size={r(22)} color={theme.primary} />
+              </View>
               <View style={{ flex: 1 }}>
-                <Text style={itemStyles.name}>{item.subCategoryName ?? item.serviceName}</Text>
-                <Text style={itemStyles.sub}>
-                  {item.categoryName}
-                  {item.serviceName ? ` • ${item.serviceName}` : ""}
+                <Text style={[styles.orderNumber, { color: theme.text }]}>#{order.orderNumber}</Text>
+                <Text style={[styles.orderDate, { color: theme.subText }]}>
+                  {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                    day: "2-digit", month: "short", year: "numeric",
+                  })}
                 </Text>
               </View>
-              <Text style={itemStyles.qty}>×{item.quantity}</Text>
-              <Text style={itemStyles.price}>₹{item.totalPrice ?? item.unitPrice * item.quantity}</Text>
+              <View style={[styles.badge, { backgroundColor: badgeCfg.bg }]}>
+                <Ionicons name={badgeCfg.icon} size={r(12)} color={badgeCfg.iconColor} style={{ marginRight: r(3) }} />
+                <Text style={[styles.badgeText, { color: badgeCfg.text }]}>
+                  {STATUS_LABEL[order.status] ?? order.status}
+                </Text>
+              </View>
             </View>
-          ))}
-        </Section>
 
-        {/* ── Price breakdown ── */}
-        <Section title="Bill Summary">
-          <Row label="Subtotal" value={`₹${order.subtotal}`} />
-          <Row label="Tax (5%)" value={`₹${order.tax}`} />
-          {order.discount > 0 && (
-            <Row label="Discount" value={`-₹${order.discount}`} valueStyle={{ color: C.teal }} />
-          )}
-          <View style={styles.divider} />
-          <Row
-            label="Total"
-            value={`₹${order.totalAmount}`}
-            valueStyle={{ fontSize: rm(16), fontWeight: "700", color: C.ink }}
-          />
-        </Section>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-        {/* ── Addresses ── */}
-        <Section title="Addresses">
-          <View style={addrStyles.block}>
-            <View style={addrStyles.iconWrap}>
-              <Ionicons name="location-outline" size={r(15)} color={C.teal} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={addrStyles.label}>Pickup</Text>
-              <Text style={addrStyles.value}>{order.pickupAddress?.address ?? "—"}</Text>
-            </View>
+            <Row label="Service" value={order.items?.[0]?.serviceName ?? "Laundry"} theme={theme} />
+            <Row label="Total items" value={`${totalQty} items`} theme={theme} />
+            <Row label="Payment" value={order.paymentMethod ?? "—"} theme={theme} />
           </View>
-          <View style={[addrStyles.block, { marginTop: rv(8) }]}>
-            <View style={addrStyles.iconWrap}>
-              <Ionicons name="home-outline" size={r(15)} color={C.teal} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={addrStyles.label}>Delivery</Text>
-              <Text style={addrStyles.value}>{order.deliveryAddress?.address ?? "—"}</Text>
-            </View>
-          </View>
-        </Section>
 
-        {/* ── Tracking ── */}
-        <Section title="Order Timeline">
-          <TrackingTimeline
-            statusHistory={order.statusHistory ?? []}
-            currentStatus={order.status}
-          />
-        </Section>
-      </ScrollView>
+          {/* Items breakdown */}
+          <Section title="Items" theme={theme}>
+            {order.items?.map((item: any, i: number) => {
+              const itemStyles = getItemStyles(theme);
+              return (
+                <View key={i} style={itemStyles.row}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[itemStyles.name, { color: theme.text }]}>{item.subCategoryName ?? item.serviceName}</Text>
+                    <Text style={[itemStyles.sub, { color: theme.subText }]}>
+                      {item.categoryName}
+                      {item.serviceName ? ` • ${item.serviceName}` : ""}
+                    </Text>
+                  </View>
+                  <Text style={[itemStyles.qty, { color: theme.subText }]}>×{item.quantity}</Text>
+                  <Text style={[itemStyles.price, { color: theme.text }]}>₹{item.totalPrice ?? item.unitPrice * item.quantity}</Text>
+                </View>
+              );
+            })}
+          </Section>
+
+          {/* Bill Summary */}
+          <Section title="Bill Summary" theme={theme}>
+            <Row label="Subtotal" value={`₹${order.subtotal}`} theme={theme} />
+            <Row label="Tax (5%)" value={`₹${order.tax}`} theme={theme} />
+            {order.discount > 0 && (
+              <Row label="Discount" value={`-₹${order.discount}`} valueStyle={{ color: theme.primary }} theme={theme} />
+            )}
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <Row
+              label="Total"
+              value={`₹${order.totalAmount}`}
+              valueStyle={{ fontSize: rm(16), fontWeight: "700", color: theme.text }}
+              theme={theme}
+            />
+          </Section>
+
+          {/* Addresses */}
+          <Section title="Addresses" theme={theme}>
+            <View style={styles.addressBlock}>
+              <View style={[styles.addressIcon, { backgroundColor: theme.primaryLight }]}>
+                <Ionicons name="location-outline" size={r(15)} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.addressLabel, { color: theme.subText }]}>Pickup</Text>
+                <Text style={[styles.addressValue, { color: theme.text }]}>{order.pickupAddress?.address ?? "—"}</Text>
+              </View>
+            </View>
+            <View style={[styles.addressBlock, { marginTop: rv(8) }]}>
+              <View style={[styles.addressIcon, { backgroundColor: theme.primaryLight }]}>
+                <Ionicons name="home-outline" size={r(15)} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.addressLabel, { color: theme.subText }]}>Delivery</Text>
+                <Text style={[styles.addressValue, { color: theme.text }]}>{order.deliveryAddress?.address ?? "—"}</Text>
+              </View>
+            </View>
+          </Section>
+
+          {/* Tracking timeline */}
+          <Section title="Order Timeline" theme={theme}>
+            <TrackingTimeline
+              statusHistory={order.statusHistory ?? []}
+              currentStatus={order.status}
+              theme={theme}
+            />
+          </Section>
+        </ScrollView>
+      </AppBackground>
     </SafeAreaView>
   );
 }
 
-// ─── Shared header ─────────────────────────────────────────────
-function Header() {
+// ─── Shared header (themed back button) ─────────────────────────
+function Header({ theme }: { theme: any }) {
+  const styles = StyleSheet.create({
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: r(16),
+      paddingTop: rv(8),
+      paddingBottom: rv(12),
+      backgroundColor: theme.background,
+    },
+    backBtn: {
+      width: r(36),
+      height: r(36),
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: r(18),
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: theme.border,
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        },
+        android: { elevation: 2 },
+      }),
+    },
+    headerTitle: {
+      flex: 1,
+      fontSize: rm(18),
+      fontWeight: "700",
+      textAlign: "center",
+      letterSpacing: -0.3,
+      color: theme.text,
+    },
+  });
   return (
     <View style={styles.header}>
       <TouchableOpacity
@@ -407,7 +411,7 @@ function Header() {
         activeOpacity={0.7}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Ionicons name="arrow-back" size={r(20)} color={C.ink} />
+        <Ionicons name="arrow-back" size={r(20)} color={theme.text} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>Order Details</Text>
       <View style={{ width: r(36) }} />
@@ -415,180 +419,144 @@ function Header() {
   );
 }
 
-// ─── Item row styles ───────────────────────────────────────────
-const itemStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: r(8),
-    paddingVertical: rv(4),
-  },
-  name: {
-    fontSize: rm(13.5),
-    fontWeight: "500",
-    color: C.ink,
-  },
-  sub: {
-    fontSize: rm(11.5),
-    color: C.inkLight,
-    marginTop: rv(1),
-  },
-  qty: {
-    fontSize: rm(13),
-    color: C.inkMid,
-    fontWeight: "500",
-    minWidth: r(28),
-    textAlign: "center",
-  },
-  price: {
-    fontSize: rm(13.5),
-    fontWeight: "600",
-    color: C.ink,
-    minWidth: r(52),
-    textAlign: "right",
-  },
-});
+// ─── Global styles (depends on theme) ──────────────────────────
+const getGlobalStyles = (theme: any) =>
+  StyleSheet.create({
+    safe: { flex: 1 },
+    content: {
+      paddingHorizontal: r(16),
+      paddingTop: rv(4),
+      paddingBottom: rv(40),
+      gap: r(12),
+    },
+    summaryCard: {
+      borderRadius: r(16),
+      padding: r(16),
+      borderWidth: 1,
+      gap: rv(10),
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        },
+        android: { elevation: 2 },
+      }),
+    },
+    summaryTop: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r(12),
+    },
+    iconCircle: {
+      width: r(44),
+      height: r(44),
+      borderRadius: r(22),
+      borderWidth: 1.5,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    orderNumber: {
+      fontSize: rm(16),
+      fontWeight: "700",
+      letterSpacing: -0.2,
+    },
+    orderDate: {
+      fontSize: rm(12),
+      marginTop: rv(2),
+    },
+    badge: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: r(9),
+      paddingVertical: rv(4),
+      borderRadius: r(20),
+    },
+    badgeText: {
+      fontSize: rm(11),
+      fontWeight: "600",
+    },
+    divider: {
+      height: 1,
+      marginVertical: rv(2),
+    },
+    centered: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: rv(12),
+    },
+    errorText: {
+      fontSize: rm(14),
+      textAlign: "center",
+      paddingHorizontal: r(32),
+    },
+    retryBtn: {
+      paddingHorizontal: r(24),
+      paddingVertical: rv(10),
+      borderRadius: r(12),
+    },
+    retryText: {
+      color: "#fff",
+      fontWeight: "600",
+      fontSize: rm(14),
+    },
+    addressBlock: {
+      flexDirection: "row",
+      gap: r(10),
+      alignItems: "flex-start",
+    },
+    addressIcon: {
+      width: r(28),
+      height: r(28),
+      borderRadius: r(14),
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: rv(1),
+    },
+    addressLabel: {
+      fontSize: rm(11.5),
+      fontWeight: "500",
+      marginBottom: rv(2),
+    },
+    addressValue: {
+      fontSize: rm(13),
+      fontWeight: "400",
+      lineHeight: rm(19),
+    },
+  });
 
-const addrStyles = StyleSheet.create({
-  block: {
-    flexDirection: "row",
-    gap: r(10),
-    alignItems: "flex-start",
-  },
-  iconWrap: {
-    width: r(28),
-    height: r(28),
-    borderRadius: r(14),
-    backgroundColor: C.tealXLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: rv(1),
-  },
-  label: {
-    fontSize: rm(11.5),
-    color: C.inkLight,
-    fontWeight: "500",
-    marginBottom: rv(2),
-  },
-  value: {
-    fontSize: rm(13),
-    color: C.ink,
-    fontWeight: "400",
-    lineHeight: rm(19),
-  },
-});
-
-// ─── Main styles ───────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: r(16),
-    paddingTop: rv(8),
-    paddingBottom: rv(12),
-    backgroundColor: C.bg,
-  },
-  backBtn: {
-    width: r(36),
-    height: r(36),
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: r(18),
-    backgroundColor: C.surface,
-    borderWidth: 1,
-    borderColor: C.border,
-    ...Platform.select({ ios: ios_shadow }),
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: rm(18),
-    fontWeight: "700",
-    color: C.ink,
-    textAlign: "center",
-    letterSpacing: -0.3,
-  },
-  content: {
-    paddingHorizontal: r(16),
-    paddingTop: rv(4),
-    paddingBottom: rv(40),
-    gap: r(12),
-  },
-  summaryCard: {
-    backgroundColor: C.surface,
-    borderRadius: r(16),
-    padding: r(16),
-    borderWidth: 1,
-    borderColor: C.border,
-    gap: rv(10),
-    ...Platform.select({ ios: ios_shadow }),
-  },
-  summaryTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: r(12),
-  },
-  iconCircle: {
-    width: r(44),
-    height: r(44),
-    borderRadius: r(22),
-    backgroundColor: C.tealXLight,
-    borderWidth: 1.5,
-    borderColor: C.tealLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  orderNumber: {
-    fontSize: rm(16),
-    fontWeight: "700",
-    color: C.ink,
-    letterSpacing: -0.2,
-  },
-  orderDate: {
-    fontSize: rm(12),
-    color: C.inkLight,
-    marginTop: rv(2),
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: r(9),
-    paddingVertical: rv(4),
-    borderRadius: r(20),
-  },
-  badgeText: {
-    fontSize: rm(11),
-    fontWeight: "600",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: C.border,
-    marginVertical: rv(2),
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: rv(12),
-  },
-  errorText: {
-    fontSize: rm(14),
-    color: C.inkMid,
-    textAlign: "center",
-    paddingHorizontal: r(32),
-  },
-  retryBtn: {
-    paddingHorizontal: r(24),
-    paddingVertical: rv(10),
-    backgroundColor: C.teal,
-    borderRadius: r(12),
-  },
-  retryText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: rm(14),
-  },
-});
+const getItemStyles = (theme: any) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: r(8),
+      paddingVertical: rv(4),
+    },
+    name: {
+      fontSize: rm(13.5),
+      fontWeight: "500",
+      color: theme.text,
+    },
+    sub: {
+      fontSize: rm(11.5),
+      marginTop: rv(1),
+      color: theme.subText,
+    },
+    qty: {
+      fontSize: rm(13),
+      fontWeight: "500",
+      minWidth: r(28),
+      textAlign: "center",
+      color: theme.subText,
+    },
+    price: {
+      fontSize: rm(13.5),
+      fontWeight: "600",
+      minWidth: r(52),
+      textAlign: "right",
+      color: theme.text,
+    },
+  });
