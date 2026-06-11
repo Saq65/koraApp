@@ -182,3 +182,35 @@ export const deleteSavedAddress = async (addressId: string) => {
   const token = await getToken();
   return apiClient(`/saved-addresses/${addressId}`, "DELETE", undefined, token || undefined);
 };
+
+// ─────────────────────────────────────────────
+// REQUEST OTP FOR EMAIL CHANGE
+// ─────────────────────────────────────────────
+export const requestEmailOtp = async (payload: { newEmail: string }) => {
+  const token = await getToken();
+  return apiClient("/customers/profile/request-email-otp", "POST", payload, token || undefined);
+};
+
+// ─────────────────────────────────────────────
+// VERIFY OTP & UPDATE EMAIL
+// ─────────────────────────────────────────────
+export const verifyEmailOtp = async (payload: { newEmail: string; otp: string }) => {
+  const token = await getToken();
+  return apiClient("/customers/profile/verify-email-otp", "POST", payload, token || undefined);
+};
+
+// ─────────────────────────────────────────────
+// REQUEST OTP FOR MOBILE CHANGE
+// ─────────────────────────────────────────────
+export const requestMobileOtp = async (payload: { newMobile: string }) => {
+  const token = await getToken();
+  return apiClient("/customers/profile/request-mobile-otp", "POST", payload, token || undefined);
+};
+
+// ─────────────────────────────────────────────
+// VERIFY OTP & UPDATE MOBILE
+// ─────────────────────────────────────────────
+export const verifyMobileOtp = async (payload: { newMobile: string; otp: string }) => {
+  const token = await getToken();
+  return apiClient("/customers/profile/verify-mobile-otp", "POST", payload, token || undefined);
+};

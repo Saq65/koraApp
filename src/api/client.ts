@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const apiClient = async (
   endpoint: string,
   method: string = "GET",
@@ -5,24 +7,25 @@ export const apiClient = async (
   token?: string
 ) => {
   try {
-    const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}${endpoint}`, {
+    const response = await axios({
+      url: `${process.env.EXPO_PUBLIC_API_URL}${endpoint}`,
       method,
+      data: body,
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(token && {
+          Authorization: `Bearer ${token}`,
+        }),
       },
-      ...(body && { body: JSON.stringify(body) }),
-    }); 
+    });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data?.error || data?.message || "Something went wrong");
-    }
-
-
-    return data;
+    return response.data;
   } catch (error: any) {
-    throw error;
+    throw new Error(
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong"
+    );
   }
 };

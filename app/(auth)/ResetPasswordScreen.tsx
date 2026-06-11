@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   logoText: { fontSize: 24, fontWeight: "700" },
   title: { fontSize: 22, fontWeight: "700", marginTop: 10 },
   description: { fontSize: 14, marginTop: 8, marginBottom: 24 },
-  inputContainer: { flexDirection: "row", alignItems: "center", padding: 14, borderRadius: 14, marginBottom: 12 },
+  inputContainer: { flexDirection: "row", alignItems: "center", padding: 4, borderRadius: 14, marginBottom: 12 },
   input: { flex: 1, marginLeft: 10, fontSize: 16 },
   hint: { fontSize: 12, marginTop: 4, marginBottom: 20 },
   button: { padding: 15, alignItems: "center", borderRadius: 14, marginTop: 10 },
