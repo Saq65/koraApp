@@ -94,16 +94,26 @@ export default function LoginScreen() {
   };
 
   const normalizeIndianPhone = (rawPhone: string): string => {
-    let cleaned = rawPhone.trim().replace(/\s/g, '');
-    if (!cleaned.startsWith('+')) {
-      if (cleaned.startsWith('91')) {
-        cleaned = '+' + cleaned;
-      } else {
-        cleaned = '+91' + cleaned;
-      }
+    const digitsOnly = rawPhone.replace(/\D/g, ""); // keep only digits
+
+    // +91XXXXXXXXXX (12 digits starting with 91)
+    if (digitsOnly.length === 12 && digitsOnly.startsWith("91")) {
+      return `+${digitsOnly}`;
     }
-    return cleaned;
+
+    // Local 10-digit number
+    if (digitsOnly.length === 10) {
+      return `+91${digitsOnly}`;
+    }
+
+    // If user pasted longer string, take last 10 digits as local
+    if (digitsOnly.length > 10) {
+      return `+91${digitsOnly.slice(-10)}`;
+    }
+
+    return rawPhone.trim();
   };
+
 
   const handleAuth = async () => {
     try {

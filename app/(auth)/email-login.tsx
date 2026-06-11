@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -20,13 +22,34 @@ import { loginUser } from "../../src/api/auth";
 import AppBackground from "@/components/AppBackground";
 import { useTranslation } from "react-i18next";
 import { handleSuccessfulLogin } from "../../src/utils/authHelpers";
+import i18n from "../../src/translations/i18n";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FlatList } from "react-native";
+
 
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function EmailLoginScreen() {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const [username, setUsername] = useState("");
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+    const { theme ,isDarkMode} = useTheme();
+
+  const languages = [
+    { code: "en", label: "English", nativeLabel: "English" },
+    { code: "hi", label: "हिन्दी", nativeLabel: "हिन्दी" },
+    { code: "mr", label: "मराठी", nativeLabel: "मराठी" },
+    { code: "gu", label: "ગુજરાતી", nativeLabel: "ગુજરાતી" },
+  ];
+
+  const currentLanguageLabel = languages.find((l) => l.code === i18n.language)?.nativeLabel || "English";
+
+  const changeLanguage = async (langCode: string) => {
+    await i18n.changeLanguage(langCode);
+    await AsyncStorage.setItem("app-language", langCode);
+    setShowLanguageDropdown(false);
+  };
+
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
@@ -34,36 +57,48 @@ export default function EmailLoginScreen() {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-  if (!username.trim() || !password.trim()) {
-    setError(t("validation.enter_email_password"));
-    return;
-  }
-
-  setLoading(true);
-  setError("");
-
-  try {
-    const data = await loginUser({ username: username.trim(), password });
-    if (!data.token) {
-      setError(t("validation.invalid_server_response"));
+    if (!identifier.trim() || !password.trim()) {
+      setError(t("validation.enter_email_or_mobile_and_password") || "Email/mobile and password required");
       return;
     }
 
-    // ✅ One line does everything: stores token, fetches profile, stores user
-    await handleSuccessfulLogin(data.token, data.role);
+    // Normalize phone-like input: if user enters 10 digits, convert to +91XXXXXXXXXX
+    const normalizePhoneIfNeeded = (value: string) => {
+      const digitsOnly = value.replace(/\D/g, "");
+      if (digitsOnly.length === 10) return `+91${digitsOnly}`;
+      return value;
+    };
 
-    router.replace("/(tabs)/home");
-  } catch (err: any) {
-    console.log("Login error:", err);
-    setError(err.message || t("validation.invalid_credentials"));
-  } finally {
-    setLoading(false);
-  }
-};
+    const normalizedIdentifier = normalizePhoneIfNeeded(identifier.trim());
 
-  // The rest of the component remains exactly the same
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await loginUser({ identifier: normalizedIdentifier, password });
+
+      if (!data.token) {
+        setError(t("validation.invalid_server_response"));
+        return;
+      }
+
+      await handleSuccessfulLogin(data.token, data.role);
+      router.replace("/(tabs)/home");
+    } catch (err: any) {
+      console.log("Login error:", err);
+      setError(err.message || t("validation.invalid_credentials"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+       <StatusBar
+              barStyle={isDarkMode ? "light-content" : "dark-content"}
+              backgroundColor={theme.background}
+            />
       <AppBackground>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -76,6 +111,26 @@ export default function EmailLoginScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Logo */}
+            {/* Language Selector - Dropdown */}
+            <View style={styles.languageRow}>
+              <TouchableOpacity
+                style={[
+                  styles.languageBtn,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border || "#ddd",
+                  },
+                ]}
+                onPress={() => setShowLanguageDropdown(true)}
+              >
+                <Ionicons name="language-outline" size={18} color={theme.primary} />
+                <Text style={[styles.languageBtnText, { color: theme.primary }]}
+                  >{currentLanguageLabel}</Text>
+                <Ionicons name="chevron-down" size={16} color={theme.primary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Logo */}
             <View style={styles.logoContainer}>
               <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
               <Text style={[styles.logoText, { color: theme.primary }]}>{t("app_name")}</Text>
@@ -83,6 +138,7 @@ export default function EmailLoginScreen() {
                 {t("branding.your_care")}
               </Text>
             </View>
+
 
             {/* Title */}
             <Text style={[styles.title, { color: theme.text }]}>
@@ -92,7 +148,7 @@ export default function EmailLoginScreen() {
               {t("auth.sign_in_continue")}
             </Text>
 
-            {/* Username/Email Input */}
+            {/* Identifier (Email/Mobile) Input */}
             <View
               style={[
                 styles.inputContainer,
@@ -100,19 +156,19 @@ export default function EmailLoginScreen() {
                   backgroundColor: theme.card,
                   borderWidth: 1,
                   borderColor:
-                    focusedInput === "username" ? theme.primary : theme.border || "#ddd",
+                    focusedInput === "identifier" ? theme.primary : theme.border || "#ddd",
                 },
               ]}
             >
               <Ionicons name="mail-outline" size={18} color={theme.subText} />
               <TextInput
-                placeholder={t("auth.email_or_username")}
+                placeholder={t("auth.email_or_mobile") || "Email or mobile number"}
                 placeholderTextColor={theme.subText}
                 style={[styles.input, { color: theme.text }]}
-                value={username}
-                onChangeText={setUsername}
+                value={identifier}
+                onChangeText={setIdentifier}
                 autoCapitalize="none"
-                onFocus={() => setFocusedInput("username")}
+                onFocus={() => setFocusedInput("identifier")}
                 onBlur={() => setFocusedInput(null)}
               />
             </View>
@@ -205,13 +261,7 @@ export default function EmailLoginScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Use Phone */}
-            <TouchableOpacity
-              style={[styles.phoneBtn, { borderColor: theme.text }]}
-              onPress={() => router.push("/(auth)/login")}
-            >
-              <Text style={{ color: theme.primary }}>{t("auth.use_phone_instead")}</Text>
-            </TouchableOpacity>
+         
 
             {/* Sign Up Link */}
             <View style={styles.bottomContainer}>
@@ -223,9 +273,51 @@ export default function EmailLoginScreen() {
                 {t("auth.sign_up")}
               </Text>
             </View>
+            
           </ScrollView>
         </KeyboardAvoidingView>
       </AppBackground>
+      <Modal
+        visible={showLanguageDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLanguageDropdown(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowLanguageDropdown(false)}
+        >
+          <View
+            style={[
+              styles.dropdownContainer,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border || "#ddd",
+              },
+            ]}
+          >
+            <FlatList
+              data={languages}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => changeLanguage(item.code)}
+                >
+                  <Text style={[styles.dropdownItemText, { color: theme.text }]}>
+                    {item.nativeLabel}
+                  </Text>
+                  {i18n.language === item.code && (
+                    <Ionicons name="checkmark" size={18} color={theme.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -257,4 +349,50 @@ const styles = StyleSheet.create({
   phoneBtn: { marginTop: 20, padding: 15, alignItems: "center" },
   bottomContainer: { flexDirection: "row", justifyContent: "center", marginTop: 30 },
   errorText: { color: "red", textAlign: "center", marginTop: 12, fontSize: 13 },
+  languageRow: {
+    alignItems: "flex-end",
+    marginBottom: 10,
+  },
+  languageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  languageBtnText: {
+    marginHorizontal: 6,
+    fontSize: 14,
+    fontWeight: "500",
+    
+  },
+   modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dropdownContainer: {
+    width: 200,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: "hidden",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#eee",
+  },
+  dropdownItemText: {
+    fontSize: 16,
+  },
 });

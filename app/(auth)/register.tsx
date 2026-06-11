@@ -19,19 +19,19 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
 import { useTranslation } from "react-i18next";
-
+import { Alert } from "react-native";
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function RegisterScreen() {
     const { theme } = useTheme();
-    const { t } = useTranslation(); // ← language hook
+    const { t } = useTranslation();
 
+    // ✅ Removed username – only email, mobile, password, fullName, dob
     const [form, setForm] = useState({
-        username: "",
-        password: "",
-        mobile: "",
-        fullName: "",
         email: "",
+        mobile: "",
+        password: "",
+        fullName: "",
         dob: "",
     });
 
@@ -66,47 +66,71 @@ export default function RegisterScreen() {
         try {
             setError("");
 
-            if (!form.username.trim()) {
-                setError(t("validation.username_required"));
+            // ✅ Validation without username
+            if (!form.email.trim()) {
+                setError(t("validation.email_required") || "Email is required");
+                return;
+            }
+            // Basic email format check
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(form.email.trim())) {
+                setError(t("validation.invalid_email") || "Please enter a valid email address");
                 return;
             }
             if (!form.password || form.password.length < 6) {
-                setError(t("validation.password_min"));
+                setError(t("validation.password_min") || "Password must be at least 6 characters");
                 return;
             }
             if (!form.mobile || form.mobile.length !== 10) {
-                setError(t("auth.enter_valid_phone"));
+                setError(t("validation.valid_phone") || "Please enter a valid 10-digit mobile number");
                 return;
             }
             if (!form.fullName.trim()) {
-                setError(t("validation.fullname_required"));
+                setError(t("validation.fullname_required") || "Full name is required");
                 return;
             }
 
             setLoading(true);
-            const normalizedMobile = `+91${form.mobile}`;
+        const normalizedMobile = `+91${form.mobile}`;
 
-            const payload = {
-                username: form.username,
-                password: form.password,
-                mobile: normalizedMobile,
-                fullName: form.fullName,
-                email: form.email || undefined,
-                dob: form.dob || undefined,
-                role: "customer",
-            };
+        const payload = {
+            email: form.email.trim().toLowerCase(),
+            mobile: normalizedMobile,
+            password: form.password,
+            role: "customer",
+            fullName: form.fullName.trim(),
+            dob: form.dob || undefined,
+        };
 
-            const res = await registerUser(payload);
-            console.log("REGISTER SUCCESS:", res);
-            router.replace("/(auth)/login");
-        } catch (error: any) {
-            console.log("REGISTER ERROR:", error.message);
-            setError(error.message || t("validation.registration_failed"));
-        } finally {
-            setLoading(false);
-        }
-    };
+        const res = await registerUser(payload);
+        console.log("REGISTER SUCCESS:", res);
 
+
+        // ✅ Show success popup
+        Alert.alert(
+            "Registration Successful",
+            "Your account has been created. Please login to continue.",
+            [
+                {
+                    text: "OK",
+                    onPress: () => router.replace("/(auth)/email-login")
+                }
+            ]
+        );
+    } catch (error: any) {
+    console.log("REGISTER ERROR RAW:", error);
+    console.log("REGISTER ERROR MESSAGE:", error?.message);
+    console.log("REGISTER ERROR STACK:", error?.stack);
+
+    // apiClient throws `new Error(data.message || "Something went wrong")`
+    // so `error.message` should contain the backend message.
+    const serverMessage = error?.message || t("validation.registration_failed");
+    setError(serverMessage);
+
+} finally {
+        setLoading(false);
+    }
+};
     const inputBoxStyle = (name: string) => [
         styles.inputContainer,
         {
@@ -120,7 +144,7 @@ export default function RegisterScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
             <AppBackground>
                 <KeyboardAvoidingView
-                    style={{ flex: 1, backgroundColor: theme.background }}
+                    style={{ flex: 1}}
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
                 >
@@ -141,18 +165,37 @@ export default function RegisterScreen() {
 
                         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
+                        {/* Email Field (required) */}
                         <InputField
-                            label={`${t("auth.username")} *`}
-                            placeholder={t("auth.choose_username")}
-                            icon="person-outline"
-                            value={form.username}
-                            onChangeText={(v: string) => handleChange("username", v)}
+                            label={`${t("auth.email")} *`}
+                            placeholder={t("auth.email_placeholder") || "your@email.com"}
+                            icon="mail-outline"
+                            value={form.email}
+                            onChangeText={(v: string) => handleChange("email", v)}
                             theme={theme}
-                            containerStyle={inputBoxStyle("username")}
-                            onFocus={() => setFocusedInput("username")}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            containerStyle={inputBoxStyle("email")}
+                            onFocus={() => setFocusedInput("email")}
                             onBlur={() => setFocusedInput(null)}
                         />
 
+                        {/* Mobile Field (required) */}
+                        <InputField
+                            label={`${t("auth.mobile_number")} *`}
+                            placeholder={t("auth.phone_number") || "9876543210"}
+                            icon="call-outline"
+                            value={form.mobile}
+                            onChangeText={handleMobileChange}
+                            theme={theme}
+                            keyboardType="number-pad"
+                            maxLength={10}
+                            containerStyle={inputBoxStyle("mobile")}
+                            onFocus={() => setFocusedInput("mobile")}
+                            onBlur={() => setFocusedInput(null)}
+                        />
+
+                        {/* Password Field (required) */}
                         <View style={styles.fieldWrapper}>
                             <Text style={[styles.label, { color: theme.text }]}>
                                 {`${t("auth.password")} *`}
@@ -160,7 +203,7 @@ export default function RegisterScreen() {
                             <View style={inputBoxStyle("password")}>
                                 <Ionicons name="lock-closed-outline" size={18} color={theme.subText} />
                                 <TextInput
-                                    placeholder={t("auth.min_6_characters")}
+                                    placeholder={t("auth.min_6_characters") || "Min. 6 characters"}
                                     placeholderTextColor={theme.subText}
                                     style={[styles.input, { color: theme.text }]}
                                     value={form.password}
@@ -179,23 +222,10 @@ export default function RegisterScreen() {
                             </View>
                         </View>
 
-                        <InputField
-                            label={`${t("auth.mobile_number")} *`}
-                            placeholder={t("auth.phone_number")}
-                            icon="call-outline"
-                            value={form.mobile}
-                            onChangeText={handleMobileChange}
-                            theme={theme}
-                            keyboardType="number-pad"
-                            maxLength={10}
-                            containerStyle={inputBoxStyle("mobile")}
-                            onFocus={() => setFocusedInput("mobile")}
-                            onBlur={() => setFocusedInput(null)}
-                        />
-
+                        {/* Full Name (required) */}
                         <InputField
                             label={`${t("auth.full_name")} *`}
-                            placeholder={t("auth.full_name_placeholder")}
+                            placeholder={t("auth.full_name_placeholder") || "John Doe"}
                             icon="person-circle-outline"
                             value={form.fullName}
                             onChangeText={(v: string) => handleChange("fullName", v)}
@@ -205,20 +235,7 @@ export default function RegisterScreen() {
                             onBlur={() => setFocusedInput(null)}
                         />
 
-                        <InputField
-                            label={t("auth.email_optional")}
-                            placeholder={t("auth.email_placeholder")}
-                            icon="mail-outline"
-                            value={form.email}
-                            onChangeText={(v: string) => handleChange("email", v)}
-                            theme={theme}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            containerStyle={inputBoxStyle("email")}
-                            onFocus={() => setFocusedInput("email")}
-                            onBlur={() => setFocusedInput(null)}
-                        />
-
+                        {/* DOB (optional) */}
                         <View style={styles.fieldWrapper}>
                             <Text style={[styles.label, { color: theme.text }]}>
                                 {t("auth.dob_optional")}
@@ -238,7 +255,7 @@ export default function RegisterScreen() {
                                         { color: form.dob ? theme.text : theme.subText },
                                     ]}
                                 >
-                                    {form.dob || t("auth.select_dob")}
+                                    {form.dob || t("auth.select_dob") || "Select date of birth"}
                                 </Text>
                             </TouchableOpacity>
                             {showDatePicker && (
@@ -262,7 +279,7 @@ export default function RegisterScreen() {
                                 style={styles.button}
                             >
                                 <Text style={styles.buttonText}>
-                                    {loading ? t("auth.please_wait") : t("auth.create_account_btn")}
+                                    {loading ? t("auth.please_wait") || "Please wait..." : t("auth.create_account_btn") || "Create Account"}
                                 </Text>
                             </LinearGradient>
                         </TouchableOpacity>
@@ -283,14 +300,14 @@ export default function RegisterScreen() {
                         >
                             <Text style={styles.googleIcon}>🌐</Text>
                             <Text style={[styles.googleText, { color: theme.text }]}>
-                                {t("auth.signup_google")}
+                                {t("auth.signup_google") || "Sign up with Google"}
                             </Text>
                         </TouchableOpacity>
 
                         <View style={{ alignItems: "center", marginTop: 20 }}>
-                            <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+                            <TouchableOpacity onPress={() => router.push("/(auth)/email-login")}>
                                 <Text style={{ color: theme.primary, textAlign: "center" }}>
-                                    {t("auth.go_back_login")}
+                                    {t("auth.go_back_login") || "Already have an account? Login"}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -301,7 +318,7 @@ export default function RegisterScreen() {
     );
 }
 
-// Helper component with translated placeholders
+// Helper component (unchanged)
 function InputField({
     label,
     placeholder,

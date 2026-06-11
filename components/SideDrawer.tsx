@@ -69,7 +69,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
   const handleLogout = async () => {
     await clearAll();
     onClose(); // close drawer
-    router.replace("/(auth)/login");
+    router.replace("/(auth)/email-login");
   };
 
   return (

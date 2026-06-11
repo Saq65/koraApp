@@ -24,8 +24,8 @@ export default function Index() {
           router.replace("/(onboarding)/terms");
         } else if (token) {
           router.replace("/(tabs)/home"); 
-        } else {
-          router.replace("/(auth)/login");
+        } else {  
+          router.replace("/(auth)/email-login");
         }
       } catch (error) {
         router.replace("/(onboarding)/language");

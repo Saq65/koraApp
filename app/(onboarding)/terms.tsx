@@ -455,7 +455,7 @@ export default function TermsScreen() {
   async function handleAgree() {
     if (!agreed) return;
     await AsyncStorage.setItem("termsAccepted", "true");
-    router.replace("/(auth)/login");
+    router.replace("/(auth)/email-login");
   }
 
   return (

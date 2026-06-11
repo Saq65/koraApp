@@ -62,7 +62,7 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     await clearAll();
-    router.replace("/(auth)/login");
+    router.replace("/(auth)/email-login");
   };
 
   const formatPhoneNumber = (phone: string) => {
@@ -205,6 +205,12 @@ export default function ProfileScreen() {
               title={t("profile.saved_addresses")}
               subtitle={t("profile.saved_addresses_sub")}
               onPress={() => router.push("/profile-page/savedaddress" as any)}
+            />
+            <MenuItem 
+              icon="chatbubble-outline"
+              title={t("profile.raise-complaint")}
+              subtitle={t("profile.raise-complaint")}
+              onPress={()=>router.push("/profile-page/raiseComplaintScreen" as any)}
             />
             <MenuItem
               icon="star-outline"
