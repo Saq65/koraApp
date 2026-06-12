@@ -1,6 +1,4 @@
-// src/hooks/useOrderTracking.ts
-// Swiggy-style live tracking hook.
-// Uses socketService.ts — your existing orderService.ts stays 100% untouched.
+
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {

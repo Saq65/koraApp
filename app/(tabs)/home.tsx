@@ -52,10 +52,10 @@ export default function HomeScreen() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "pending_sp": return t("order.status_pending");
-      case "accepted":   return t("order.status_accepted");
-      case "picked_up":  return t("order.status_picked_up");
-      case "delivered":  return t("order.status_delivered");
-      case "cancelled":  return t("order.status_cancelled");
+      case "accepted": return t("order.status_accepted");
+      case "picked_up": return t("order.status_picked_up");
+      case "delivered": return t("order.status_delivered");
+      case "cancelled": return t("order.status_cancelled");
       default: return status;
     }
   };
@@ -269,8 +269,7 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={order._id}
                 onPress={() =>
-                  router.push(`/order/orderDetails?orderId=${order._id}`)
-                }
+                  router.push(`/order/orderDetails?id=${order.orderNumber}`)}
                 activeOpacity={0.7}
               >
                 <View style={[styles.recentCard, { backgroundColor: theme.card, shadowColor: theme.shadow }]}>
@@ -283,7 +282,7 @@ export default function HomeScreen() {
                       {order.items?.length || 0} {t("order.items")} •{" "}
                       {formatDate(order.createdAt)}
                     </Text>
-                  </View> 
+                  </View>
                   <Text style={[styles.recentStatus, { color: theme.primary }]}>
                     {getStatusText(order.status)}
                   </Text>

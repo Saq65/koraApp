@@ -127,12 +127,12 @@ export async function createOrderSocket(
 
     callbacks.onUpdate(data);
 
-    if (
-      data.status === 'delivered' ||
-      data.status === 'cancelled'
-    ) {
-      socket.disconnect();
-    }
+    // if (
+    //   data.status === 'delivered' ||
+    //   data.status === 'cancelled'
+    // ) {
+    //   socket.disconnect();
+    // }
   });
 
   // Rider location updates
@@ -147,6 +147,8 @@ export async function createOrderSocket(
 
     callbacks.onError(err.message);
   });
+
+  
 
   return () => {
     console.log('[Socket] Cleanup disconnect');

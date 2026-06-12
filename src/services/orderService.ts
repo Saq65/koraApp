@@ -2,9 +2,9 @@
 // All order-related API calls. Matches the real Mongoose schema.
 
 const BASE_URL = __DEV__
-  ? 'http://192.168.1.126:5000/api'          // Android emulator → host localhost
+  ? 'http://192.168.1.48:5000/api'          // Android emulator → host localhost
   // ? 'http://localhost:3001/api'       // iOS simulator
-  : 'https://your-production-api.com/api';
+  : 'https://192.168.1.48/api';
 
 // ─── Types mirroring the Mongoose schema ─────────────────────────────────────
 
@@ -137,8 +137,16 @@ export async function getOrderHistory(): Promise<HistoryOrder[]> {
 // ─── Generic fetch helper ─────────────────────────────────────────────────────
 
 async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  // ✅ Token lo AsyncStorage se
+  const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+  const token = await AsyncStorage.getItem('token'); // ← apna key check karo
+
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}), // ✅ token add karo
+      ...options.headers,
+    },
     ...options,
   });
   const data = await response.json();
@@ -169,10 +177,10 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order> {
 
 /** Fetch a single order by MongoDB _id. Includes full tracking timeline. */
 export async function getOrder(orderId: string): Promise<Order> {
-  const res = await apiRequest<{ success: boolean; order: Order }>(
+  const res = await apiRequest<{ success: boolean; data: any }>(
     `/orders/${encodeURIComponent(orderId)}`
   );
-  return res.order;
+  return res.data; // ← `res.order` ki jagah `res.data`
 }
 
 
