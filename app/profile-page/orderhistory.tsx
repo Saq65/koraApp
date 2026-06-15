@@ -197,7 +197,6 @@ export default function OrderHistory() {
       setError(null);
 
       const data = await getOrderHistory();
-      console.log("HISTORY DATA:", data); // ← already HistoryOrder[]
       setOrders(data.map(normaliseOrder));    // ← no .data needed
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong. Please try again.");

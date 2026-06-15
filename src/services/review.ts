@@ -18,3 +18,9 @@ export const submitReview = async (payload: {
   console.log('submitReview payload:', payload);    
   return apiClient("/reviews", "POST", payload, token || undefined);
 };
+
+export const getMyReview = async () => {
+  const token = await getToken();
+  return apiClient("/reviews/my", "GET", undefined, token || undefined);
+};
+
