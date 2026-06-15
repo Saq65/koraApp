@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Platform,
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
+
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,13 +23,69 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
-import { submitComplaint } from "../../src/api/support"; // we'll create this API function
+import { getComplaintCategories, submitComplaint } from "../../src/api/support";
+
+interface Category {
+  _id: string;
+  name: string;
+  subCategories: string[];
+  isActive: boolean;
+  displayOrder: number;
+}
+
+// Static fallback data matching the design
+const DEFAULT_CATEGORIES: Category[] = [
+  {
+    _id: "1",
+    name: "Order Issue",
+    subCategories: ["Damaged Item", "Missing Item", "Wrong Item Received", "Incomplete Order", "Expired Product", "Poor Packaging"],
+    isActive: true,
+    displayOrder: 1,
+  },
+  {
+    _id: "2",
+    name: "Delivery Delay",
+    subCategories: [],
+    isActive: true,
+    displayOrder: 2,
+  },
+  {
+    _id: "3",
+    name: "Payment Problem",
+    subCategories: [],
+    isActive: true,
+    displayOrder: 3,
+  },
+  {
+    _id: "4",
+    name: "Staff Behaviour",
+    subCategories: [],
+    isActive: true,
+    displayOrder: 4,
+  },
+  {
+    _id: "5",
+    name: "App / Technical",
+    subCategories: [],
+    isActive: true,
+    displayOrder: 5,
+  },
+  {
+    _id: "6",
+    name: "Other",
+    subCategories: [],
+    isActive: true,
+    displayOrder: 6,
+  },
+];
 
 export default function RaiseComplaintScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
-  // Form state
+  // Dynamic state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string | null>(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   const [orderId, setOrderId] = useState("");
@@ -35,23 +95,38 @@ export default function RaiseComplaintScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Categories (main)
-  const mainCategories = [
-    "Order Issue",
-    "Delivery Delay",
-    "Payment Problem",
-    "Staff Behaviour",
-    "App / Technical",
-    "Other",
-  ];
-
-  // Sub‑categories for "Order Issue"
-  const orderIssueSubs = ["Damaged Item", "Missing Item"];
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getComplaintCategories();
+        if (response.success && response.categories && response.categories.length > 0) {
+          // Filter only active categories
+          const active = response.categories.filter((c: Category) => c.isActive);
+          if (active.length > 0) {
+            setCategories(active);
+          } else {
+            // Fallback to static data if API returns empty active list
+            setCategories(DEFAULT_CATEGORIES);
+          }
+        } else {
+          // Fallback to static data on API failure or empty response
+          setCategories(DEFAULT_CATEGORIES);
+        }
+      } catch (err) {
+        console.error(err);
+        setCategories(DEFAULT_CATEGORIES);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(t("common.permission_needed"), t("common.photo_permission_message"));
+      Alert.alert(t("common.permission_needed", "Permission needed"), t("common.photo_permission_message", "Please grant permission to access photos"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -66,23 +141,24 @@ export default function RaiseComplaintScreen() {
 
   const validateForm = () => {
     if (!selectedMainCategory) {
-      setError(t("complaint.select_category"));
+      setError(t("complaint.select_category", "Please select a category"));
       return false;
     }
-    if (selectedMainCategory === "Order Issue" && !selectedSubCategory) {
-      setError(t("complaint.select_order_issue_sub"));
+    const selectedCat = categories.find(c => c.name === selectedMainCategory);
+    if (selectedCat && selectedCat.subCategories.length > 0 && !selectedSubCategory) {
+      setError(t("complaint.select_subcategory", "Please select a subcategory"));
       return false;
     }
     if (!subject.trim()) {
-      setError(t("complaint.subject_required"));
+      setError(t("complaint.subject_required", "Subject is required"));
       return false;
     }
     if (!description.trim()) {
-      setError(t("complaint.description_required"));
+      setError(t("complaint.description_required", "Description is required"));
       return false;
     }
     if (description.length > 1000) {
-      setError(t("complaint.description_too_long"));
+      setError(t("complaint.description_too_long", "Description must be 1000 characters or less"));
       return false;
     }
     return true;
@@ -93,209 +169,271 @@ export default function RaiseComplaintScreen() {
     setLoading(true);
     setError("");
 
+    const categoryValue = selectedSubCategory
+      ? `${selectedMainCategory} - ${selectedSubCategory}`
+      : selectedMainCategory!;
+
     const complaintData = {
-      category: selectedMainCategory === "Order Issue" ? `${selectedMainCategory} - ${selectedSubCategory}` : selectedMainCategory,
+      category: categoryValue,
       orderId: orderId.trim() || undefined,
       subject: subject.trim(),
       description: description.trim(),
-      photo: imageUri, // we'll need to upload the image separately, but for now send URI or base64
+      photoUri: imageUri,
     };
 
     try {
-      // Replace with your actual API call
       await submitComplaint(complaintData);
-      Alert.alert(t("complaint.success_title"), t("complaint.success_message"));
+      Alert.alert(t("complaint.success_title", "Success"), t("complaint.success_message", "Your complaint has been submitted. We will respond within 24 hours."));
       router.back();
     } catch (err: any) {
-      setError(err.message || t("complaint.submit_failed"));
+      setError(err.message || t("complaint.submit_failed", "Submission failed. Please try again."));
     } finally {
       setLoading(false);
     }
   };
 
-  const renderCategoryChip = (category: string, isSub = false) => {
+  const renderCategoryChip = (categoryName: string, isSub = false) => {
     const isSelected = isSub
-      ? selectedSubCategory === category
-      : selectedMainCategory === category;
+      ? selectedSubCategory === categoryName
+      : selectedMainCategory === categoryName;
     return (
       <TouchableOpacity
-        key={category}
+        key={categoryName}
         style={[
-          styles.categoryChip,
+          isSub ? styles.subCategoryChip : styles.categoryChip,
           {
-            backgroundColor: isSelected ? theme.primary : theme.card,
-            borderColor: theme.border || "#ddd",
+            backgroundColor: isSelected
+              ? isSub
+                ? theme.primary + '20'
+                : theme.primary
+              : isSub
+              ? 'transparent'
+              : theme.card,
+            borderColor: isSelected
+              ? theme.primary
+              : theme.border || "#e0e0e0",
           },
         ]}
         onPress={() => {
           if (isSub) {
-            setSelectedSubCategory(category);
+            setSelectedSubCategory(categoryName);
           } else {
-            setSelectedMainCategory(category);
-            setSelectedSubCategory(null); // reset sub when main changes
+            setSelectedMainCategory(categoryName);
+            setSelectedSubCategory(null);
           }
         }}
       >
         <Text
           style={[
-            styles.categoryChipText,
-            { color: isSelected ? "#fff" : theme.text },
+            isSub ? styles.subCategoryChipText : styles.categoryChipText,
+            {
+              color: isSelected
+                ? isSub
+                  ? theme.primary
+                  : "#fff"
+                : theme.text,
+            },
           ]}
         >
-          {t(`complaint.${category.toLowerCase().replace(/[ /]+/g, "_")}`) || category}
+          {categoryName}
         </Text>
       </TouchableOpacity>
     );
   };
 
+  if (loadingCategories) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  const selectedCategoryObj = categories.find(c => c.name === selectedMainCategory);
+  const showSubCategories = selectedCategoryObj && selectedCategoryObj.subCategories.length > 0;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F7F8FA" }}>
       <AppBackground>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
-          {/* Header with back button */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color={theme.primary} />
-            </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>
-              {t("complaint.title")}
-            </Text>
-            <View style={{ width: 40 }} />
-          </View>
-
-          {/* Support contact row (Call, Email, WhatsApp) */}
-          <View style={styles.contactRow}>
-            <TouchableOpacity style={styles.contactIcon}>
-              <Ionicons name="call-outline" size={24} color={theme.primary} />
-              <Text style={[styles.contactText, { color: theme.text }]}>Call</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.contactIcon}>
-              <Ionicons name="mail-outline" size={24} color={theme.primary} />
-              <Text style={[styles.contactText, { color: theme.text }]}>Email</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.contactIcon}>
-              <Ionicons name="logo-whatsapp" size={24} color={theme.primary} />
-              <Text style={[styles.contactText, { color: theme.text }]}>WhatsApp</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={[styles.infoText, { color: theme.subText }]}>
-            {t("complaint.info_text")}
-          </Text>
-
-          {/* Category section */}
-          <Text style={[styles.sectionLabel, { color: theme.text }]}>
-            {t("complaint.category")}
-          </Text>
-          <View style={styles.categoriesContainer}>
-            {mainCategories.map((cat) => renderCategoryChip(cat))}
-          </View>
-
-          {/* Sub‑categories for Order Issue */}
-          {selectedMainCategory === "Order Issue" && (
-            <View style={styles.subCategoriesContainer}>
-              {orderIssueSubs.map((sub) => renderCategoryChip(sub, true))}
-            </View>
-          )}
-
-          {/* Order ID (optional) */}
-          <Text style={[styles.sectionLabel, { color: theme.text }]}>
-            {t("complaint.order_id")} <Text style={styles.optionalLabel}>({t("common.optional")})</Text>
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.inputBg || theme.card,
-                color: theme.text,
-                borderColor: theme.border || "#ddd",
-              },
-            ]}
-            placeholder={t("complaint.order_id_placeholder")}
-            placeholderTextColor={theme.subText}
-            value={orderId}
-            onChangeText={setOrderId}
-          />
-
-          {/* Subject (required) */}
-          <Text style={[styles.sectionLabel, { color: theme.text }]}>
-            {t("complaint.subject")} *
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.inputBg || theme.card,
-                color: theme.text,
-                borderColor: theme.border || "#ddd",
-              },
-            ]}
-            placeholder={t("complaint.subject_placeholder")}
-            placeholderTextColor={theme.subText}
-            value={subject}
-            onChangeText={setSubject}
-          />
-
-          {/* Description (required) with counter */}
-          <Text style={[styles.sectionLabel, { color: theme.text }]}>
-            {t("complaint.description")} *
-          </Text>
-          <TextInput
-            style={[
-              styles.textArea,
-              {
-                backgroundColor: theme.inputBg || theme.card,
-                color: theme.text,
-                borderColor: theme.border || "#ddd",
-              },
-            ]}
-            placeholder={t("complaint.description_placeholder")}
-            placeholderTextColor={theme.subText}
-            multiline
-            numberOfLines={6}
-            textAlignVertical="top"
-            value={description}
-            onChangeText={(text) => {
-              if (text.length <= 1000) setDescription(text);
-            }}
-          />
-          <Text style={[styles.charCounter, { color: theme.subText }]}>
-            {description.length}/1000
-          </Text>
-
-          {/* Photo attachment */}
-          <TouchableOpacity style={styles.attachButton} onPress={handlePickImage}>
-            <Ionicons name="camera-outline" size={20} color={theme.primary} />
-            <Text style={[styles.attachButtonText, { color: theme.primary }]}>
-              {t("complaint.attach_photo")}
-            </Text>
-          </TouchableOpacity>
-          {imageUri && (
-            <Image source={{ uri: imageUri }} style={styles.previewImage} />
-          )}
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          {/* Submit button */}
-          <TouchableOpacity onPress={handleSubmit} disabled={loading}>
-            <LinearGradient
-              colors={theme.gradient || [theme.primary, theme.primary]}
-              style={styles.submitButton}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {t("complaint.submit")}
+              {/* Header */}
+              <View style={styles.headerRow}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                  <Ionicons name="arrow-back" size={24} color={theme.primary} />
+                </TouchableOpacity>
+                <Text style={[styles.headerTitle, { color: theme.text }]}>
+                  {t("complaint.title", "Raise a Complaint")}
                 </Text>
+                <View style={{ width: 40 }} />
+              </View>
+
+              {/* Contact Options - Matching Design */}
+              <View style={styles.contactRow}>
+                {/* <TouchableOpacity style={styles.contactCard}>
+                  <View style={[styles.contactIconCircle, { backgroundColor: theme.primary + '10' }]}>
+                    <Ionicons name="call-outline" size={24} color={theme.primary} />
+                  </View>
+                  <Text style={[styles.contactCardText, { color: theme.text }]}>{t("common.call", "Call")}</Text>
+                </TouchableOpacity> */}
+
+                <TouchableOpacity style={styles.contactCard}>
+                  <View style={[styles.contactIconCircle, { backgroundColor: theme.primary + '10' }]}>
+                    <Ionicons name="mail-outline" size={24} color={theme.primary} />
+                  </View>
+                  <Text style={[styles.contactCardText, { color: theme.text }]}>{t("common.email", "Email")}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.contactCard}>
+                  <View style={[styles.contactIconCircle, { backgroundColor: theme.primary + '10' }]}>
+                    <Ionicons name="logo-whatsapp" size={24} color={theme.primary} />
+                  </View>
+                  <Text style={[styles.contactCardText, { color: theme.text }]}>{t("common.whatsapp", "WhatsApp")}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Info Message */}
+              <View style={[styles.infoBox, { borderColor: theme.primary + "40", backgroundColor: theme.primary + "08" }]}>
+                <Ionicons name="information-circle-outline" size={20} color={theme.primary} />
+                <Text style={[styles.infoBoxText, { color: theme.subText || "#666" }]}>
+                  {t("complaint.info_text", "Tell us what went wrong. Our team responds within 24 hours.")}
+                </Text>
+              </View>
+
+              {/* Dynamic Categories */}
+              <Text style={[styles.sectionLabel, { color: theme.text }]}>
+                {t("complaint.category", "Category")}
+              </Text>
+              <View style={styles.categoriesContainer}>
+                {categories.map((cat) => renderCategoryChip(cat.name))}
+              </View>
+
+              {/* Sub Category - Only when selected main category has subcategories */}
+              {showSubCategories && (
+                <View style={styles.subCategoriesSection}>
+                  <Text style={[styles.subHeading, { color: theme.text }]}>
+                    {t("complaint.sub_category", "Sub Category")}
+                  </Text>
+                  <View style={styles.subCategoriesContainer}>
+                    {selectedCategoryObj.subCategories.map((sub) => renderCategoryChip(sub, true))}
+                  </View>
+                </View>
               )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </ScrollView>
+
+              {/* Order ID (optional) */}
+              <Text style={[styles.sectionLabel, { color: theme.text }]}>
+                {t("complaint.order_id", "Order ID")}{" "}
+                <Text style={styles.optionalLabel}>({t("common.optional", "optional")})</Text>
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBg || theme.card,
+                    color: theme.text,
+                    borderColor: theme.border || "#e0e0e0",
+                  },
+                ]}
+                placeholder={t("complaint.order_id_placeholder", "e.g. #KOR2451")}
+                placeholderTextColor={theme.subText || "#999"}
+                value={orderId}
+                onChangeText={setOrderId}
+              />
+
+              {/* Subject (Required) */}
+              <Text style={[styles.sectionLabel, { color: theme.text }]}>
+                {t("complaint.subject", "Subject")} *
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBg || theme.card,
+                    color: theme.text,
+                    borderColor: theme.border || "#e0e0e0",
+                  },
+                ]}
+                placeholder={t("complaint.subject_placeholder", "Brief title for your issue")}
+                placeholderTextColor={theme.subText || "#999"}
+                value={subject}
+                onChangeText={setSubject}
+              />
+
+              {/* Description (Required) */}
+              <Text style={[styles.sectionLabel, { color: theme.text }]}>
+                {t("complaint.description", "Description")} *
+              </Text>
+              <TextInput
+                style={[
+                  styles.textArea,
+                  {
+                    backgroundColor: theme.inputBg || theme.card,
+                    color: theme.text,
+                    borderColor: theme.border || "#e0e0e0",
+                  },
+                ]}
+                placeholder={t("complaint.description_placeholder", "Please provide detailed information about your issue...")}
+                placeholderTextColor={theme.subText || "#999"}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+                value={description}
+                onChangeText={(text) => {
+                  if (text.length <= 1000) setDescription(text);
+                }}
+              />
+              <Text style={[styles.charCounter, { color: theme.subText || "#999" }]}>
+                {description.length}/1000
+              </Text>
+
+              {/* Attach Photo */}
+              <TouchableOpacity style={styles.attachButton} onPress={handlePickImage}>
+                <Ionicons name="camera-outline" size={22} color={theme.primary} />
+                <Text style={[styles.attachButtonText, { color: theme.primary }]}>
+                  {t("complaint.attach_photo", "Attach Photo")}
+                </Text>
+              </TouchableOpacity>
+              {imageUri && (
+                <View style={styles.previewContainer}>
+                  <Image source={{ uri: imageUri }} style={styles.previewImage} />
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => setImageUri(null)}
+                  >
+                    <Ionicons name="close-circle" size={24} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+              <TouchableOpacity onPress={handleSubmit} disabled={loading}>
+                <LinearGradient
+                  colors={theme.gradient || [theme.primary, theme.primary]}
+                  style={styles.submitButton}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>
+                      {t("complaint.submit", "Submit Complaint")}
+                    </Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </ScrollView>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </AppBackground>
     </SafeAreaView>
   );
@@ -311,118 +449,172 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 22,
+    fontWeight: "700",
   },
   contactRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: 20,
-  },
-  contactIcon: {
-    alignItems: "center",
-  },
-  contactText: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  infoText: {
-    fontSize: 14,
-    textAlign: "center",
     marginBottom: 24,
+  },
+  contactCard: {
+    alignItems: "center",
+    width: 80,
+  },
+  contactIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  contactCardText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  infoBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  infoBoxText: {
+    fontSize: 14,
+    marginLeft: 10,
+    flexShrink: 1,
+    lineHeight: 20,
   },
   sectionLabel: {
     fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 8,
+    fontWeight: "600",
+    marginBottom: 10,
     marginTop: 16,
   },
   optionalLabel: {
     fontSize: 12,
-    fontWeight: "normal",
+    fontWeight: "400",
   },
   categoriesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
     marginBottom: 8,
+  },
+  categoryChip: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 40,
+    borderWidth: 1,
+    marginRight: 10,
+    marginBottom: 10,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  categoryChipText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  subCategoriesSection: {
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  subHeading: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 12,
+    marginLeft: 4,
   },
   subCategoriesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 8,
-    marginLeft: 8,
   },
-  categoryChip: {
+  subCategoryChip: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 30,
     borderWidth: 1,
-    marginRight: 8,
-    marginBottom: 8,
+    marginRight: 10,
+    marginBottom: 10,
+    backgroundColor: 'transparent',
   },
-  categoryChipText: {
-    fontSize: 14,
+  subCategoryChipText: {
+    fontSize: 13,
     fontWeight: "500",
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 16,
   },
   textArea: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 16,
     minHeight: 120,
   },
   charCounter: {
     fontSize: 12,
     textAlign: "right",
-    marginTop: 4,
+    marginTop: 6,
   },
   attachButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 20,
     marginBottom: 16,
     alignSelf: "flex-start",
   },
   attachButtonText: {
-    fontSize: 14,
-    marginLeft: 8,
+    fontSize: 15,
+    fontWeight: "500",
+    marginLeft: 10,
+  },
+  previewContainer: {
+    position: 'relative',
+    alignSelf: 'flex-start',
+    marginBottom: 16,
   },
   previewImage: {
     width: 100,
     height: 100,
-    borderRadius: 10,
-    marginBottom: 16,
+    borderRadius: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: 'white',
+    borderRadius: 12,
   },
   errorText: {
-    color: "red",
+    color: "#ff4444",
     textAlign: "center",
     marginTop: 12,
+    fontSize: 14,
   },
   submitButton: {
-    paddingVertical: 14,
-    borderRadius: 30,
+    paddingVertical: 16,
+    borderRadius: 40,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 24,
+    marginBottom: 20,
   },
   submitButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });
