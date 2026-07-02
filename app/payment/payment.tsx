@@ -1,13 +1,13 @@
 import { createOrder } from "@/src/api/order";
 import { clearCart } from "@/src/redux/store/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/hooks";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
   selectPickupAddress,
   selectDropoffAddress,
-  selectPickupCoordinates,   // ✅ import
-  selectDropoffCoordinates,  // ✅ import
+  selectPickupCoordinates,
+  selectDropoffCoordinates,
 } from "@/src/redux/store/addressSlice";
 import {
   View,
@@ -49,8 +49,14 @@ export default function Payment() {
   const [selected, setSelected] = useState("gpay");
   const [upiId, setUpiId] = useState("");
   const [loading, setLoading] = useState(false);
-  const pickupCoordinates = useAppSelector(selectPickupCoordinates);   // ✅ use
-  const dropoffCoordinates = useAppSelector(selectDropoffCoordinates); // ✅ use
+  const pickupCoordinates = useAppSelector(selectPickupCoordinates);
+  const dropoffCoordinates = useAppSelector(selectDropoffCoordinates);
+  const { pickupDay, timeSlot } = useLocalSearchParams<{
+    total: string;
+    pickupDay: string;
+    timeSlot: string;
+  }>();
+
   const handlePayment = async () => {
     try {
       if (cartItems.length === 0) {
@@ -82,6 +88,8 @@ export default function Payment() {
         paymentMethod: "upi" as const,
         selectedUpiApp: selected,
         paymentStatus: "success",
+        pickupDay: pickupDay ?? "",    // ← add
+        timeSlot: timeSlot ?? "",
       };
 
       console.log("ORDER PAYLOAD:", JSON.stringify(payload, null, 2));

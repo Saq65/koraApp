@@ -2,11 +2,12 @@ import { apiClient } from "./client";
 import { getToken } from "../utils/storage";
 
 export interface OrderPayload {
-items: {
+  items: {
     serviceId: string;
     categoryName: string;
     subCategoryName: string;
     quantity: number;
+
   }[];
 
   pickupAddress: {
@@ -20,6 +21,9 @@ items: {
   };
 
   paymentMethod: "cash" | "upi" | "card";
+
+  pickupDay: string;    // "2026-06-28"
+  timeSlot: string;
 }
 
 export const getActiveOrder = async () => {

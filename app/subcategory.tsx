@@ -20,7 +20,7 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
 
 // ─── Responsive helpers ───────────────────────────────────────
 const { width: W, height: H } = Dimensions.get("window");
-const r  = (n: number) => Math.round((W / 375) * n);
+const r = (n: number) => Math.round((W / 375) * n);
 const rv = (n: number) => Math.round((H / 812) * n);
 const rm = (n: number, f = 0.45) => n + (r(n) - n) * f;
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
@@ -35,8 +35,8 @@ const C = {
 
 const shadow = (depth: 1 | 2 | 3) => {
   const configs = {
-    1: { ios: { shadowColor: "#0a3530", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4  }, android: { elevation: 2 } },
-    2: { ios: { shadowColor: "#0a3530", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.09, shadowRadius: 8  }, android: { elevation: 4 } },
+    1: { ios: { shadowColor: "#0a3530", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4 }, android: { elevation: 2 } },
+    2: { ios: { shadowColor: "#0a3530", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.09, shadowRadius: 8 }, android: { elevation: 4 } },
     3: { ios: { shadowColor: "#0a3530", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.13, shadowRadius: 16 }, android: { elevation: 8 } },
   };
   return Platform.OS === "ios" ? configs[depth].ios : configs[depth].android;
@@ -48,9 +48,9 @@ type Item = { key: string; label: string; icon: string; lib: IconLib };
 
 // ─── Services ─────────────────────────────────────────────────
 const SERVICES: Record<string, { id: string; name: string; price: number }> = {
-  Wash:       { id: "69f0746b11410d962926907f", name: "Wash",      price: 30 },
-  Iron:       { id: "69f0746b11410d962926907d", name: "Iron",      price: 25 },
-  "Wash+Iron":{ id: "69f0746b11410d962926907e", name: "Wash+Iron", price: 50 },
+  Wash: { id: "69f0746b11410d962926907f", name: "Wash", price: 30 },
+  Iron: { id: "69f0746b11410d962926907d", name: "Iron", price: 25 },
+  "Wash+Iron": { id: "69f0746b11410d962926907e", name: "Wash+Iron", price: 50 },
 };
 
 // ─── ClothingIcon ─────────────────────────────────────────────
@@ -175,22 +175,25 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
 type ItemCardProps = { item: Item; cardWidth: number; onPress: (item: Item) => void; t: any };
 const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress, t }) => {
   const pressAnim = useRef(new Animated.Value(1)).current;
-  const onPressIn  = () => Animated.spring(pressAnim, { toValue: 0.93, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
-  const onPressOut = () => Animated.spring(pressAnim, { toValue: 1,    useNativeDriver: true, speed: 25, bounciness: 6 }).start();
+  const onPressIn = () => Animated.spring(pressAnim, { toValue: 0.92, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
+  const onPressOut = () => Animated.spring(pressAnim, { toValue: 1, useNativeDriver: true, speed: 25, bounciness: 6 }).start();
 
   return (
     <Animated.View style={{ width: cardWidth, transform: [{ scale: pressAnim }] }}>
-      <TouchableOpacity activeOpacity={1} onPressIn={onPressIn} onPressOut={onPressOut} onPress={() => onPress(item)} style={styles.card}>
+      <TouchableOpacity
+        activeOpacity={1}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        onPress={() => onPress(item)}
+        style={[styles.card, { width: cardWidth, height: cardWidth }]}  // perfect square
+      >
+        {/* Icon container — fills most of the card */}
         <View style={styles.iconWrap}>
-          <ClothingIcon icon={item.icon} lib={item.lib} size={r(26)} color={C.inkMid} />
+          <ClothingIcon icon={item.icon} lib={item.lib} size={r(32)} color={C.teal} />
         </View>
-        <Text style={styles.cardLabel} numberOfLines={2}>{item.label}</Text>
-        <View style={styles.addRow}>
-          <Text style={styles.addText}>{t("common.select")}</Text>
-          <View style={styles.addIcon}>
-            <Ionicons name="arrow-forward" size={r(12)} color={C.teal} />
-          </View>
-        </View>
+
+        {/* Label */}
+        <Text style={styles.cardLabel} numberOfLines={1}>{item.label}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -208,22 +211,37 @@ const styles = StyleSheet.create({
   tagPill: { backgroundColor: C.tealLight, borderRadius: r(20), paddingHorizontal: r(10), paddingVertical: rv(3) },
   tagText: { fontSize: rm(10.5), fontWeight: "600", color: C.tealDark },
   infoBtn: { width: r(38), height: r(38), borderRadius: r(19), backgroundColor: C.tealXLight, alignItems: "center", justifyContent: "center" },
-  tabsScroll: { paddingHorizontal: r(16), paddingTop: rv(2), flexDirection: "row", gap: 0 },
-  tab: { flexDirection: "row", alignItems: "center", gap: r(5), paddingHorizontal: r(14), paddingVertical: rv(10), borderBottomWidth: 2.5, borderBottomColor: "transparent", marginBottom: -1 },
-  tabActive: { borderBottomColor: C.teal },
-  tabLabel: { fontSize: rm(12.5), fontWeight: "600", color: C.inkLight },
-  tabLabelActive: { color: C.teal },
-  tabBubble: { backgroundColor: C.tealLight, borderRadius: r(10), minWidth: r(18), height: r(18), paddingHorizontal: r(4), alignItems: "center", justifyContent: "center" },
-  tabBubbleText: { fontSize: rm(9.5), fontWeight: "700", color: C.tealDark },
-  tabLine: { height: 1.5, backgroundColor: C.border, marginHorizontal: r(16), marginBottom: rv(2) },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", paddingHorizontal: r(16), paddingTop: rv(14), paddingBottom: rv(10) },
   sectionTitle: { fontSize: rm(15), fontWeight: "700", color: C.ink, letterSpacing: -0.2 },
   sectionCount: { fontSize: rm(12), fontWeight: "500", color: C.inkLight },
   gridContent: { paddingBottom: rv(110) },
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-start" },
-  card: { backgroundColor: C.surface, borderRadius: r(18), paddingTop: rv(16), paddingBottom: rv(14), paddingHorizontal: r(6), alignItems: "center", borderWidth: 1.5, borderColor: C.border, ...shadow(1) },
-  iconWrap: { width: r(50), height: r(50), borderRadius: r(25), backgroundColor: C.bgAlt, alignItems: "center", justifyContent: "center", marginBottom: rv(9), borderWidth: 1.5, borderColor: C.border },
-  cardLabel: { fontSize: rm(11), fontWeight: "600", color: C.inkMid, textAlign: "center", lineHeight: rm(14.5), paddingHorizontal: r(2), marginBottom: rv(8) },
+  card: {
+    backgroundColor: C.tealXLight,
+    borderRadius: r(16),
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: rv(10),
+    borderWidth: 1.5,
+    borderColor: C.tealLight,
+    ...shadow(1),
+  },
+  iconWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    backgroundColor: C.tealLight,
+    borderRadius: r(14),
+    marginBottom: rv(6),
+  },
+  cardLabel: {
+    fontSize: rm(11),
+    fontWeight: "700",
+    color: C.tealDark,
+    textAlign: "center",
+    paddingHorizontal: r(4),
+  },
   addRow: { flexDirection: "row", alignItems: "center", gap: r(4) },
   addText: { fontSize: rm(10.5), fontWeight: "600", color: C.inkLight },
   addIcon: { width: r(18), height: r(18), borderRadius: r(9), backgroundColor: C.tealLight, alignItems: "center", justifyContent: "center" },
@@ -249,7 +267,55 @@ const styles = StyleSheet.create({
   modalAddBtn: { backgroundColor: C.teal, borderRadius: r(16), paddingVertical: rv(14), alignItems: "center", marginTop: rv(20) },
   modalAddBtnText: { fontSize: rm(16), fontWeight: "700", color: "#fff" },
   summaryRow: { backgroundColor: C.tealXLight, borderRadius: r(10), padding: r(10), marginTop: rv(12), alignItems: "center" },
+
+  
   summaryText: { fontSize: rm(13), fontWeight: "600", color: C.tealDark },
+
+  tabsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: r(16),
+    paddingTop: rv(8),
+    paddingBottom: rv(4),
+    gap: r(8),
+  },
+  tab: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: r(5),
+    paddingHorizontal: r(14),
+    paddingVertical: rv(8),
+    borderRadius: r(20),
+    backgroundColor: C.bgAlt,
+    borderWidth: 1.5,
+    borderColor: C.border,
+  },
+  tabActive: {
+    backgroundColor: C.tealLight,
+    borderColor: C.teal,
+  },
+  tabLabel: {
+    fontSize: rm(12.5),
+    fontWeight: "600",
+    color: C.inkLight,
+  },
+  tabLabelActive: {
+    color: C.teal,
+  },
+  tabBubble: {
+    backgroundColor: C.teal,
+    borderRadius: r(10),
+    minWidth: r(18),
+    height: r(18),
+    paddingHorizontal: r(4),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabBubbleText: {
+    fontSize: rm(9.5),
+    fontWeight: "700",
+    color: "#fff",
+  },
 });
 
 // ─── MAIN SCREEN (single export default) ─────────────────────
@@ -262,28 +328,28 @@ export default function SubcategoryScreen() {
       tabs: [t("tabs_sub.upper_wear"), t("tabs_sub.lower_wear"), t("tabs_sub.garments"), t("tabs_sub.winter_wear")],
       items: {
         "Upper Wear": [
-          { key: "shirt",   label: t("items.shirt"),   icon: "shirt-outline",       lib: "ion" },
-          { key: "tshirt",  label: t("items.tshirt"),  icon: "tshirt-crew-outline", lib: "mci" },
-          { key: "vest",    label: t("items.vest"),    icon: "tshirt-outline",      lib: "mci" },
-          { key: "kurta",   label: t("items.kurta"),   icon: "shirt-outline",       lib: "ion" },
-          { key: "jacket",  label: t("items.jacket"),  icon: "jacket",              lib: "mci" },
-          { key: "hoodie",  label: t("items.hoodie"),  icon: "hanger",              lib: "mci" },
+          { key: "shirt", label: t("items.shirt"), icon: "shirt-outline", lib: "ion" },
+          { key: "tshirt", label: t("items.tshirt"), icon: "tshirt-crew-outline", lib: "mci" },
+          { key: "vest", label: t("items.vest"), icon: "tshirt-outline", lib: "mci" },
+          { key: "kurta", label: t("items.kurta"), icon: "shirt-outline", lib: "ion" },
+          { key: "jacket", label: t("items.jacket"), icon: "jacket", lib: "mci" },
+          { key: "hoodie", label: t("items.hoodie"), icon: "hanger", lib: "mci" },
         ],
         "Lower Wear": [
-          { key: "jeans",    label: t("items.jeans"),    icon: "human-male", lib: "mci" },
+          { key: "jeans", label: t("items.jeans"), icon: "human-male", lib: "mci" },
           { key: "trousers", label: t("items.trousers"), icon: "human-male", lib: "mci" },
-          { key: "shorts",   label: t("items.shorts"),   icon: "human-male", lib: "mci" },
-          { key: "pajamas",  label: t("items.pajamas"),  icon: "hanger",     lib: "mci" },
+          { key: "shorts", label: t("items.shorts"), icon: "human-male", lib: "mci" },
+          { key: "pajamas", label: t("items.pajamas"), icon: "hanger", lib: "mci" },
         ],
         "Garments": [
-          { key: "suit",     label: t("items.suit"),     icon: "briefcase-outline", lib: "ion" },
-          { key: "blazer",   label: t("items.blazer"),   icon: "hanger",            lib: "mci" },
-          { key: "sherwani", label: t("items.sherwani"), icon: "hanger",            lib: "mci" },
+          { key: "suit", label: t("items.suit"), icon: "briefcase-outline", lib: "ion" },
+          { key: "blazer", label: t("items.blazer"), icon: "hanger", lib: "mci" },
+          { key: "sherwani", label: t("items.sherwani"), icon: "hanger", lib: "mci" },
         ],
         "Winter Wear": [
           { key: "sweater", label: t("items.sweater"), icon: "hanger", lib: "mci" },
-          { key: "coat",    label: t("items.coat"),    icon: "hanger", lib: "mci" },
-          { key: "muffler", label: t("items.muffler"), icon: "scarf",  lib: "mci" },
+          { key: "coat", label: t("items.coat"), icon: "hanger", lib: "mci" },
+          { key: "muffler", label: t("items.muffler"), icon: "scarf", lib: "mci" },
         ],
       },
     },
@@ -292,25 +358,25 @@ export default function SubcategoryScreen() {
       tabs: [t("tabs_sub.upper_wear"), t("tabs_sub.lower_wear"), t("tabs_sub.ethnic"), t("tabs_sub.winter_wear")],
       items: {
         "Upper Wear": [
-          { key: "top",    label: t("items.top"),    icon: "tshirt-crew-outline", lib: "mci" },
-          { key: "blouse", label: t("items.blouse"), icon: "hanger",              lib: "mci" },
-          { key: "kurti",  label: t("items.kurti"),  icon: "hanger",              lib: "mci" },
-          { key: "shirt",  label: t("items.shirt"),  icon: "shirt-outline",       lib: "ion" },
+          { key: "top", label: t("items.top"), icon: "tshirt-crew-outline", lib: "mci" },
+          { key: "blouse", label: t("items.blouse"), icon: "hanger", lib: "mci" },
+          { key: "kurti", label: t("items.kurti"), icon: "hanger", lib: "mci" },
+          { key: "shirt", label: t("items.shirt"), icon: "shirt-outline", lib: "ion" },
         ],
         "Lower Wear": [
           { key: "leggings", label: t("items.leggings"), icon: "human-female", lib: "mci" },
-          { key: "jeans",    label: t("items.jeans"),    icon: "human-female", lib: "mci" },
-          { key: "skirt",    label: t("items.skirt"),    icon: "human-female", lib: "mci" },
+          { key: "jeans", label: t("items.jeans"), icon: "human-female", lib: "mci" },
+          { key: "skirt", label: t("items.skirt"), icon: "human-female", lib: "mci" },
         ],
         "Ethnic": [
-          { key: "saree",   label: t("items.saree"),   icon: "hanger", lib: "mci" },
-          { key: "salwar",  label: t("items.salwar"),  icon: "hanger", lib: "mci" },
-          { key: "dupatta", label: t("items.dupatta"), icon: "scarf",  lib: "mci" },
+          { key: "saree", label: t("items.saree"), icon: "hanger", lib: "mci" },
+          { key: "salwar", label: t("items.salwar"), icon: "hanger", lib: "mci" },
+          { key: "dupatta", label: t("items.dupatta"), icon: "scarf", lib: "mci" },
         ],
         "Winter Wear": [
-          { key: "sweater", label: t("items.sweater"), icon: "hanger",  lib: "mci" },
-          { key: "jacket",  label: t("items.jacket"),  icon: "jacket",  lib: "mci" },
-          { key: "shawl",   label: t("items.shawl"),   icon: "scarf",   lib: "mci" },
+          { key: "sweater", label: t("items.sweater"), icon: "hanger", lib: "mci" },
+          { key: "jacket", label: t("items.jacket"), icon: "jacket", lib: "mci" },
+          { key: "shawl", label: t("items.shawl"), icon: "scarf", lib: "mci" },
         ],
       },
     },
@@ -320,22 +386,22 @@ export default function SubcategoryScreen() {
       items: {
         "Upper Wear": [
           { key: "tshirt", label: t("items.tshirt"), icon: "tshirt-crew-outline", lib: "mci" },
-          { key: "shirt",  label: t("items.shirt"),  icon: "shirt-outline",       lib: "ion" },
-          { key: "frock",  label: t("items.frock"),  icon: "hanger",              lib: "mci" },
+          { key: "shirt", label: t("items.shirt"), icon: "shirt-outline", lib: "ion" },
+          { key: "frock", label: t("items.frock"), icon: "hanger", lib: "mci" },
         ],
         "Lower Wear": [
-          { key: "shorts",   label: t("items.shorts"),   icon: "human-male-boy", lib: "mci" },
+          { key: "shorts", label: t("items.shorts"), icon: "human-male-boy", lib: "mci" },
           { key: "trousers", label: t("items.trousers"), icon: "human-male-boy", lib: "mci" },
-          { key: "skirt",    label: t("items.skirt"),    icon: "human-female",   lib: "mci" },
+          { key: "skirt", label: t("items.skirt"), icon: "human-female", lib: "mci" },
         ],
         "Uniforms": [
-          { key: "school_uniform", label: t("items.school_uniform"), icon: "school-outline",   lib: "ion" },
-          { key: "sports_kit",     label: t("items.sports_kit"),     icon: "football-outline", lib: "ion" },
+          { key: "school_uniform", label: t("items.school_uniform"), icon: "school-outline", lib: "ion" },
+          { key: "sports_kit", label: t("items.sports_kit"), icon: "football-outline", lib: "ion" },
         ],
         "Winter Wear": [
-          { key: "sweater", label: t("items.sweater"), icon: "hanger",           lib: "mci" },
-          { key: "jacket",  label: t("items.jacket"),  icon: "jacket",           lib: "mci" },
-          { key: "gloves",  label: t("items.gloves"),  icon: "hand-left-outline", lib: "ion" },
+          { key: "sweater", label: t("items.sweater"), icon: "hanger", lib: "mci" },
+          { key: "jacket", label: t("items.jacket"), icon: "jacket", lib: "mci" },
+          { key: "gloves", label: t("items.gloves"), icon: "hand-left-outline", lib: "ion" },
         ],
       },
     },
@@ -344,34 +410,34 @@ export default function SubcategoryScreen() {
       tabs: [t("tabs_sub.bedding"), t("tabs_sub.bath"), t("tabs_sub.home"), t("tabs_sub.others")],
       items: {
         "Bedding": [
-          { key: "bedsheet",     label: t("items.bedsheet"),     icon: "bed-outline", lib: "ion" },
-          { key: "pillow_cover", label: t("items.pillow_cover"), icon: "pillow",      lib: "mci" },
-          { key: "blanket",      label: t("items.blanket"),      icon: "bed-outline", lib: "ion" },
-          { key: "duvet",        label: t("items.duvet"),        icon: "bed-outline", lib: "ion" },
+          { key: "bedsheet", label: t("items.bedsheet"), icon: "bed-outline", lib: "ion" },
+          { key: "pillow_cover", label: t("items.pillow_cover"), icon: "pillow", lib: "mci" },
+          { key: "blanket", label: t("items.blanket"), icon: "bed-outline", lib: "ion" },
+          { key: "duvet", label: t("items.duvet"), icon: "bed-outline", lib: "ion" },
         ],
         "Bath": [
-          { key: "towel",      label: t("items.towel"),      icon: "hanger",           lib: "mci" },
-          { key: "bath_mat",   label: t("items.bath_mat"),   icon: "mat",              lib: "mci" },
+          { key: "towel", label: t("items.towel"), icon: "hanger", lib: "mci" },
+          { key: "bath_mat", label: t("items.bath_mat"), icon: "mat", lib: "mci" },
           { key: "hand_towel", label: t("items.hand_towel"), icon: "hand-left-outline", lib: "ion" },
         ],
         "Home": [
-          { key: "curtains",      label: t("items.curtains"),      icon: "curtains",        lib: "mci" },
-          { key: "cushion_cover", label: t("items.cushion_cover"), icon: "sofa-outline",    lib: "mci" },
-          { key: "table_cloth",   label: t("items.table_cloth"),   icon: "table-furniture", lib: "mci" },
+          { key: "curtains", label: t("items.curtains"), icon: "curtains", lib: "mci" },
+          { key: "cushion_cover", label: t("items.cushion_cover"), icon: "sofa-outline", lib: "mci" },
+          { key: "table_cloth", label: t("items.table_cloth"), icon: "table-furniture", lib: "mci" },
         ],
         "Others": [
           { key: "sofa_cover", label: t("items.sofa_cover"), icon: "sofa-outline", lib: "mci" },
-          { key: "carpet",     label: t("items.carpet"),     icon: "rug",           lib: "mci" },
+          { key: "carpet", label: t("items.carpet"), icon: "rug", lib: "mci" },
         ],
       },
     },
   };
 
   const CATEGORY_META: Record<string, { tag: string; label: string }> = {
-    Men:      { tag: "👔", label: t("meta.premium_care") },
-    Women:    { tag: "👗", label: t("meta.premium_care") },
+    Men: { tag: "👔", label: t("meta.premium_care") },
+    Women: { tag: "👗", label: t("meta.premium_care") },
     Children: { tag: "🧒", label: t("meta.gentle_wash") },
-    Linen:    { tag: "🛏", label: t("meta.deep_clean") },
+    Linen: { tag: "🛏", label: t("meta.deep_clean") },
   };
 
   const params = useLocalSearchParams<{ category: string }>();
@@ -398,7 +464,7 @@ export default function SubcategoryScreen() {
     setActiveTabKey(key);
   }, []);
 
-  const openModal  = (item: Item) => { setSelectedItem(item); setModalVisible(true); };
+  const openModal = (item: Item) => { setSelectedItem(item); setModalVisible(true); };
   const closeModal = () => { setModalVisible(false); setSelectedItem(null); };
   const viewBasket = () => {
     if (cartCount === 0) { alert("Your basket is empty"); return; }
@@ -430,13 +496,21 @@ export default function SubcategoryScreen() {
 
       {/* Tabs */}
       <View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsScroll}>
+      // Tabs section replace karo — View ke andar ScrollView ki jagah
+        <View style={styles.tabsContainer}>
           {data.tabKeys.map((key, idx) => {
             const active = key === activeTabKey;
-            const count  = data.items[key]?.length ?? 0;
+            const count = data.items[key]?.length ?? 0;
             return (
-              <TouchableOpacity key={key} onPress={() => switchTab(key)} activeOpacity={0.75} style={[styles.tab, active && styles.tabActive]}>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{data.tabs[idx]}</Text>
+              <TouchableOpacity
+                key={key}
+                onPress={() => switchTab(key)}
+                activeOpacity={0.75}
+                style={[styles.tab, active && styles.tabActive]}
+              >
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                  {data.tabs[idx]}
+                </Text>
                 {active && (
                   <View style={styles.tabBubble}>
                     <Text style={styles.tabBubbleText}>{count}</Text>
@@ -445,8 +519,7 @@ export default function SubcategoryScreen() {
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
-        <View style={styles.tabLine} />
+        </View>
       </View>
 
       {/* Section heading */}
