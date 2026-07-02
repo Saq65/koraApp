@@ -12,6 +12,7 @@ export const apiClient = async (
       url: `${process.env.EXPO_PUBLIC_API_URL}${endpoint}`,
       method,
       data: body,
+      timeout: 15000,
       headers: {
         // 👇 dynamically set Content-Type
         ...(isFormData
@@ -22,11 +23,14 @@ export const apiClient = async (
     });
     return response.data;
   } catch (error: any) {
-    throw new Error(
+    const msg =
       error?.response?.data?.error ||
       error?.response?.data?.message ||
       error?.message ||
-      "Something went wrong"
-    );
+      (error?.code === "ECONNABORTED"
+        ? "Request timed out. Check API URL/network on device."
+        : "Something went wrong");
+
+    throw new Error(msg);
   }
 };
