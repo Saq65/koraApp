@@ -23,16 +23,16 @@ import { forgotPassword, verifyResetOtp } from "../../src/api/auth";
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function ForgotPasswordScreen() {
-    const { theme ,isDarkMode} = useTheme();
+    const { theme } = useTheme();
     const { t } = useTranslation();
 
-    const [identifier, setIdentifier] = useState("");
+    const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [showOtp, setShowOtp] = useState(false);
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [focusedOtpIndex, setFocusedOtpIndex] = useState<number | null>(null);
-    const [isIdentifierFocused, setIsIdentifierFocused] = useState(false);
+    const [isEmailFocused, setIsEmailFocused] = useState(false);
 
     const otpRefs = useRef<(TextInput | null)[]>([]);
 
@@ -42,50 +42,26 @@ export default function ForgotPasswordScreen() {
         }
     }, [showOtp]);
 
-    const getRawMobile = (input: string): string => {
-        const digits = input.replace(/\D/g, "");
-        if (digits.length >= 10) return digits.slice(-10);
-        return digits;
-    };
-
     const isValidEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/;
         return emailRegex.test(email);
     };
 
-    const isValidMobile = (mobile: string): boolean => {
-        const digits = mobile.replace(/\D/g, "");
-        return digits.length === 10;
-    };
-
     const handleSendCode = async () => {
         setError("");
-        const trimmed = identifier.trim();
+        const trimmed = email.trim();
         if (!trimmed) {
-            setError(t("auth.enter_email_or_phone"));
+            setError(t("auth.enter_email") || "Please enter your email");
             return;
         }
-
-        let processedIdentifier = trimmed;
-        const isEmail = trimmed.includes("@");
-
-        if (isEmail) {
-            if (!isValidEmail(trimmed)) {
-                setError(t("auth.valid_email"));
-                return;
-            }
-        } else {
-            const rawMobile = getRawMobile(trimmed);
-            if (!isValidMobile(rawMobile)) {
-                setError(t("validation.valid_phone"));
-                return;
-            }
-            processedIdentifier = rawMobile;
+        if (!isValidEmail(trimmed)) {
+            setError(t("auth.valid_email") || "Please enter a valid email address");
+            return;
         }
 
         setLoading(true);
         try {
-            await forgotPassword(processedIdentifier);
+            await forgotPassword(trimmed);
             setShowOtp(true);
             setOtp(["", "", "", "", "", ""]);
         } catch (err: any) {
@@ -131,24 +107,19 @@ export default function ForgotPasswordScreen() {
     const handleVerifyOtp = async () => {
         const enteredOtp = otp.join("");
         if (enteredOtp.length !== 6) {
-            setError(t("auth.enter_complete_otp"));
+            setError(t("auth.enter_complete_otp") || "Enter complete OTP");
             return;
         }
 
-        let processedIdentifier = identifier.trim();
-        const isEmail = processedIdentifier.includes("@");
-        if (!isEmail) {
-            processedIdentifier = getRawMobile(processedIdentifier);
-        }
-
+        const trimmedEmail = email.trim();
         setLoading(true);
         try {
-            const response = await verifyResetOtp(processedIdentifier, enteredOtp);
+            const response = await verifyResetOtp(trimmedEmail, enteredOtp);
             const resetToken = response.resetToken;
             if (!resetToken) throw new Error("No reset token received");
             router.push({
                 pathname: "/(auth)/ResetPasswordScreen",
-                params: { resetToken }
+                params: { resetToken },
             });
         } catch (err: any) {
             const serverMsg = err.response?.data?.error || err.message;
@@ -158,7 +129,7 @@ export default function ForgotPasswordScreen() {
         }
     };
 
-    const handleBackToIdentifier = () => {
+    const handleBackToEmail = () => {
         setShowOtp(false);
         setOtp(["", "", "", "", "", ""]);
         setError("");
@@ -211,23 +182,23 @@ export default function ForgotPasswordScreen() {
                                         styles.inputContainer,
                                         {
                                             backgroundColor: theme.inputBg || theme.card,
-                                            borderColor: isIdentifierFocused ? theme.primary : "transparent",
-                                            borderWidth: isIdentifierFocused ? 2 : 1,
+                                            borderColor: isEmailFocused ? theme.primary : "transparent",
+                                            borderWidth: isEmailFocused ? 2 : 1,
                                         },
                                     ]}
                                 >
                                     <Ionicons name="mail-outline" size={18} color={theme.subText} />
                                     <TextInput
-                                        placeholder={t("auth.email_or_phone")}
+                                        placeholder={t("auth.email") || "Email"}
                                         placeholderTextColor={theme.subText}
                                         style={[styles.input, { color: theme.text }]}
-                                        value={identifier}
-                                        onChangeText={setIdentifier}
-                                        keyboardType="default"
+                                        value={email}
+                                        onChangeText={setEmail}
+                                        keyboardType="email-address"
                                         autoCapitalize="none"
                                         editable={!loading}
-                                        onFocus={() => setIsIdentifierFocused(true)}
-                                        onBlur={() => setIsIdentifierFocused(false)}
+                                        onFocus={() => setIsEmailFocused(true)}
+                                        onBlur={() => setIsEmailFocused(false)}
                                     />
                                 </View>
 
@@ -293,9 +264,9 @@ export default function ForgotPasswordScreen() {
                                     </LinearGradient>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity onPress={handleBackToIdentifier} style={styles.backLink}>
+                                <TouchableOpacity onPress={handleBackToEmail} style={styles.backLink}>
                                     <Text style={[styles.backLinkText, { color: theme.primary }]}>
-                                        {t("auth.change_identifier")}
+                                        {t("auth.change_email") || "Change email"}
                                     </Text>
                                 </TouchableOpacity>
                             </>
@@ -314,7 +285,8 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-    logoContainer: { alignItems: "center", marginBottom: 40 }, // reduced from 40
+    // All styles remain the same as your original
+    logoContainer: { alignItems: "center", marginBottom: 40 },
     logoImage: { width: 80, height: 80, marginBottom: 10 },
     logoText: { fontSize: 28, fontWeight: "700" },
     subTitle: { fontSize: 14, marginTop: 4 },
@@ -347,7 +319,7 @@ const styles = StyleSheet.create({
     backButton: {
         padding: 8,
         borderRadius: 30,
-        backgroundColor: "transparent", // will be overridden by theme.card
+        backgroundColor: "transparent",
         marginRight: 8,
     },
     backButtonText: {
