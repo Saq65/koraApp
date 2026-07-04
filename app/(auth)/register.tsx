@@ -10,6 +10,7 @@ import {
     Platform,
     KeyboardAvoidingView,
     Alert,
+    ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,11 +24,64 @@ import AppBackground from "@/components/AppBackground";
 import { useTranslation } from "react-i18next";
 // import { loginWithGoogle } from "@/src/services/auth0";
 
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+WebBrowser.maybeCompleteAuthSession();
+
+const AUTH0_DOMAIN = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
+const AUTH0_CLIENT_ID = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
+
+const redirectUri = AuthSession.makeRedirectUri({
+  scheme: "koraapp",
+  path: "callback",
+});
+
+const discovery = {
+  authorizationEndpoint: `https://${AUTH0_DOMAIN}/authorize`,
+  tokenEndpoint: `https://${AUTH0_DOMAIN}/oauth/token`,
+};
+
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function RegisterScreen() {
     const { theme } = useTheme();
     const { t } = useTranslation();
+
+    // -----------------------------
+    // GOOGLE AUTH REQUEST (Auth0) — same setup as email-login.tsx
+    // -----------------------------
+    const [request, response, promptAsync] = AuthSession.useAuthRequest(
+        {
+            clientId: AUTH0_CLIENT_ID,
+            redirectUri,
+            responseType: "code",
+            usePKCE: true,
+            scopes: ["openid", "profile", "email"],
+            extraParams: {
+                connection: "google-oauth2",
+                prompt: "select_account",
+            },
+        },
+        discovery
+    );
+
+    // Save the PKCE verifier so callback.tsx can read it after the redirect
+    React.useEffect(() => {
+        if (!request) return;
+        const saveVerifier = async () => {
+            if (request.codeVerifier) {
+                await AsyncStorage.setItem("auth0_code_verifier", request.codeVerifier);
+            }
+        };
+        saveVerifier();
+    }, [request]);
+
+    // NOTE: intentionally no response-handling effect here. The redirect to
+    // koraapp://callback is handled exclusively by app/(auth)/callback.tsx —
+    // adding a second handler here would race against it the same way
+    // email-login.tsx used to (see that file's history). Do not add one.
 
     // Step: 'register' or 'verify'
     const [step, setStep] = useState<"register" | "verify">("register");
@@ -176,22 +230,18 @@ export default function RegisterScreen() {
     };
 
     // ─── Google Login ──────────────────────────────────────────
+    const [googleLoading, setGoogleLoading] = useState(false);
 
-   const handleGoogleLogin = async () => {
-  try {
-    console.log("google login clicked")
-    // const { token, role } = await loginWithGoogle();
-    // // Persist the token and role using your existing helper
-    // await handleSuccessfulLogin(token, role);
-
-    // Now check if the user's profile has a mobile number
-    // We'll navigate accordingly in the main app routing (see Step 5)
-    // For now, simply navigate to home; the root layout will handle redirection.
-    // router.replace('/(tabs)/home');
-  } catch (error: any) {
-    Alert.alert('Google Login Failed', error?.message || 'Something went wrong');
-  }
-};
+    const handleGoogleLogin = async () => {
+        setGoogleLoading(true);
+        try {
+            await promptAsync();
+        } catch (error: any) {
+            Alert.alert('Google Login Failed', error?.message || 'Something went wrong');
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
     // ─── Helpers for styles ──────────────────────────────────
 
     const inputBoxStyle = (name: string) => [
@@ -337,11 +387,18 @@ export default function RegisterScreen() {
                                         { backgroundColor: theme.card, borderColor: theme.border },
                                     ]}
                                     onPress={handleGoogleLogin}
+                                    disabled={googleLoading || !request}
                                 >
-                                    <Text style={styles.googleIcon}>🌐</Text>
-                                    <Text style={[styles.googleText, { color: theme.text }]}>
-                                        {t("auth.signup_google") || "Sign up with Google"}
-                                    </Text>
+                                    {googleLoading ? (
+                                        <ActivityIndicator color={theme.text} />
+                                    ) : (
+                                        <>
+                                            <Text style={styles.googleIcon}>🌐</Text>
+                                            <Text style={[styles.googleText, { color: theme.text }]}>
+                                                {t("auth.signup_google") || "Sign up with Google"}
+                                            </Text>
+                                        </>
+                                    )}
                                 </TouchableOpacity>
 
                                 <View style={{ alignItems: "center", marginTop: 20 }}>
