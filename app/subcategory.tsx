@@ -276,7 +276,6 @@ const styles = StyleSheet.create({
 
   tabsContainer: {
     flexDirection: "row",
-    flexWrap: "wrap",
     paddingHorizontal: r(16),
     paddingTop: rv(8),
     paddingBottom: rv(4),
@@ -499,9 +498,13 @@ export default function SubcategoryScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Tabs */}
+        {/* Tabs — horizontally scrollable, not wrapped */}
         <View>
-          <View style={styles.tabsContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsContainer}
+          >
             {data.tabKeys.map((key, idx) => {
               const active = key === activeTabKey;
               const count = data.items[key]?.length ?? 0;
@@ -527,7 +530,7 @@ export default function SubcategoryScreen() {
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
         </View>
 
         {/* Section heading */}
