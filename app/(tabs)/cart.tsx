@@ -45,7 +45,7 @@ export default function Cart() {
   const styles = getStyles(theme);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={["top"]}>
       <AppBackground>
         <StatusBar
           barStyle={isDarkMode ? "light-content" : "dark-content"}

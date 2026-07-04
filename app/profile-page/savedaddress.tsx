@@ -1,4 +1,4 @@
- import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -136,7 +136,7 @@ function AddAddressForm({
   mode: FormMode;
   initialLabel: AddressType;
   onCancel: () => void;
-  onPickOnMap: () => void;
+  onPickOnMap: (label: AddressType, customLabel: string | null) => void;
   onSave: (payload: { label: AddressType; customLabel: string | null; address: string }) => void;
 }) {
   const { theme } = useTheme();
@@ -204,7 +204,11 @@ function AddAddressForm({
         />
 
         <View style={{ flexDirection: "row", gap: r(10), marginTop: rv(12) }}>
-          <TouchableOpacity style={[styles.btnSecondary, { borderColor: theme.border }]} onPress={onPickOnMap} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={[styles.btnSecondary, { borderColor: theme.border }]}
+            onPress={() => onPickOnMap(label, label === "other" ? (customLabel.trim() || null) : null)}
+            activeOpacity={0.8}
+          >
             <Ionicons name="map-outline" size={r(16)} color={theme.primary} style={{ marginRight: r(6) }} />
             <Text style={[styles.btnSecondaryText, { color: theme.primary }]}>Pick on map</Text>
           </TouchableOpacity>
@@ -244,6 +248,7 @@ export default function SavedAddressScreen() {
 
   const [mode, setMode] = useState<FormMode>("list");
   const [activeLabel, setActiveLabel] = useState<AddressType>("other");
+  const [activeCustomLabel, setActiveCustomLabel] = useState<string | null>(null);
 
   // map selection
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
@@ -296,10 +301,13 @@ export default function SavedAddressScreen() {
 
   const openAdd = (label: AddressType = "other") => {
     setActiveLabel(label);
+    setActiveCustomLabel(null);
     setMode("add");
   };
 
-  const openPickMap = () => {
+  const openPickMap = (label: AddressType, customLabel: string | null) => {
+    setActiveLabel(label);
+    setActiveCustomLabel(customLabel);
     setPickedAddressText("");
     setMode("pick");
   };
@@ -310,6 +318,7 @@ export default function SavedAddressScreen() {
       Alert.alert("Location needed", "Please pick this address on map to save coordinates.");
       // We keep user in pick mode.
       setActiveLabel(payload.label);
+      setActiveCustomLabel(payload.customLabel);
       setPickedAddressText(payload.address);
       setMode("pick");
     } catch (e: any) {
@@ -327,7 +336,7 @@ export default function SavedAddressScreen() {
 
       await createSavedAddress({
         label: activeLabel,
-        customLabel: activeLabel === "other" ? (addr.length > 0 ? null : null) : null,
+        customLabel: activeLabel === "other" ? activeCustomLabel : null,
         address: addr,
         coordinates: { lat: marker.latitude, lng: marker.longitude },
         isDefault: false,
@@ -682,4 +691,3 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 });
-

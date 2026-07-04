@@ -103,15 +103,22 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
           </LinearGradient>
 
           {[
-            "Profile Details",
-            "My Services",
-            "Refer & Earn",
-            "Rewards",
-            "Settings",
-            "Support",
+            { label: "Profile Details", route: "/profile-page/personal-details" },
+            { label: "My Services", route: "/(tabs)/orders" },
+            { label: "Refer & Earn", route: "/refer" },
+            { label: "Rewards", route: "/rewards" },
+            { label: "Settings", route: "/settings" },
+            { label: "Support", route: "/support" },
           ].map((item, i) => (
-            <TouchableOpacity key={i} style={styles.item}>
-              <Text style={{ color: theme.text }}>{item}</Text>
+            <TouchableOpacity
+              key={i}
+              style={styles.item}
+              onPress={() => {
+                onClose();
+                router.push(item.route as any);
+              }}
+            >
+              <Text style={{ color: theme.text }}>{item.label}</Text>
               <Ionicons name="chevron-forward" size={18} color={theme.subText} />
             </TouchableOpacity>
           ))}

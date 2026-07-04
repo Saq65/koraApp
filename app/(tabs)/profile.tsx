@@ -109,7 +109,7 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={["top", "bottom"]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={["top"]}>
         <AppBackground>
           <View style={styles.loader}>
             <ActivityIndicator size="large" color={theme.primary} />
@@ -120,7 +120,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={["top", "bottom"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={["top"]}>
       <AppBackground>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
