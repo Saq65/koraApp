@@ -8,11 +8,13 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../src/theme/ThemeProvider";
 import {
   useAppDispatch, useAppSelector,
   selectCartCount, selectCartTotal,
 } from "../src/redux/store/hooks";
 import { addToCart } from "../src/redux/store/cartSlice";
+import AppBackground from "@/components/AppBackground";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -63,26 +65,26 @@ function ClothingIcon({ icon, lib, size, color }: { icon: string; lib: IconLib; 
 // ─── ServiceRow ───────────────────────────────────────────────
 type ServiceRowProps = {
   label: string; price: number; quantity: number;
-  onIncrement: () => void; onDecrement: () => void; t: any;
+  onIncrement: () => void; onDecrement: () => void; t: any; theme: any;
 };
-const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncrement, onDecrement, t }) => (
-  <View style={styles.serviceRow}>
+const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncrement, onDecrement, t, theme }) => (
+  <View style={[styles.serviceRow, { borderBottomColor: theme.border }]}>
     <View style={styles.serviceInfo}>
-      <Text style={styles.serviceLabel}>{label}</Text>
-      <Text style={styles.servicePrice}>₹{price}/{t("common.piece")}</Text>
+      <Text style={[styles.serviceLabel, { color: theme.text }]}>{label}</Text>
+      <Text style={[styles.servicePrice, { color: theme.subText }]}>₹{price}/{t("common.piece")}</Text>
     </View>
     {quantity === 0 ? (
-      <TouchableOpacity style={styles.addButton} onPress={onIncrement}>
-        <Text style={styles.addButtonText}>ADD</Text>
+      <TouchableOpacity style={[styles.addButton, { backgroundColor: theme.primaryLight }]} onPress={onIncrement}>
+        <Text style={[styles.addButtonText, { color: theme.primary }]}>ADD</Text>
       </TouchableOpacity>
     ) : (
       <View style={styles.stepperRow}>
-        <TouchableOpacity style={styles.stepCircle} onPress={onDecrement}>
-          <Ionicons name="remove" size={r(14)} color={C.teal} />
+        <TouchableOpacity style={[styles.stepCircle, { backgroundColor: theme.primaryLight }]} onPress={onDecrement}>
+          <Ionicons name="remove" size={r(14)} color={theme.primary} />
         </TouchableOpacity>
-        <Text style={styles.stepQtyModal}>{quantity}</Text>
-        <TouchableOpacity style={styles.stepCircle} onPress={onIncrement}>
-          <Ionicons name="add" size={r(14)} color={C.teal} />
+        <Text style={[styles.stepQtyModal, { color: theme.primary }]}>{quantity}</Text>
+        <TouchableOpacity style={[styles.stepCircle, { backgroundColor: theme.primaryLight }]} onPress={onIncrement}>
+          <Ionicons name="add" size={r(14)} color={theme.primary} />
         </TouchableOpacity>
       </View>
     )}
@@ -92,9 +94,9 @@ const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncre
 // ─── ServiceModal ─────────────────────────────────────────────
 type ServiceModalProps = {
   visible: boolean; item: Item | null;
-  categoryName: string; onClose: () => void; t: any;
+  categoryName: string; onClose: () => void; t: any; theme: any; isDarkMode: boolean;
 };
-const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName, onClose, t }) => {
+const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName, onClose, t, theme, isDarkMode }) => {
   const dispatch = useAppDispatch();
   const [quantities, setQuantities] = useState<Record<string, number>>({ Wash: 0, Iron: 0, "Wash+Iron": 0 });
 
@@ -136,10 +138,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.modalOverlay}>
           <TouchableWithoutFeedback>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>{t("subcategory.choose_services")}</Text>
-              <Text style={styles.modalSubtitle}>{item.label} • {categoryName}</Text>
+            <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+              <View style={[styles.modalHandle, { backgroundColor: theme.border }]} />
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{t("subcategory.choose_services")}</Text>
+              <Text style={[styles.modalSubtitle, { color: theme.subText }]}>{item.label} • {categoryName}</Text>
               {(["Wash", "Iron", "Wash+Iron"] as const).map(st => (
                 <ServiceRow
                   key={st} label={st} price={SERVICES[st].price}
@@ -147,15 +149,16 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
                   onIncrement={() => increment(st)}
                   onDecrement={() => decrement(st)}
                   t={t}
+                  theme={theme}
                 />
               ))}
               {totalItems > 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryText}>{totalItems} items • ₹{totalPrice}</Text>
+                <View style={[styles.summaryRow, { backgroundColor: theme.primaryLight }]}>
+                  <Text style={[styles.summaryText, { color: theme.primary }]}>{totalItems} items • ₹{totalPrice}</Text>
                 </View>
               )}
               <TouchableOpacity
-                style={[styles.modalAddBtn, { backgroundColor: totalItems > 0 ? C.teal : C.border }]}
+                style={[styles.modalAddBtn, { backgroundColor: totalItems > 0 ? theme.primary : theme.border }]}
                 onPress={handleAddToCart}
                 disabled={totalItems === 0}
               >
@@ -172,8 +175,8 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
 };
 
 // ─── ItemCard ─────────────────────────────────────────────────
-type ItemCardProps = { item: Item; cardWidth: number; onPress: (item: Item) => void; t: any };
-const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress, t }) => {
+type ItemCardProps = { item: Item; cardWidth: number; onPress: (item: Item) => void; t: any; theme: any };
+const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress, t, theme }) => {
   const pressAnim = useRef(new Animated.Value(1)).current;
   const onPressIn = () => Animated.spring(pressAnim, { toValue: 0.92, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
   const onPressOut = () => Animated.spring(pressAnim, { toValue: 1, useNativeDriver: true, speed: 25, bounciness: 6 }).start();
@@ -185,15 +188,15 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress, t }) => {
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         onPress={() => onPress(item)}
-        style={[styles.card, { width: cardWidth, height: cardWidth }]}  // perfect square
+        style={[styles.card, { width: cardWidth, height: cardWidth, backgroundColor: theme.primaryLight, borderColor: theme.border }]}  // perfect square
       >
         {/* Icon container — fills most of the card */}
-        <View style={styles.iconWrap}>
-          <ClothingIcon icon={item.icon} lib={item.lib} size={r(32)} color={C.teal} />
+        <View style={[styles.iconWrap, { backgroundColor: theme.card }]}>
+          <ClothingIcon icon={item.icon} lib={item.lib} size={r(32)} color={theme.primary} />
         </View>
 
         {/* Label */}
-        <Text style={styles.cardLabel} numberOfLines={1}>{item.label}</Text>
+        <Text style={[styles.cardLabel, { color: theme.text }]} numberOfLines={1}>{item.label}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
   modalAddBtnText: { fontSize: rm(16), fontWeight: "700", color: "#fff" },
   summaryRow: { backgroundColor: C.tealXLight, borderRadius: r(10), padding: r(10), marginTop: rv(12), alignItems: "center" },
 
-  
+
   summaryText: { fontSize: rm(13), fontWeight: "600", color: C.tealDark },
 
   tabsContainer: {
@@ -321,6 +324,7 @@ const styles = StyleSheet.create({
 // ─── MAIN SCREEN (single export default) ─────────────────────
 export default function SubcategoryScreen() {
   const { t } = useTranslation();
+  const { theme, isDarkMode } = useTheme();
 
   const DATA: Record<string, { tabs: string[]; tabKeys: string[]; items: Record<string, Item[]> }> = {
     Men: {
@@ -472,89 +476,95 @@ export default function SubcategoryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={["top", "left", "right"]}>
+      <AppBackground>
+        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={r(20)} color={C.ink} />
-        </TouchableOpacity>
-        <View style={styles.headerText}>
-          <Text style={styles.eyebrow}>{t("subcategory.laundry_service")}</Text>
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{category}</Text>
-            <View style={styles.tagPill}>
-              <Text style={styles.tagText}>{meta.tag}  {meta.label}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border }]} onPress={() => router.back()} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={r(20)} color={theme.text} />
+          </TouchableOpacity>
+          <View style={styles.headerText}>
+            <Text style={[styles.eyebrow, { color: theme.subText }]}>{t("subcategory.laundry_service")}</Text>
+            <View style={styles.titleRow}>
+              <Text style={[styles.title, { color: theme.text }]}>{category}</Text>
+              <View style={[styles.tagPill, { backgroundColor: theme.primaryLight }]}>
+                <Text style={[styles.tagText, { color: theme.primary }]}>{meta.tag}  {meta.label}</Text>
+              </View>
             </View>
           </View>
-        </View>
-        <TouchableOpacity style={styles.infoBtn} activeOpacity={0.75}>
-          <Ionicons name="information-circle-outline" size={r(21)} color={C.teal} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Tabs */}
-      <View>
-        <View style={styles.tabsContainer}>
-          {data.tabKeys.map((key, idx) => {
-            const active = key === activeTabKey;
-            const count = data.items[key]?.length ?? 0;
-            return (
-              <TouchableOpacity
-                key={key}
-                onPress={() => switchTab(key)}
-                activeOpacity={0.75}
-                style={[styles.tab, active && styles.tabActive]}
-              >
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                  {data.tabs[idx]}
-                </Text>
-                {active && (
-                  <View style={styles.tabBubble}>
-                    <Text style={styles.tabBubbleText}>{count}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* Section heading */}
-      <View style={styles.sectionRow}>
-        <Text style={styles.sectionTitle}>{data.tabs[data.tabKeys.indexOf(activeTabKey)]}</Text>
-        <Text style={styles.sectionCount}>{items.length} {t("common.items")}</Text>
-      </View>
-
-      {/* Grid */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.gridContent, { paddingHorizontal: H_PAD }]}>
-        <View style={[styles.grid, { gap: GAP }]}>
-          {items.map((item, idx) => (
-            <ItemCard key={`${activeTabKey}-${idx}`} item={item} cardWidth={cardWidth} onPress={openModal} t={t} />
-          ))}
-          {Array.from({ length: (COLS - (items.length % COLS)) % COLS }).map((_, i) => (
-            <View key={`ghost-${i}`} style={{ width: cardWidth }} />
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Cart Footer */}
-      {cartCount > 0 && (
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom > 0 ? insets.bottom + 12 : rv(30) }]}>
-          <TouchableOpacity style={styles.ctaBtn} onPress={viewBasket} activeOpacity={0.85}>
-            <View style={styles.ctaLeft}>
-              <Ionicons name="cart-outline" size={r(18)} color="#fff" />
-              <Text style={styles.ctaText}>{cartCount} {t("common.items")} • {t("common.total")} ₹{cartTotal}</Text>
-            </View>
-            <View style={styles.ctaArrow}>
-              <Ionicons name="arrow-forward" size={r(15)} color={C.tealMid} />
-            </View>
+          <TouchableOpacity style={[styles.infoBtn, { backgroundColor: theme.primaryLight }]} activeOpacity={0.75}>
+            <Ionicons name="information-circle-outline" size={r(21)} color={theme.primary} />
           </TouchableOpacity>
         </View>
-      )}
 
-      <ServiceModal visible={modalVisible} item={selectedItem} categoryName={category} onClose={closeModal} t={t} />
+        {/* Tabs */}
+        <View>
+          <View style={styles.tabsContainer}>
+            {data.tabKeys.map((key, idx) => {
+              const active = key === activeTabKey;
+              const count = data.items[key]?.length ?? 0;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => switchTab(key)}
+                  activeOpacity={0.75}
+                  style={[
+                    styles.tab,
+                    { backgroundColor: theme.card, borderColor: theme.border },
+                    active && { backgroundColor: theme.primaryLight, borderColor: theme.primary },
+                  ]}
+                >
+                  <Text style={[styles.tabLabel, { color: theme.subText }, active && { color: theme.primary }]}>
+                    {data.tabs[idx]}
+                  </Text>
+                  {active && (
+                    <View style={[styles.tabBubble, { backgroundColor: theme.primary }]}>
+                      <Text style={styles.tabBubbleText}>{count}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Section heading */}
+        <View style={styles.sectionRow}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{data.tabs[data.tabKeys.indexOf(activeTabKey)]}</Text>
+          <Text style={[styles.sectionCount, { color: theme.subText }]}>{items.length} {t("common.items")}</Text>
+        </View>
+
+        {/* Grid */}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.gridContent, { paddingHorizontal: H_PAD }]}>
+          <View style={[styles.grid, { gap: GAP }]}>
+            {items.map((item, idx) => (
+              <ItemCard key={`${activeTabKey}-${idx}`} item={item} cardWidth={cardWidth} onPress={openModal} t={t} theme={theme} />
+            ))}
+            {Array.from({ length: (COLS - (items.length % COLS)) % COLS }).map((_, i) => (
+              <View key={`ghost-${i}`} style={{ width: cardWidth }} />
+            ))}
+          </View>
+        </ScrollView>
+
+        {/* Cart Footer */}
+        {cartCount > 0 && (
+          <View style={[styles.bottomBar, { backgroundColor: theme.background, borderTopColor: theme.border, paddingBottom: insets.bottom > 0 ? insets.bottom + 12 : rv(30) }]}>
+            <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: theme.primary }]} onPress={viewBasket} activeOpacity={0.85}>
+              <View style={styles.ctaLeft}>
+                <Ionicons name="cart-outline" size={r(18)} color="#fff" />
+                <Text style={styles.ctaText}>{cartCount} {t("common.items")} • {t("common.total")} ₹{cartTotal}</Text>
+              </View>
+              <View style={styles.ctaArrow}>
+                <Ionicons name="arrow-forward" size={r(15)} color="#fff" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <ServiceModal visible={modalVisible} item={selectedItem} categoryName={category} onClose={closeModal} t={t} theme={theme} isDarkMode={isDarkMode} />
+      </AppBackground>
     </SafeAreaView>
   );
 }

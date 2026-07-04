@@ -6,11 +6,14 @@ import {
     TouchableOpacity,
     ScrollView,
     Dimensions,
+    StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../src/theme/ThemeProvider";
+import AppBackground from "@/components/AppBackground";
 
 
 const { width: W, height: H } = Dimensions.get("window");
@@ -26,6 +29,7 @@ const TEAL_LIGHT = "#e8f5f3";
 
 export default function CategoryScreen() {
     const { t } = useTranslation();
+    const { theme, isDarkMode } = useTheme();
 
     const categories = [
         {
@@ -59,31 +63,37 @@ export default function CategoryScreen() {
     ];
 
     return (
-        <SafeAreaView style={styles.container} edges={["top"]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={["top"]}>
             {/* ── HEADER ── */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backBtn}
-                    onPress={() => router.back()}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="arrow-back" size={s(20)} color="#1a1a1a" />
-                </TouchableOpacity>
-                <View style={styles.headerText}>
-                    <Text style={styles.headerSuper}>{t("category.laundry")}</Text>
-                    <Text style={styles.headerTitle}>{t("category.choose_category")}</Text>
+            <AppBackground>
+                <StatusBar
+                    barStyle={isDarkMode ? "light-content" : "dark-content"}
+                    backgroundColor={theme.background}
+                />
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        style={[styles.backBtn, { backgroundColor: theme.card, shadowColor: isDarkMode ? "#000" : "#000" }]}
+                        onPress={() => router.back()}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="arrow-back" size={s(20)} color={theme.text} />
+                    </TouchableOpacity>
+                    <View style={styles.headerText}>
+                        <Text style={[styles.headerSuper, { color: theme.subText }]}>{t("category.laundry")}</Text>
+                        <Text style={[styles.headerTitle, { color: theme.text }]}>{t("category.choose_category")}</Text>
+                    </View>
                 </View>
-            </View>
 
-            {/* ── GRID ── */}
-            <ScrollView
-                contentContainerStyle={styles.grid}
-                showsVerticalScrollIndicator={false}
-            >
-                {categories.map((cat) => (
-                    <CategoryCard key={cat.id} {...cat} t={t} />
-                ))}
-            </ScrollView>
+                {/* ── GRID ── */}
+                <ScrollView
+                    contentContainerStyle={styles.grid}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {categories.map((cat) => (
+                        <CategoryCard key={cat.id} {...cat} t={t} theme={theme} isDarkMode={isDarkMode} />
+                    ))}
+                </ScrollView>
+            </AppBackground>
         </SafeAreaView>
     );
 }
@@ -94,14 +104,17 @@ function CategoryCard({
     desc,
     icon,
     route,
-    t
+    t,
+    theme,
 }: {
     id: string;
     label: string;
     desc: string;
     icon: string;
     route?: string;
-    t: any
+    t: any;
+    theme: any;
+    isDarkMode: boolean;
 }) {
     const cardWidth = (W - s(16) * 2 - s(12)) / 2;
 
@@ -109,21 +122,21 @@ function CategoryCard({
         <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => route && router.push(route as any)}
-            style={[styles.card, { width: cardWidth }]}
+            style={[styles.card, { width: cardWidth, backgroundColor: theme.card, borderColor: theme.border }]}
         >
             {/* Icon box */}
-            <View style={styles.iconBox}>
+            <View style={[styles.iconBox, { backgroundColor: theme.primary }]}>
                 <Ionicons name={icon as any} size={s(24)} color="#fff" />
             </View>
 
             {/* Text */}
-            <Text style={styles.cardLabel}>{label}</Text>
-            <Text style={styles.cardDesc}>{desc}</Text>
+            <Text style={[styles.cardLabel, { color: theme.text }]}>{label}</Text>
+            <Text style={[styles.cardDesc, { color: theme.subText }]}>{desc}</Text>
 
             {/* Browse link */}
             <View style={styles.browseRow}>
-                <Text style={styles.browseText}>{t("common.browse")}</Text>
-                <Ionicons name="chevron-forward" size={s(13)} color={TEAL} />
+                <Text style={[styles.browseText, { color: theme.primary }]}>{t("common.browse")}</Text>
+                <Ionicons name="chevron-forward" size={s(13)} color={theme.primary} />
             </View>
         </TouchableOpacity>
     );
@@ -133,7 +146,6 @@ function CategoryCard({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f0f4f3",
     },
 
     // Header
