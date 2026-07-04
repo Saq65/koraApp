@@ -300,7 +300,7 @@ export default function PersonalDetailsScreen() {
                                 <Ionicons name="arrow-back" size={22} color={theme.text} />
                             </TouchableOpacity>
                             <Text style={styles.headerTitle}>Personal Details</Text>
-                            <View style={{ width: 40 }} /> {/* spacer */}
+                            <View style={{ width: 40 }} />
                         </View>
 
                         {/* Avatar & Name */}
