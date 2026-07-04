@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
     StyleSheet,
     Text,
@@ -6,55 +6,36 @@ import {
     TouchableOpacity,
     FlatList,
     StatusBar,
+    ActivityIndicator,
+    RefreshControl,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import AppBackground from "@/components/AppBackground"
 import { useTheme } from '@react-navigation/native'
 import { router } from 'expo-router'
+import { getWallet, WalletTransaction } from '@/src/api/wallet'
 
-const transactions = [
-    {
-        id: '1',
-        type: 'refund',
-        title: 'Refund - Order #KR-2842',
-        date: 'Mar 26, 2:14 PM',
-        amount: '+₹180',
-        positive: true,
-    },
-    {
-        id: '2',
-        type: 'paid',
-        title: 'Paid - Order #KR-2846',
-        date: 'Mar 28, 10:02 AM',
-        amount: '₹340',
-        positive: false,
-    },
-    {
-        id: '3',
-        type: 'added',
-        title: 'Money Added',
-        date: 'Mar 24, 6:45 PM',
-        amount: '+₹500',
-        positive: true,
-    },
-    {
-        id: '4',
-        type: 'cashback',
-        title: 'Cashback - KORA30',
-        date: 'Mar 20, 11:30 AM',
-        amount: '+₹90',
-        positive: true,
-    },
-    {
-        id: '5',
-        type: 'paid',
-        title: 'Paid - Order #KR-2835',
-        date: 'Mar 19, 9:15 AM',
-        amount: '₹220',
-        positive: false,
-    },
-]
+const formatDate = (iso: string) => {
+    try {
+        return new Date(iso).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+        });
+    } catch {
+        return '';
+    }
+};
+
+const titleForTransaction = (txn: WalletTransaction) => {
+    if (txn.type === 'refund') {
+        return txn.orderNumber ? `Refund - Order #${txn.orderNumber}` : 'Refund';
+    }
+    if (txn.type === 'debit') {
+        return txn.orderNumber ? `Paid - Order #${txn.orderNumber}` : 'Payment';
+    }
+    if (txn.type === 'cashback') return 'Cashback';
+    return txn.reason || 'Wallet Credit';
+};
 
 const TransactionIcon = ({ type }: { type: string }) => {
     const getIconStyle = () => {
@@ -64,6 +45,7 @@ const TransactionIcon = ({ type }: { type: string }) => {
             case 'paid':
                 return { bg: '#FFEBEE', color: '#F44336', symbol: '↗' }
             case 'added':
+            case 'credit':
                 return { bg: '#E3F2FD', color: '#2196F3', symbol: '+' }
             case 'cashback':
                 return { bg: '#FFF8E1', color: '#FFC107', symbol: '🎁' }
@@ -81,6 +63,45 @@ const TransactionIcon = ({ type }: { type: string }) => {
 
 const Wallet = () => {
     const { colors } = useTheme()
+    const [loading, setLoading] = useState(true)
+    const [refreshing, setRefreshing] = useState(false)
+    const [balance, setBalance] = useState(0)
+    const [transactions, setTransactions] = useState<WalletTransaction[]>([])
+
+    const loadWallet = useCallback(async () => {
+        try {
+            const res = await getWallet()
+            if (res.success && res.data) {
+                setBalance(res.data.balance ?? 0)
+                setTransactions(res.data.transactions ?? [])
+            }
+        } catch (error) {
+            console.log('Error loading wallet:', error)
+        }
+    }, [])
+
+    useEffect(() => {
+        (async () => {
+            setLoading(true)
+            await loadWallet()
+            setLoading(false)
+        })()
+    }, [loadWallet])
+
+    const onRefresh = async () => {
+        setRefreshing(true)
+        await loadWallet()
+        setRefreshing(false)
+    }
+
+    const listData = transactions.map(txn => ({
+        id: txn.id,
+        type: txn.type,
+        title: titleForTransaction(txn),
+        date: formatDate(txn.createdAt),
+        amount: `${txn.type === 'debit' ? '-' : '+'}₹${Math.abs(txn.amount)}`,
+        positive: txn.type !== 'debit',
+    }))
 
     const ListHeader = () => (
         <>
@@ -96,7 +117,7 @@ const Wallet = () => {
                     <Text style={styles.availableText}>AVAILABLE</Text>
                 </View>
                 <Text style={styles.balanceLabel}>Total Balance</Text>
-                <Text style={styles.balanceAmount}>₹1,290</Text>
+                <Text style={styles.balanceAmount}>₹{balance.toLocaleString('en-IN')}</Text>
                 <View style={styles.cardActions}>
                     <TouchableOpacity style={styles.addBtn}>
                         <Text style={styles.addBtnText}>+ Add Money</Text>
@@ -120,6 +141,16 @@ const Wallet = () => {
         </>
     )
 
+    if (loading) {
+        return (
+            <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+            </SafeAreaView>
+        )
+    }
+
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
             <AppBackground>
@@ -139,11 +170,17 @@ const Wallet = () => {
 
                 {/* Single FlatList handles all scrolling — no overflow */}
                 <FlatList
-                    data={transactions}
+                    data={listData}
                     keyExtractor={(item) => item.id}
                     ListHeaderComponent={<ListHeader />}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    ListEmptyComponent={
+                        <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.6, marginTop: 20 }}>
+                            No transactions yet
+                        </Text>
+                    }
                     renderItem={({ item }) => (
                         <View style={[styles.transactionCard, { backgroundColor: colors.card }]}>
                             <TransactionIcon type={item.type} />

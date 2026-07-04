@@ -41,12 +41,14 @@ const SECTIONS: GuideSection[] = [
   {
     title: "Cancellations",
     dos: [
-      "Cancel within the free-cancellation window shown on your active order card for a full refund.",
+      "Cancel within 2 hours of placing your order (and before pickup starts) for a free cancellation.",
       "Check the countdown timer on the order card to know how much time you have left.",
+      "Refunds are processed within 3 to 7 working days and may be issued as coupons or credits at Company discretion.",
     ],
     donts: [
-      "Don't wait until the last moment — cancelling after the free window may deduct a small fee from your paid amount.",
+      "Don't wait too long — cancelling after the free 2-hour window attracts a ₹50 cancellation fee.",
       "Don't expect cancellation once the order has been picked up or is already in process at the service provider.",
+      "Don't expect a refund for a completed service unless damage is proven.",
     ],
   },
   {

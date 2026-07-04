@@ -167,7 +167,9 @@
     "loading": "Loading...",
     "optional": "optional",
   "permission_needed": "Permission Needed",
-  "photo_permission_message": "We need access to your photo library to attach images."
+  "photo_permission_message": "We need access to your photo library to attach images.",
+  "yes": "Yes",
+  "no": "No"
   },
   "tabs": {
     "home": "Home",
@@ -267,7 +269,11 @@
     "live_tracking": "Live Tracking",
     "free_cancellation": "Free cancellation available",
     "cancellation_closed": "Cancellation window closed",
-    "cancellation_mins_left": "Free cancellation — {{mins}} mins left in 2hr window"
+    "cancellation_mins_left": "Free cancellation — {{mins}} mins left in 2hr window",
+    "cancel_confirm_message": "Are you sure you want to cancel this order? A ₹50 fee applies if the free 2-hour window has passed.",
+    "cancel_success_free": "Your order was cancelled free of charge. Any amount paid will be refunded to your wallet.",
+    "cancel_success_fee": "Order cancelled. A ₹{{fee}} late cancellation fee was applied and ₹{{refund}} has been credited to your wallet.",
+    "cancel_failed": "We couldn't cancel this order. Please try again or contact support."
   },
   "cart": {
     "my_cart": "My Cart",

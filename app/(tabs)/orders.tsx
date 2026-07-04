@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, ActivityIndicator
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, ActivityIndicator, Alert
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import AppBackground from "@/components/AppBackground";
-import { getActiveOrder, getOrderHistory } from "../../src/api/order";
+import { getActiveOrder, getOrderHistory, cancelOrder } from "../../src/api/order";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -32,14 +32,16 @@ interface TrackingStep {
 }
 
 /* ─── Active Order Card ─── */
-const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMode }: {
+const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMode, onCancel }: {
   order: Order;
   trackingSteps: TrackingStep[];
   cancelDeadline?: string | null;
   theme: any;
   isDarkMode: boolean;
+  onCancel: (orderId: string) => void;
 }) => {
   const { t } = useTranslation();
+  const [cancelling, setCancelling] = useState(false);
 
   const getCancelNotice = () => {
     if (!cancelDeadline) return t("orders.free_cancellation");
@@ -134,8 +136,21 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
       </View>
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={[styles.cancelBtn, { borderColor: "#E53935" }]} activeOpacity={0.8}>
-          <Text style={styles.cancelBtnText}>{t("orders.cancel_order")}</Text>
+        <TouchableOpacity
+          style={[styles.cancelBtn, { borderColor: "#E53935" }, cancelling && { opacity: 0.6 }]}
+          activeOpacity={0.8}
+          disabled={cancelling}
+          onPress={async () => {
+            setCancelling(true);
+            await onCancel(order.id);
+            setCancelling(false);
+          }}
+        >
+          {cancelling ? (
+            <ActivityIndicator size="small" color="#E53935" />
+          ) : (
+            <Text style={styles.cancelBtnText}>{t("orders.cancel_order")}</Text>
+          )}
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => router.push(`/trackorder/trackOrderScreen?orderId=${order.id ?? (order as any)?._id ?? ''}`)}
@@ -220,6 +235,41 @@ export default function Orders() {
     }
   };
 
+  const handleCancelOrder = (orderId: string) => {
+    return new Promise<void>((resolve) => {
+      Alert.alert(
+        t("orders.cancel_order"),
+        t("orders.cancel_confirm_message"),
+        [
+          { text: t("common.no") || "No", style: "cancel", onPress: () => resolve() },
+          {
+            text: t("common.yes") || "Yes, cancel",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                const res = await cancelOrder(orderId);
+                if (res.success) {
+                  const { cancellationFee, refundAmount, isFreeCancellation } = res.data || {};
+                  const message = isFreeCancellation
+                    ? t("orders.cancel_success_free")
+                    : t("orders.cancel_success_fee", { fee: cancellationFee, refund: refundAmount });
+                  Alert.alert(t("orders.cancel_order"), message);
+                  await loadOrders();
+                } else {
+                  Alert.alert(t("orders.cancel_order"), res.message || t("orders.cancel_failed"));
+                }
+              } catch (error: any) {
+                Alert.alert(t("orders.cancel_order"), error?.message || t("orders.cancel_failed"));
+              } finally {
+                resolve();
+              }
+            },
+          },
+        ]
+      );
+    });
+  };
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background }}>
@@ -279,6 +329,7 @@ export default function Orders() {
                   cancelDeadline={item.cancellationDeadline}
                   theme={theme}
                   isDarkMode={isDarkMode}
+                  onCancel={handleCancelOrder}
                 />
               ))
             )
