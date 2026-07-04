@@ -15,7 +15,8 @@ export const handleSuccessfulLogin = async (token: string, role?: string) => {
     id: userData.id,
     name: userData.fullName,
     email: userData.email,
-    mobile: userData.mobile,
+    mobile: userData.mobile,       // Account.mobile — set via verified OTP flow
+    phone: userData.phone,         // Customer.phone — set via onboarding (unverified)
     role: role || userData.role,
   });
 };

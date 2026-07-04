@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -26,13 +26,31 @@ import i18n from "../../src/translations/i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FlatList } from "react-native";
 
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
+import axios from "axios";
+
+WebBrowser.maybeCompleteAuthSession();
+
+const AUTH0_DOMAIN = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
+const AUTH0_CLIENT_ID = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
+
+const redirectUri = AuthSession.makeRedirectUri({
+  scheme: "koraapp",
+  path: "callback",
+});
+
+const discovery = {
+  authorizationEndpoint: `https://${AUTH0_DOMAIN}/authorize`,
+  tokenEndpoint: `https://${AUTH0_DOMAIN}/oauth/token`,
+};
 
 const logoImage = require("../../assets/images/kora-logo.png");
 
 export default function EmailLoginScreen() {
   const { t } = useTranslation();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
-    const { theme ,isDarkMode} = useTheme();
+  const { theme, isDarkMode } = useTheme();
 
   const languages = [
     { code: "en", label: "English", nativeLabel: "English" },
@@ -41,7 +59,8 @@ export default function EmailLoginScreen() {
     { code: "gu", label: "ગુજરાતી", nativeLabel: "ગુજરાતી" },
   ];
 
-  const currentLanguageLabel = languages.find((l) => l.code === i18n.language)?.nativeLabel || "English";
+  const currentLanguageLabel =
+    languages.find((l) => l.code === i18n.language)?.nativeLabel || "English";
 
   const changeLanguage = async (langCode: string) => {
     await i18n.changeLanguage(langCode);
@@ -54,11 +73,85 @@ export default function EmailLoginScreen() {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // -----------------------------
+  // GOOGLE AUTH REQUEST (Auth0)
+  // -----------------------------
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: AUTH0_CLIENT_ID,
+      redirectUri,
+      responseType: "code",
+      usePKCE: true,
+      scopes: ["openid", "profile", "email"],
+      extraParams: {
+        connection: "google-oauth2",
+        prompt: "select_account",
+      },
+    },
+    discovery
+  );
+
+  // -----------------------------
+  // SAVE PKCE VERIFIER
+  // -----------------------------
+  useEffect(() => {
+  if (!request) return;
+
+  const saveVerifier = async () => {
+    if (request.codeVerifier) {
+      await AsyncStorage.setItem("auth0_code_verifier", request.codeVerifier);
+    }
+  };
+
+  saveVerifier();
+}, [request]);
+  // -----------------------------
+  // GOOGLE LOGIN BUTTON CLICK
+  // -----------------------------
+  const handleGoogleLogin = async () => {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      await promptAsync();
+    } catch (err) {
+      console.log("Google prompt error:", err);
+      setError(t("validation.google_login_failed") || "Google login failed. Please try again.");
+      setGoogleLoading(false);
+    }
+  };
+
+  // -----------------------------
+  // HANDLE GOOGLE AUTH RESPONSE
+  // -----------------------------
+  // NOTE: intentionally does nothing here. The redirect to
+  // koraapp://callback is handled exclusively by app/(auth)/callback.tsx —
+  // that's where the token exchange, backend call, and onboarding-vs-home
+  // decision happen. Having a second handler here used to race against
+  // callback.tsx (both reading/consuming the same one-time PKCE verifier
+  // and independently deciding where to navigate), which caused random
+  // "asks for mobile again" / "skips onboarding" behavior depending on
+  // which one won the race. Do not re-add exchange/navigation logic here.
+  useEffect(() => {
+    if (!response) return;
+    if (response.type !== "success") {
+      setGoogleLoading(false);
+    }
+    // On success, just wait — callback.tsx (triggered by the koraapp://callback
+    // deep link) takes it from here and will navigate when it's done.
+  }, [response]);
+
+  // -----------------------------
+  // EMAIL / MOBILE LOGIN
+  // -----------------------------
   const handleLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
-      setError(t("validation.enter_email_or_mobile_and_password") || "Email/mobile and password required");
+      setError(
+        t("validation.enter_email_or_mobile_and_password") ||
+          "Email/mobile and password required"
+      );
       return;
     }
 
@@ -70,7 +163,6 @@ export default function EmailLoginScreen() {
     };
 
     const normalizedIdentifier = normalizePhoneIfNeeded(identifier.trim());
-
 
     setLoading(true);
     setError("");
@@ -95,10 +187,10 @@ export default function EmailLoginScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-       <StatusBar
-              barStyle={isDarkMode ? "light-content" : "dark-content"}
-              backgroundColor={theme.background}
-            />
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={theme.background}
+      />
       <AppBackground>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -110,7 +202,6 @@ export default function EmailLoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Logo */}
             {/* Language Selector - Dropdown */}
             <View style={styles.languageRow}>
               <TouchableOpacity
@@ -124,8 +215,9 @@ export default function EmailLoginScreen() {
                 onPress={() => setShowLanguageDropdown(true)}
               >
                 <Ionicons name="language-outline" size={18} color={theme.primary} />
-                <Text style={[styles.languageBtnText, { color: theme.primary }]}
-                  >{currentLanguageLabel}</Text>
+                <Text style={[styles.languageBtnText, { color: theme.primary }]}>
+                  {currentLanguageLabel}
+                </Text>
                 <Ionicons name="chevron-down" size={16} color={theme.primary} />
               </TouchableOpacity>
             </View>
@@ -139,11 +231,8 @@ export default function EmailLoginScreen() {
               </Text>
             </View>
 
-
             {/* Title */}
-            <Text style={[styles.title, { color: theme.text }]}>
-              {t("auth.welcome_back")}
-            </Text>
+            <Text style={[styles.title, { color: theme.text }]}>{t("auth.welcome_back")}</Text>
             <Text style={[styles.subText, { color: theme.subText }]}>
               {t("auth.sign_in_continue")}
             </Text>
@@ -221,7 +310,7 @@ export default function EmailLoginScreen() {
             <TouchableOpacity
               style={styles.buttonWrapper}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={loading || googleLoading}
             >
               <LinearGradient
                 colors={[theme.primary, theme.secondary || theme.primary]}
@@ -255,13 +344,25 @@ export default function EmailLoginScreen() {
                   borderColor: theme.border || "#ddd",
                 },
               ]}
+              onPress={handleGoogleLogin}
+              disabled={googleLoading || loading || !request}
             >
-              <Text style={[styles.googleText, { color: theme.text }]}>
-                {t("auth.continue_google")}
-              </Text>
+              {googleLoading ? (
+                <ActivityIndicator color={theme.primary} />
+              ) : (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Ionicons
+                    name="logo-google"
+                    size={18}
+                    color={theme.text}
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={[styles.googleText, { color: theme.text }]}>
+                    {t("auth.continue_google")}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
-
-         
 
             {/* Sign Up Link */}
             <View style={styles.bottomContainer}>
@@ -273,10 +374,10 @@ export default function EmailLoginScreen() {
                 {t("auth.sign_up")}
               </Text>
             </View>
-            
           </ScrollView>
         </KeyboardAvoidingView>
       </AppBackground>
+
       <Modal
         visible={showLanguageDropdown}
         transparent={true}
@@ -317,7 +418,6 @@ export default function EmailLoginScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-
     </SafeAreaView>
   );
 }
@@ -344,7 +444,13 @@ const styles = StyleSheet.create({
   dividerContainer: { flexDirection: "row", alignItems: "center", marginVertical: 25 },
   line: { flex: 1, height: 1 },
   orText: { marginHorizontal: 10, fontSize: 12 },
-  googleBtn: { padding: 15, borderRadius: 14, borderWidth: 1, alignItems: "center" },
+  googleBtn: {
+    padding: 15,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   googleText: { fontWeight: "500" },
   phoneBtn: { marginTop: 20, padding: 15, alignItems: "center" },
   bottomContainer: { flexDirection: "row", justifyContent: "center", marginTop: 30 },
@@ -364,9 +470,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
     fontSize: 14,
     fontWeight: "500",
-    
   },
-   modalOverlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",

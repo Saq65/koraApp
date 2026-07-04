@@ -411,7 +411,7 @@ export default function SubcategoryScreen() {
       items: {
         "Bedding": [
           { key: "bedsheet", label: t("items.bedsheet"), icon: "bed-outline", lib: "ion" },
-          { key: "pillow_cover", label: t("items.pillow_cover"), icon: "pillow", lib: "mci" },
+          { key: "pillow_cover", label: t("items.pillow_cover"), icon: "bed-outline", lib: "ion" },
           { key: "blanket", label: t("items.blanket"), icon: "bed-outline", lib: "ion" },
           { key: "duvet", label: t("items.duvet"), icon: "bed-outline", lib: "ion" },
         ],
@@ -496,7 +496,6 @@ export default function SubcategoryScreen() {
 
       {/* Tabs */}
       <View>
-      // Tabs section replace karo — View ke andar ScrollView ki jagah
         <View style={styles.tabsContainer}>
           {data.tabKeys.map((key, idx) => {
             const active = key === activeTabKey;

@@ -18,6 +18,19 @@ export const getProfile = async () => {
 
 
 // ─────────────────────────────────────────────
+// SET INITIAL MOBILE (onboarding, unverified)
+// ─────────────────────────────────────────────
+export const setInitialMobile = async (payload: { mobile: string }) => {
+  const token = await getToken();
+  return apiClient(
+    "/customers/profile/set-initial-mobile",
+    "PUT",
+    payload,
+    token || undefined
+  );
+};
+
+// ─────────────────────────────────────────────
 // UPDATE PROFILE
 // ─────────────────────────────────────────────
 export const updateProfile = async (
