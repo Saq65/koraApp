@@ -32,10 +32,10 @@
     "invalid_otp": "अवैध किंवा एक्सपायर्ड OTP",
     "otp_maybe_sent": "ईमेल किंवा फोन नोंदणीकृत असल्यास, OTP पाठविला गेला आहे.",
     "create_new_password": "नवीन पासवर्ड तयार करा",
-"password_reset_description": "खाली तुमचा नवीन पासवर्ड टाका",
-"new_password": "नवीन पासवर्ड",
-"confirm_new_password": "नवीन पासवर्डची पुष्टी करा",
-"reset_password": "पासवर्ड रीसेट करा"
+    "password_reset_description": "खाली तुमचा नवीन पासवर्ड टाका",
+    "new_password": "नवीन पासवर्ड",
+    "confirm_new_password": "नवीन पासवर्डची पुष्टी करा",
+    "reset_password": "पासवर्ड रीसेट करा"
   },
   "validation": {
     "valid_phone": "कृपया 10 अंकी वैध फोन नंबर टाका",
@@ -48,12 +48,12 @@
     "fullname_required": "पूर्ण नाव आवश्यक आहे",
     "registration_failed": "नोंदणी अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
     "password_min_hint": "पासवर्ड किमान ६ अक्षरांचा असावा",
-"passwords_not_match": "पासवर्ड जुळत नाहीत",
-"reset_failed": "पासवर्ड रीसेट अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
-"password_reset_success": "पासवर्ड रीसेट यशस्वी!",
-"password_reset_success_description": "तुमचा पासवर्ड यशस्वीरित्या रीसेट झाला आहे. कृपया तुमच्या नवीन पासवर्डने लॉगिन करा.",
-"continue_signin": "साइन इन करण्यासाठी पुढे जा",
-"go_back": "वापस जाएं"
+    "passwords_not_match": "पासवर्ड जुळत नाहीत",
+    "reset_failed": "पासवर्ड रीसेट अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+    "password_reset_success": "पासवर्ड रीसेट यशस्वी!",
+    "password_reset_success_description": "तुमचा पासवर्ड यशस्वीरित्या रीसेट झाला आहे. कृपया तुमच्या नवीन पासवर्डने लॉगिन करा.",
+    "continue_signin": "साइन इन करण्यासाठी पुढे जा",
+    "go_back": "वापस जाएं"
   },
   "home": {
     "active_order": "सक्रिय ऑर्डर",
@@ -90,8 +90,7 @@
     "settings": "सेटिंग्ज",
     "settings_sub": "थीम, आवाज, परवानग्या",
     "logout": "लॉग आउट",
-      "raise-complaint": "तक्रार नोंदवा"
-
+    "raise-complaint": "तक्रार नोंदवा"
   },
   "services": {
     "laundry": "लॉन्ड्री",
@@ -143,11 +142,10 @@
     "piece": "नग",
     "guest": "पाहुणे",
     "loading": "लोड होत आहे...",
-     "permission_needed": "परवानगी आवश्यक",
+    "permission_needed": "परवानगी आवश्यक",
     "photo_permission_message": "फोटो जोडण्यासाठी आम्हाला आपल्या फोटो लायब्ररीमध्ये प्रवेश आवश्यक आहे.",
     "optional": "ऐच्छिक",
-    "yes": "होय",
-    "no": "नाही"
+    "continue": "पुढे चला"
   },
   "tabs": {
     "home": "होम",
@@ -247,11 +245,7 @@
     "live_tracking": "लाइव्ह ट्रॅकिंग",
     "free_cancellation": "मोफत रद्दीकरण उपलब्ध",
     "cancellation_closed": "रद्दीकरण विंडो बंद झाली",
-    "cancellation_mins_left": "मोफत रद्दीकरण — {{mins}} मिनिटे शिल्लक 2 तासांच्या विंडोत",
-    "cancel_confirm_message": "तुम्हाला खात्री आहे की तुम्ही हा ऑर्डर रद्द करू इच्छिता? मोफत 2 तासांची विंडो संपली असल्यास ₹50 शुल्क लागू होईल.",
-    "cancel_success_free": "तुमचा ऑर्डर मोफत रद्द करण्यात आला आहे. भरलेली रक्कम तुमच्या वॉलेटमध्ये परत केली जाईल.",
-    "cancel_success_fee": "ऑर्डर रद्द करण्यात आला. ₹{{fee}} विलंब शुल्क लागू करण्यात आले आणि ₹{{refund}} तुमच्या वॉलेटमध्ये जमा करण्यात आले आहे.",
-    "cancel_failed": "आम्ही हा ऑर्डर रद्द करू शकलो नाही. कृपया पुन्हा प्रयत्न करा किंवा सपोर्टशी संपर्क साधा."
+    "cancellation_mins_left": "मोफत रद्दीकरण — {{mins}} मिनिटे शिल्लक 2 तासांच्या विंडोत"
   },
   "cart": {
     "my_cart": "माझी कार्ट",
@@ -337,5 +331,20 @@
     "call": "कॉल करा",
     "email": "ईमेल",
     "whatsapp": "व्हॉट्सअॅप"
+  },
+  "terms": {
+    "title": "नियम व अटी",
+    "subtitle": "पुढे जाण्यापूर्वी कृपया वाचा",
+    "agreement_title": "तुमच्याशी आमचा करार",
+    "agree_checkbox_prefix": "मी वाचले असून मी सहमत आहे",
+    "agree_checkbox_terms": "नियम व अटी",
+    "agree_checkbox_and": "आणि",
+    "agree_checkbox_privacy": "गोपनीयता धोरण",
+    "agree_checkbox_suffix": "शी।",
+    "agree_button": "मी सहमत आहे व पुढे जा"
+  },
+  "onboarding": {
+    "mobile_title": "तुमचा मोबाइल नंबर टाका",
+    "mobile_subtitle": "आम्ही याचा वापर तुमच्या ऑर्डरची माहिती देण्यासाठी आणि डिलिव्हरी टीमला तुमच्यापर्यंत पोहोचण्यासाठी करू."
   }
 }

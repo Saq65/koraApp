@@ -6,13 +6,28 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://koraapp-backend.onrender.com/api",
+        "EXPO_PUBLIC_AUTH0_DOMAIN": "dev-yhb3xssuawesxfyk.us.auth0.com",
+        "EXPO_PUBLIC_AUTH0_CLIENT_ID": "ogrYMeb7inzwCle6cu6ymLoq2D74FimU"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://koraapp-backend.onrender.com/api",
+        "EXPO_PUBLIC_AUTH0_DOMAIN": "dev-yhb3xssuawesxfyk.us.auth0.com",
+        "EXPO_PUBLIC_AUTH0_CLIENT_ID": "ogrYMeb7inzwCle6cu6ymLoq2D74FimU"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://koraapp-backend.onrender.com/api",
+        "EXPO_PUBLIC_AUTH0_DOMAIN": "dev-yhb3xssuawesxfyk.us.auth0.com",
+        "EXPO_PUBLIC_AUTH0_CLIENT_ID": "ogrYMeb7inzwCle6cu6ymLoq2D74FimU"
+      }
     }
   },
   "submit": {

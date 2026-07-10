@@ -51,11 +51,12 @@ export default function Payment() {
   const [loading, setLoading] = useState(false);
   const pickupCoordinates = useAppSelector(selectPickupCoordinates);
   const dropoffCoordinates = useAppSelector(selectDropoffCoordinates);
-  const { pickupDay, timeSlot } = useLocalSearchParams<{
+  const { total, pickupDay, timeSlot } = useLocalSearchParams<{
     total: string;
     pickupDay: string;
     timeSlot: string;
   }>();
+  const totalAmount = Number(total) || 0;
 
   const handlePayment = async () => {
     try {
@@ -131,6 +132,21 @@ export default function Payment() {
           <View style={styles.card}>
             <View style={styles.upiHeader}>
               <View style={styles.upiIconWrap}>
+                <MaterialCommunityIcons name="cash-multiple" size={20} color="#fff" />
+              </View>
+              <View>
+                <Text style={styles.upiTitle}>Amount to Pay</Text>
+                <Text style={styles.upiSubtitle}>Includes tax, as shown on the previous screen</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 28, fontWeight: "800", color: TEXT_DARK, marginTop: 4 }}>
+              ₹{totalAmount}
+            </Text>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.upiHeader}>
+              <View style={styles.upiIconWrap}>
                 <MaterialCommunityIcons name="cellphone" size={20} color="#fff" />
               </View>
               <View>
@@ -182,7 +198,7 @@ export default function Payment() {
             ) : (
               <>
                 <MaterialCommunityIcons name="check-circle-outline" size={20} color="#fff" />
-                <Text style={styles.payBtnText}>Continue Payment</Text>
+                <Text style={styles.payBtnText}>Pay ₹{totalAmount}</Text>
               </>
             )}
           </TouchableOpacity>

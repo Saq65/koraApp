@@ -183,8 +183,17 @@ export default function RaiseComplaintScreen() {
 
     try {
       await submitComplaint(complaintData);
-      Alert.alert(t("complaint.success_title", "Success"), t("complaint.success_message", "Your complaint has been submitted. We will respond within 24 hours."));
-      router.back();
+      Alert.alert(
+        t("complaint.success_title", "Success"),
+        t("complaint.success_message", "Your complaint has been submitted. We will respond within 24 hours."),
+        [
+          { text: t("common.ok", "OK"), style: "cancel", onPress: () => router.back() },
+          {
+            text: "View My Complaints",
+            onPress: () => router.replace("/profile-page/myComplaintsScreen"),
+          },
+        ]
+      );
     } catch (err: any) {
       setError(err.message || t("complaint.submit_failed", "Submission failed. Please try again."));
     } finally {

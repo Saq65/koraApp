@@ -24,6 +24,10 @@ export default function Cart() {
   const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const subtotal = useAppSelector(selectCartTotal);
+  // Matches backend's tax calc exactly (orderController.js: subtotal * 0.05)
+  // so what the user sees here is what actually gets charged.
+  const tax = +(subtotal * 0.05).toFixed(2);
+  const total = +(subtotal + tax).toFixed(2);
 
   const handleIncrement = (item: CartItem) => {
     dispatch(addToCart({
@@ -140,10 +144,14 @@ export default function Cart() {
                     <Text style={styles.billLabel}>{t("cart.delivery")}</Text>
                     <Text style={styles.billFree}>{t("cart.free")}</Text>
                   </View>
+                  <View style={styles.billRow}>
+                    <Text style={styles.billLabel}>{t("cart.tax") || "Tax (5%)"}</Text>
+                    <Text style={styles.billValue}>₹{tax}</Text>
+                  </View>
                   <View style={styles.billDivider} />
                   <View style={styles.billRow}>
                     <Text style={styles.billTotal}>{t("cart.total")}</Text>
-                    <Text style={styles.billTotalValue}>₹{subtotal}</Text>
+                    <Text style={styles.billTotalValue}>₹{total}</Text>
                   </View>
                 </View>
               </ScrollView>

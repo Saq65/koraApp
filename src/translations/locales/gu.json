@@ -32,14 +32,14 @@
     "invalid_otp": "અમાન્ય અથવા સમય સમાપ્ત OTP",
     "otp_maybe_sent": "જો ઈમેઇલ અથવા ફોન રજિસ્ટર્ડ છે, તો OTP મોકલવામાં આવ્યો છે.",
     "create_new_password": "નવો પાસવર્ડ બનાવો",
-"password_reset_description": "નીચે તમારો નવો પાસવર્ડ દાખલ કરો",
-"new_password": "નવો પાસવર્ડ",
-"confirm_new_password": "નવા પાસવર્ડની પુષ્ટિ કરો",
-"reset_password": "પાસવર્ડ રીસેટ કરો",
-"password_reset_success": "પાસવર્ડ રીસેટ સફળ!",
-"password_reset_success_description": "તમારો પાસવર્ડ સફળતાપૂર્વક રીસેટ થઈ ગયો છે. કૃપા કરી તમારા નવા પાસવર્ડથી લૉગિન કરો.",
-"continue_signin": "સાઇન ઇન કરવા આગળ વધો",
-"go_back": "પાછા જાઓ"
+    "password_reset_description": "નીચે તમારો નવો પાસવર્ડ દાખલ કરો",
+    "new_password": "નવો પાસવર્ડ",
+    "confirm_new_password": "નવા પાસવર્ડની પુષ્ટિ કરો",
+    "reset_password": "પાસવર્ડ રીસેટ કરો",
+    "password_reset_success": "પાસવર્ડ રીસેટ સફળ!",
+    "password_reset_success_description": "તમારો પાસવર્ડ સફળતાપૂર્વક રીસેટ થઈ ગયો છે. કૃપા કરી તમારા નવા પાસવર્ડથી લૉગિન કરો.",
+    "continue_signin": "સાઇન ઇન કરવા આગળ વધો",
+    "go_back": "પાછા જાઓ"
   },
   "validation": {
     "valid_phone": "કૃપા કરી 10 અંકનો માન્ય ફોન નંબર દાખલ કરો",
@@ -52,8 +52,8 @@
     "fullname_required": "સંપૂર્ણ નામ આવશ્યક છે",
     "registration_failed": "રજિસ્ટ્રેશન નિષ્ફળ. કૃપા કરી ફરી પ્રયાસ કરો.",
     "password_min_hint": "પાસવર્ડ ઓછામાં ઓછો 6 અક્ષરોનો હોવો જોઈએ",
-"passwords_not_match": "પાસવર્ડ મેળ ખાતા નથી",
-"reset_failed": "પાસવર્ડ રીસેટ નિષ્ફળ. કૃપા કરી ફરી પ્રયાસ કરો."
+    "passwords_not_match": "પાસવર્ડ મેળ ખાતા નથી",
+    "reset_failed": "પાસવર્ડ રીસેટ નિષ્ફળ. કૃપા કરી ફરી પ્રયાસ કરો."
   },
   "home": {
     "active_order": "સક્રિય ઓર્ડર",
@@ -90,8 +90,7 @@
     "settings": "સેટિંગ્સ",
     "settings_sub": "થીમ, અવાજ, પરવાનગીઓ",
     "logout": "લૉગ આઉટ",
-      "raise-complaint": "ફરિયાદ નોંધાવો"
-
+    "raise-complaint": "ફરિયાદ નોંધાવો"
   },
   "services": {
     "laundry": "લોન્ડ્રી",
@@ -143,11 +142,10 @@
     "piece": "નંગ",
     "guest": "મહેમાન",
     "loading": "લોડ થઈ રહ્યું છે...",
-     "permission_needed": "પરવાનગી જરૂરી",
+    "permission_needed": "પરવાનગી જરૂરી",
     "photo_permission_message": "ફોટા જોડવા માટે અમને તમારી ફોટો લાઇબ્રેરીની ઍક્સેસ જોઈએ છે.",
     "optional": "વૈકલ્પિક",
-    "yes": "હા",
-    "no": "ના"
+    "continue": "ચાલુ રાખો"
   },
   "tabs": {
     "home": "હોમ",
@@ -247,11 +245,7 @@
     "live_tracking": "લાઇવ ટ્રેકિંગ",
     "free_cancellation": "મફત રદ્દ ઉપલબ્ધ છે",
     "cancellation_closed": "રદ્દ વિંડો બંધ થઈ ગઈ",
-    "cancellation_mins_left": "મફત રદ્દ — 2 કલાકની વિંડોમાં {{mins}} મિનિટ બાકી",
-    "cancel_confirm_message": "શું તમે ખરેખર આ ઓર્ડર રદ કરવા માંગો છો? જો મફત 2 કલાકની વિંડો પસાર થઈ ગઈ હોય તો ₹50 શુલ્ક લાગુ થશે.",
-    "cancel_success_free": "તમારો ઓર્ડર મફતમાં રદ કરવામાં આવ્યો છે. ચૂકવેલી રકમ તમારા વોલેટમાં પરત કરવામાં આવશે.",
-    "cancel_success_fee": "ઓર્ડર રદ કરવામાં આવ્યો. ₹{{fee}} મોડું શુલ્ક લાગુ કરવામાં આવ્યું અને ₹{{refund}} તમારા વોલેટમાં જમા કરવામાં આવ્યા છે.",
-    "cancel_failed": "અમે આ ઓર્ડર રદ કરી શક્યા નહીં. કૃપા કરીને ફરી પ્રયાસ કરો અથવા સપોર્ટનો સંપર્ક કરો."
+    "cancellation_mins_left": "મફત રદ્દ — 2 કલાકની વિંડોમાં {{mins}} મિનિટ બાકી"
   },
   "cart": {
     "my_cart": "મારી કાર્ટ",
@@ -306,7 +300,7 @@
     "allow_location_save": "વર્તમાન સ્થાન સાચવવા માટે સ્થાનની પરવાનગી આપો.",
     "error": "ભૂલ"
   },
-  "complaint":{
+  "complaint": {
     "title": "ફરિયાદ નોંધાવો",
     "info_text": "અમને જણાવો કે શું ખોટું થયું. અમારી ટીમ ૨૪ કલાકમાં જવાબ આપશે.",
     "category": "શ્રેણી",
@@ -337,5 +331,20 @@
     "call": "કૉલ કરો",
     "email": "ઇમેઇલ",
     "whatsapp": "વોટ્સએપ"
+  },
+  "terms": {
+    "title": "નિયમો અને શરતો",
+    "subtitle": "આગળ વધતા પહેલા કૃપા કરી વાંચો",
+    "agreement_title": "તમારી સાથેનો અમારો કરાર",
+    "agree_checkbox_prefix": "મેં વાંચ્યું છે અને હું સંમત છું",
+    "agree_checkbox_terms": "નિયમો અને શરતો",
+    "agree_checkbox_and": "અને",
+    "agree_checkbox_privacy": "ગોપનીયતા નીતિ",
+    "agree_checkbox_suffix": "સાથે.",
+    "agree_button": "હું સંમત છું અને આગળ વધો"
+  },
+  "onboarding": {
+    "mobile_title": "તમારો મોબાઇલ નંબર ઉમેરો",
+    "mobile_subtitle": "અમે તમારા ઓર્ડર વિશે અપડેટ રાખવા અને ડિલિવરી ટીમને તમારા સુધી પહોંચવામાં મદદ કરવા આનો ઉપયોગ કરીશું."
   }
 }

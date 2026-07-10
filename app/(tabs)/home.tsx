@@ -45,9 +45,9 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const BUTTON_HEIGHT = vs(56);
-  const BUTTON_BOTTOM = vs(16);
-  const bottomPad = BUTTON_HEIGHT + BUTTON_BOTTOM + vs(12);
+  // Reserve a small bottom padding so scroll content isn't flush against
+  // the tab bar (the floating "Book Pickup" button used to live here).
+  const bottomPad = vs(24);
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -291,19 +291,6 @@ export default function HomeScreen() {
             ))
           )}
         </ScrollView>
-
-        {/* FLOATING BOOK PICKUP BUTTON */}
-        <View style={[styles.bottomBar, { bottom: BUTTON_BOTTOM }]}>
-          <TouchableOpacity
-            onPress={() => router.push("/placeorder/placeorder")}
-            activeOpacity={0.88}
-          >
-            <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
-              <Ionicons name="car-outline" size={s(20)} color="#fff" />
-              <Text style={styles.pickupText}>{t("home.book_pickup")}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
 
         {drawerVisible && (
           <SideDrawer

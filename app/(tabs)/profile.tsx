@@ -213,6 +213,12 @@ export default function ProfileScreen() {
               onPress={()=>router.push("/profile-page/raiseComplaintScreen" as any)}
             />
             <MenuItem
+              icon="list-outline"
+              title={t("profile.my_complaints")}
+              subtitle={t("profile.my_complaints_sub")}
+              onPress={() => router.push("/profile-page/myComplaintsScreen" as any)}
+            />
+            <MenuItem
               icon="star-outline"
               title={t("profile.rate_us")}
               subtitle={t("profile.rate_us_sub")}

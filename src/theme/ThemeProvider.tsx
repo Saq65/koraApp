@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const THEME_STORAGE_KEY = "app-theme-mode";
 
 type ThemeType = "light" | "dark" | "custom";
 
@@ -41,11 +44,27 @@ const customTheme = {
 const ThemeContext = createContext<any>(null);
 
 export const ThemeProvider = ({ children }: any) => {
-  const [mode, setMode] = useState<ThemeType>("light");
+  const [mode, setModeState] = useState<ThemeType>("light");
+
+  // Load the saved theme once when the app starts, so it doesn't
+  // reset to light every time the app is reopened fresh.
+  useEffect(() => {
+    AsyncStorage.getItem(THEME_STORAGE_KEY).then((saved) => {
+      if (saved === "light" || saved === "dark" || saved === "custom") {
+        setModeState(saved);
+      }
+    });
+  }, []);
+
+  // Wrap setMode so any change (including via setMode directly) is persisted
+  const setMode = (next: ThemeType) => {
+    setModeState(next);
+    AsyncStorage.setItem(THEME_STORAGE_KEY, next).catch(() => {});
+  };
 
   // Helper to toggle between light and dark
   const toggleTheme = () => {
-    setMode(prev => (prev === "dark" ? "light" : "dark"));
+    setMode(mode === "dark" ? "light" : "dark");
   };
 
   const isDarkMode = mode === "dark";

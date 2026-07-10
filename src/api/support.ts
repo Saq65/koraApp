@@ -9,6 +9,12 @@ export const getComplaintCategories = async () => {
   return apiClient("/complaint-categories", "GET");
 };
 
+// Fetch the logged-in customer's own complaints (open + resolved + rejected).
+export const getMyComplaints = async () => {
+  const token = await getAuthToken();
+  return apiClient("/complaints/my", "GET", undefined, token ?? undefined);
+};
+
 export const submitComplaint = async (complaintData: {
   category: string;
   orderId?: string;

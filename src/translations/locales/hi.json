@@ -32,14 +32,14 @@
     "invalid_otp": "अमान्य या समाप्त हो चुका OTP",
     "otp_maybe_sent": "यदि ईमेल या फ़ोन पंजीकृत है, तो OTP भेज दिया गया है।",
     "create_new_password": "नया पासवर्ड बनाएँ",
-"password_reset_description": "अपना नया पासवर्ड नीचे दर्ज करें",
-"new_password": "नया पासवर्ड",
-"confirm_new_password": "नए पासवर्ड की पुष्टि करें",
-"reset_password": "पासवर्ड रीसेट करें",
-"password_reset_success": "पासवर्ड रीसेट सफल!",
-"password_reset_success_description": "आपका पासवर्ड सफलतापूर्वक रीसेट हो गया है। कृपया अपने नए पासवर्ड से लॉगिन करें।",
-"continue_signin": "साइन इन करने के लिए आगे बढ़ें",
-"go_back": "वापस जाएं"
+    "password_reset_description": "अपना नया पासवर्ड नीचे दर्ज करें",
+    "new_password": "नया पासवर्ड",
+    "confirm_new_password": "नए पासवर्ड की पुष्टि करें",
+    "reset_password": "पासवर्ड रीसेट करें",
+    "password_reset_success": "पासवर्ड रीसेट सफल!",
+    "password_reset_success_description": "आपका पासवर्ड सफलतापूर्वक रीसेट हो गया है। कृपया अपने नए पासवर्ड से लॉगिन करें।",
+    "continue_signin": "साइन इन करने के लिए आगे बढ़ें",
+    "go_back": "वापस जाएं"
   },
   "validation": {
     "valid_phone": "कृपया 10 अंकों का सही फ़ोन नंबर दर्ज करें",
@@ -52,8 +52,8 @@
     "fullname_required": "पूरा नाम आवश्यक है",
     "registration_failed": "पंजीकरण विफल। कृपया पुनः प्रयास करें।",
     "password_min_hint": "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए",
-"passwords_not_match": "पासवर्ड मेल नहीं खाते",
-"reset_failed": "पासवर्ड रीसेट विफल। कृपया पुनः प्रयास करें।"
+    "passwords_not_match": "पासवर्ड मेल नहीं खाते",
+    "reset_failed": "पासवर्ड रीसेट विफल। कृपया पुनः प्रयास करें।"
   },
   "home": {
     "active_order": "सक्रिय ऑर्डर",
@@ -90,7 +90,7 @@
     "settings": "सेटिंग्स",
     "settings_sub": "थीम, ध्वनि, अनुमतियां",
     "logout": "लॉग आउट",
-     "raise-complaint": "शिकायत दर्ज करें"
+    "raise-complaint": "शिकायत दर्ज करें"
   },
   "services": {
     "laundry": "लॉन्ड्री",
@@ -145,8 +145,7 @@
     "permission_needed": "अनुमति आवश्यक",
     "photo_permission_message": "फोटो संलग्न करने के लिए हमें आपकी फोटो लाइब्रेरी तक पहुंच चाहिए।",
     "optional": "वैकल्पिक",
-    "yes": "हाँ",
-    "no": "नहीं"
+    "continue": "जारी रखें"
   },
   "tabs": {
     "home": "होम",
@@ -246,11 +245,7 @@
     "live_tracking": "लाइव ट्रैकिंग",
     "free_cancellation": "मुफ्त रद्दीकरण उपलब्ध है",
     "cancellation_closed": "रद्दीकरण विंडो बंद हो गई",
-    "cancellation_mins_left": "मुफ्त रद्दीकरण — {{mins}} मिनट शेष 2 घंटे की विंडो में",
-    "cancel_confirm_message": "क्या आप वाकई इस ऑर्डर को रद्द करना चाहते हैं? यदि निःशुल्क 2 घंटे की अवधि बीत चुकी है तो ₹50 शुल्क लागू होगा।",
-    "cancel_success_free": "आपका ऑर्डर निःशुल्क रद्द कर दिया गया है। भुगतान की गई राशि आपके वॉलेट में वापस कर दी जाएगी।",
-    "cancel_success_fee": "ऑर्डर रद्द कर दिया गया। ₹{{fee}} देरी शुल्क लागू किया गया और ₹{{refund}} आपके वॉलेट में जमा कर दिया गया है।",
-    "cancel_failed": "हम इस ऑर्डर को रद्द नहीं कर सके। कृपया पुनः प्रयास करें या सहायता से संपर्क करें।"
+    "cancellation_mins_left": "मुफ्त रद्दीकरण — {{mins}} मिनट शेष 2 घंटे की विंडो में"
   },
   "cart": {
     "my_cart": "मेरी कार्ट",
@@ -336,5 +331,20 @@
     "call": "कॉल करें",
     "email": "ईमेल",
     "whatsapp": "व्हाट्सऐप"
+  },
+  "terms": {
+    "title": "नियम एवं शर्तें",
+    "subtitle": "आगे बढ़ने से पहले कृपया इन्हें पढ़ें",
+    "agreement_title": "आपके साथ हमारा समझौता",
+    "agree_checkbox_prefix": "मैंने पढ़ लिया है और सहमत हूँ",
+    "agree_checkbox_terms": "नियम एवं शर्तों",
+    "agree_checkbox_and": "और",
+    "agree_checkbox_privacy": "गोपनीयता नीति",
+    "agree_checkbox_suffix": "से।",
+    "agree_button": "मैं सहमत हूँ और आगे बढ़ें"
+  },
+  "onboarding": {
+    "mobile_title": "अपना मोबाइल नंबर जोड़ें",
+    "mobile_subtitle": "हम इसका उपयोग आपके ऑर्डर की जानकारी देने और डिलीवरी टीम को आप तक पहुँचने में मदद के लिए करेंगे।"
   }
 }

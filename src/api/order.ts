@@ -70,13 +70,15 @@ export const getOrderDetails = async (orderId: string) => {
   return apiClient(`/orders/${orderId}`, "GET", undefined, token || undefined);
 };
 
-
+// Cancel order via the dedicated, policy-enforced endpoint (Terms §8.1–8.5).
+// Handles the free-cancellation window, late fee, and refund automatically
+// server-side — response includes a breakdown you can show the user.
 export const cancelOrder = async (orderId: string) => {
   const token = await getToken();
   return apiClient(
-    `/orders/${orderId}/status`,
-    "PUT",
-    { status: "cancelled" },
+    `/orders/${orderId}/cancel`,
+    "POST",
+    undefined,
     token || undefined
   );
 };

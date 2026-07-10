@@ -30,6 +30,12 @@ export default function SupportScreen() {
       onPress: () => router.push("/profile-page/raiseComplaintScreen"),
     },
     {
+      icon: "list-outline",
+      label: "My Complaints",
+      subtitle: "Track the status of complaints you've raised",
+      onPress: () => router.push("/profile-page/myComplaintsScreen"),
+    },
+    {
       icon: "star-outline",
       label: "Rate Us",
       subtitle: "Tell us how we're doing",

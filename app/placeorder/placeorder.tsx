@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView,
   StyleSheet, StatusBar,
@@ -20,16 +20,31 @@ import { useTheme } from "../../src/theme/ThemeProvider";
 import AppBackground from "@/components/AppBackground";
 
 type PickupDay = string;
-type TimeSlot = "10:00 AM" | "2:00 PM" | "6:00 PM";
+type TimeSlot = "10:00 AM" | "6:00 PM";
 type LocationType = "pickup" | "dropoff";
 
-const TIME_SLOTS: TimeSlot[] = ["10:00 AM", "2:00 PM", "6:00 PM"];
+const TIME_SLOTS: TimeSlot[] = ["10:00 AM", "6:00 PM"];
 const SLOT_CUTOFF: Record<TimeSlot, number> = {
   "10:00 AM": 9,
-  "2:00 PM": 13,
   "6:00 PM": 17,
 };
 const DELIVERY_CHARGE = 0;
+
+// Local calendar-day key (YYYY-MM-DD) using the device's local time —
+// NOT toISOString(), which converts to UTC and silently rolls back to
+// "yesterday" between midnight and 5:30am IST.
+function toLocalDateKey(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Friendly labels shown to the user instead of raw clock times
+const SLOT_LABEL: Record<TimeSlot, string> = {
+  "10:00 AM": "Morning",
+  "6:00 PM": "Evening",
+};
 
 function generateDates(): { key: string; label: string }[] {
   const days = [];
@@ -37,7 +52,7 @@ function generateDates(): { key: string; label: string }[] {
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    const key = d.toISOString().split("T")[0];
+    const key = toLocalDateKey(d);
     let label: string;
     if (i === 0) label = "Today";
     else if (i === 1) label = "Tomorrow";
@@ -48,7 +63,7 @@ function generateDates(): { key: string; label: string }[] {
 }
 
 function isSlotDisabled(dateKey: string, slot: TimeSlot): boolean {
-  const todayKey = new Date().toISOString().split("T")[0];
+  const todayKey = toLocalDateKey(new Date());
   if (dateKey !== todayKey) return false;
   return new Date().getHours() >= SLOT_CUTOFF[slot];
 }
@@ -57,14 +72,14 @@ function isSlotDisabled(dateKey: string, slot: TimeSlot): boolean {
 function getSmartDefault(): { dateKey: string; slot: TimeSlot } {
   const now = new Date();
   const currentHour = now.getHours();
-  const todayKey = now.toISOString().split("T")[0];
+  const todayKey = toLocalDateKey(now);
 
   if (currentHour < 12) {
     return { dateKey: todayKey, slot: "6:00 PM" };
   } else {
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
-    const tomorrowKey = tomorrow.toISOString().split("T")[0];
+    const tomorrowKey = toLocalDateKey(tomorrow);
     return { dateKey: tomorrowKey, slot: "10:00 AM" };
   }
 }
@@ -124,12 +139,15 @@ const getLocationRowStyles = (theme: any) => StyleSheet.create({
   addressText: { fontSize: 11, flex: 1 },
 });
 
-const DATES = generateDates();
-const smartDefault = getSmartDefault();
-
 export default function PlaceOrder() {
   const { t } = useTranslation();
   const { theme, isDarkMode } = useTheme();
+
+  // Recomputed every time this screen mounts (not once per app session) —
+  // otherwise "today"/"tomorrow" and the smart default slot stay frozen
+  // at whatever time the app happened to first load.
+  const DATES = useMemo(() => generateDates(), []);
+  const smartDefault = useMemo(() => getSmartDefault(), []);
 
   const defaultDate = DATES[0].key;
 
@@ -147,7 +165,10 @@ export default function PlaceOrder() {
   const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const itemsTotal = useAppSelector(selectCartTotal);
-  const total = itemsTotal + DELIVERY_CHARGE;
+  // Matches backend's tax calc exactly (orderController.js: subtotal * 0.05)
+  // so what's shown here is what actually gets charged at order creation.
+  const tax = +(itemsTotal * 0.05).toFixed(2);
+  const total = +(itemsTotal + tax + DELIVERY_CHARGE).toFixed(2);
 
   const openLocationScreen = (type: LocationType) => {
     router.push({ pathname: "/PickupLocation/PickupLocation", params: { type } });
@@ -283,7 +304,7 @@ export default function PlaceOrder() {
                         ? styles.pillTextActive
                         : [styles.pillTextInactive, { color: theme.subText }],
                     ]}>
-                      {slot}
+                      {SLOT_LABEL[slot]}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -302,6 +323,10 @@ export default function PlaceOrder() {
             <View style={styles.billRow}>
               <Text style={[styles.billLabel, { color: theme.subText }]}>{t("place_order.delivery")}</Text>
               <Text style={[styles.billFree, { color: theme.primary }]}>{t("place_order.free")}</Text>
+            </View>
+            <View style={styles.billRow}>
+              <Text style={[styles.billLabel, { color: theme.subText }]}>{t("place_order.tax") || "Tax (5%)"}</Text>
+              <Text style={[styles.billValue, { color: theme.text }]}>₹{tax}</Text>
             </View>
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
             <View style={styles.billRow}>
