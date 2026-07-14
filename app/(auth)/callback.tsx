@@ -84,6 +84,11 @@ export default function Callback() {
         // to contact the customer. Send them to a short onboarding step to
         // collect it (unverified, just required) before letting them in.
         const cachedUser = await getUser();
+        // Clear the entire pre-login stack (welcome/language/login/
+        // email-login/callback screens) so back-navigation from home can't
+        // walk backward into them — this is what was causing back presses
+        // to eventually land back on the login screen after a Google login.
+        if (router.canDismiss()) router.dismissAll();
         if (!cachedUser?.mobile) {
           router.replace("/onboarding-mobile");
         } else {

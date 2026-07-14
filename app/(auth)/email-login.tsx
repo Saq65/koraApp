@@ -176,6 +176,9 @@ export default function EmailLoginScreen() {
       }
 
       await handleSuccessfulLogin(data.token, data.role);
+      // See login.tsx — clears index/welcome/login screens out of the stack
+      // so back-navigation from home can't return to them.
+      if (router.canDismiss()) router.dismissAll();
       router.replace("/(tabs)/home");
     } catch (err: any) {
       console.log("Login error:", err);

@@ -23,6 +23,7 @@ export default function Index() {
         } else if (!termsAccepted) {
           router.replace("/(onboarding)/terms");
         } else if (token) {
+          if (router.canDismiss()) router.dismissAll();
           router.replace("/(tabs)/home"); 
         } else {  
           router.replace("/(auth)/email-login");

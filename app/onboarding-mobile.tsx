@@ -46,6 +46,10 @@ export default function OnboardingMobileScreen() {
         await setUser({ ...cachedUser, mobile: savedMobile });
       }
 
+      // In case this screen is ever reached with other screens still
+      // beneath it in the stack (e.g. a future entry point), clear them
+      // out too — see login.tsx / callback.tsx for why this matters.
+      if (router.canDismiss()) router.dismissAll();
       router.replace("/(tabs)/home");
     } catch (err: any) {
       setError(err.message || t("validation.something_went_wrong") || "Something went wrong");

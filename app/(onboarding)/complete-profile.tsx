@@ -28,6 +28,9 @@ export default function CompleteProfileScreen() {
     const profileRes = await getProfile();
     const profile = profileRes?.data;
     if (profile?.mobile) {
+      // Clear the whole pre-login/onboarding stack so back-navigation from
+      // home can't walk backward into login/onboarding screens.
+      if (router.canDismiss()) router.dismissAll();
       router.replace("/(tabs)/home"); // ✅ go to home after completion
     }
   };
@@ -46,6 +49,7 @@ export default function CompleteProfileScreen() {
 
         // ✅ If already has mobile, skip to home
         if (profile?.mobile) {
+          if (router.canDismiss()) router.dismissAll();
           router.replace("/(tabs)/home");
           return;
         }

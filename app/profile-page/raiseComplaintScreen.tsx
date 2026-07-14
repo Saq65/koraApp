@@ -123,7 +123,7 @@ export default function RaiseComplaintScreen() {
     fetchCategories();
   }, []);
 
-  const handlePickImage = async () => {
+  const handlePickFromGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(t("common.permission_needed", "Permission needed"), t("common.photo_permission_message", "Please grant permission to access photos"));
@@ -131,6 +131,24 @@ export default function RaiseComplaintScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        t("common.permission_needed", "Permission needed"),
+        t("common.camera_permission_message", "Please grant permission to use the camera")
+      );
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       quality: 0.7,
     });
@@ -405,13 +423,39 @@ export default function RaiseComplaintScreen() {
                 {description.length}/1000
               </Text>
 
-              {/* Attach Photo */}
-              <TouchableOpacity style={styles.attachButton} onPress={handlePickImage}>
-                <Ionicons name="camera-outline" size={22} color={theme.primary} />
-                <Text style={[styles.attachButtonText, { color: theme.primary }]}>
-                  {t("complaint.attach_photo", "Attach Photo")}
-                </Text>
-              </TouchableOpacity>
+              {/* Attach Photo — two direct options, no popup */}
+              <Text style={[styles.attachLabel, { color: theme.text }]}>
+                {t("complaint.attach_photo", "Attach Photo")}
+              </Text>
+              <View style={styles.photoOptionsRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.photoOptionCard,
+                    { backgroundColor: theme.inputBg || theme.card, borderColor: theme.border || "#e0e0e0" },
+                  ]}
+                  onPress={handleTakePhoto}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="camera-outline" size={24} color={theme.primary} />
+                  <Text style={[styles.photoOptionText, { color: theme.text }]}>
+                    {t("complaint.take_photo", "Take Photo")}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.photoOptionCard,
+                    { backgroundColor: theme.inputBg || theme.card, borderColor: theme.border || "#e0e0e0" },
+                  ]}
+                  onPress={handlePickFromGallery}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="image-outline" size={24} color={theme.primary} />
+                  <Text style={[styles.photoOptionText, { color: theme.text }]}>
+                    {t("complaint.choose_from_gallery", "Upload Image")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
               {imageUri && (
                 <View style={styles.previewContainer}>
                   <Image source={{ uri: imageUri }} style={styles.previewImage} />
@@ -579,17 +623,32 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginTop: 6,
   },
-  attachButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  attachLabel: {
+    fontSize: 14,
+    fontWeight: "600",
     marginTop: 20,
-    marginBottom: 16,
-    alignSelf: "flex-start",
+    marginBottom: 10,
   },
-  attachButtonText: {
-    fontSize: 15,
-    fontWeight: "500",
-    marginLeft: 10,
+  photoOptionsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  photoOptionCard: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    gap: 8,
+  },
+  photoOptionText: {
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
   },
   previewContainer: {
     position: 'relative',

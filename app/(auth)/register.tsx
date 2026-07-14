@@ -211,6 +211,9 @@ export default function RegisterScreen() {
             await handleSuccessfulLogin(loginRes.token, loginRes.role);
 
             // 4. Navigate to main app
+            // Clear the whole pre-login stack (welcome/login/register/OTP
+            // screens) so back-navigation from home can't return to them.
+            if (router.canDismiss()) router.dismissAll();
             router.replace("/(tabs)/home");
         } catch (error: any) {
             setOtpError(error?.message || "Invalid OTP or login failed. Please try again.");
