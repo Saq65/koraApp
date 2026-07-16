@@ -71,7 +71,9 @@ const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncre
   <View style={[styles.serviceRow, { borderBottomColor: theme.border }]}>
     <View style={styles.serviceInfo}>
       <Text style={[styles.serviceLabel, { color: theme.text }]}>{label}</Text>
-      <Text style={[styles.servicePrice, { color: theme.subText }]}>₹{price}/{t("common.piece")}</Text>
+      <Text style={[styles.servicePrice, { color: theme.subText }]}>
+        ₹{price}/{t("common.piece")} <Text style={styles.gstTag}>({t("common.incl_gst", "Incl. GST")})</Text>
+      </Text>
     </View>
     {quantity === 0 ? (
       <TouchableOpacity style={[styles.addButton, { backgroundColor: theme.primaryLight }]} onPress={onIncrement}>
@@ -154,7 +156,9 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
               ))}
               {totalItems > 0 && (
                 <View style={[styles.summaryRow, { backgroundColor: theme.primaryLight }]}>
-                  <Text style={[styles.summaryText, { color: theme.primary }]}>{totalItems} items • ₹{totalPrice}</Text>
+                  <Text style={[styles.summaryText, { color: theme.primary }]}>
+                    {totalItems} items • ₹{totalPrice} <Text style={styles.gstTagOnPrimary}>({t("common.incl_gst", "Incl. GST")})</Text>
+                  </Text>
                 </View>
               )}
               <TouchableOpacity
@@ -262,6 +266,8 @@ const styles = StyleSheet.create({
   serviceInfo: { flexDirection: "column" },
   serviceLabel: { fontSize: rm(14), fontWeight: "600", color: C.ink, marginBottom: rv(2) },
   servicePrice: { fontSize: rm(12), color: C.inkLight },
+  gstTag: { fontSize: rm(10.5), fontStyle: "italic" },
+  gstTagOnPrimary: { fontSize: rm(10.5), fontStyle: "italic" },
   addButton: { backgroundColor: C.tealLight, paddingHorizontal: r(16), paddingVertical: rv(6), borderRadius: r(20) },
   addButtonText: { fontSize: rm(12), fontWeight: "700", color: C.tealDark },
   stepperRow: { flexDirection: "row", alignItems: "center", gap: r(12) },
@@ -557,7 +563,10 @@ export default function SubcategoryScreen() {
             <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: theme.primary }]} onPress={viewBasket} activeOpacity={0.85}>
               <View style={styles.ctaLeft}>
                 <Ionicons name="cart-outline" size={r(18)} color="#fff" />
-                <Text style={styles.ctaText}>{cartCount} {t("common.items")} • {t("common.total")} ₹{cartTotal}</Text>
+                <Text style={styles.ctaText}>
+                  {cartCount} {t("common.items")} • {t("common.total")} ₹{cartTotal}{" "}
+                  <Text style={styles.gstTagOnPrimary}>({t("common.incl_gst", "Incl. GST")})</Text>
+                </Text>
               </View>
               <View style={styles.ctaArrow}>
                 <Ionicons name="arrow-forward" size={r(15)} color="#fff" />

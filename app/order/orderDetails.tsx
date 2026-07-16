@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { router, useLocalSearchParams } from "expo-router";
-import { getOrderDetails } from "@/src/services/orderService";
+import { getOrderDetails } from "@/src/api/order";
 import AppBackground from "@/components/AppBackground";
 import { useTheme } from "../../src/theme/ThemeProvider";
 
@@ -265,8 +265,13 @@ export default function OrderDetailsScreen() {
     (async () => {
       try {
         setLoading(true);
+        setError(null);
         const res = await getOrderDetails(id);
-        setOrder(res);
+        if (res?.success) {
+          setOrder(res.data);
+        } else {
+          setError(res?.message ?? "Order not found");
+        }
       } catch (err: any) {
         setError(err?.message ?? "Something went wrong.");
       } finally {
@@ -368,13 +373,21 @@ export default function OrderDetailsScreen() {
 
           {/* ── Bill ── */}
           <Section title="Bill Summary" theme={theme}>
-            <Row label="Subtotal"  value={`₹${order.subtotal}`} theme={theme} />
-            <Row label="Tax (5%)"  value={`₹${order.tax}`}      theme={theme} />
+            <Row label="Item Total" value={`₹${order.subtotal}`} theme={theme} />
+            <Row
+              label="GST (included)"
+              value={`₹${order.tax}`}
+              valueStyle={{ color: theme.subText, fontStyle: "italic" }}
+              theme={theme}
+            />
             {order.discount > 0 && (
               <Row label="Discount" value={`-₹${order.discount}`} valueStyle={{ color: theme.primary }} theme={theme} />
             )}
             <View style={[gs.divider, { backgroundColor: theme.border }]} />
             <Row label="Total" value={`₹${order.totalAmount}`} valueStyle={{ fontSize: rm(16), fontWeight: "700", color: theme.text }} theme={theme} />
+            <Text style={{ fontSize: rm(11), color: theme.subText, marginTop: rv(6), fontStyle: "italic" }}>
+              Prices are inclusive of all taxes — no extra charges were added at checkout.
+            </Text>
           </Section>
 
           {/* ── Addresses ── */}
@@ -440,4 +453,3 @@ const getGlobalStyles = (theme: any) => StyleSheet.create({
   addressLabel: { fontSize: rm(11.5), fontWeight: "500", marginBottom: rv(2) },
   addressValue: { fontSize: rm(13), fontWeight: "400", lineHeight: rm(19) },
 });
-

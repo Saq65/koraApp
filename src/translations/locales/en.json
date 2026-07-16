@@ -46,14 +46,14 @@
     "send_otp_failed": "Failed to send OTP. Please try again.",
     "invalid_otp": "Invalid or expired OTP",
     "create_new_password": "Create New Password",
-    "password_reset_description": "Enter your new password below",
-    "new_password": "New Password",
-    "confirm_new_password": "Confirm New Password",
-    "reset_password": "Reset Password",
-    "password_reset_success": "Password Reset Successful!",
-    "password_reset_success_description": "Your password has been reset successfully. Please log in with your new password.",
-    "continue_signin": "Continue to Sign In",
-    "go_back": "Go Back"
+"password_reset_description": "Enter your new password below",
+"new_password": "New Password",
+"confirm_new_password": "Confirm New Password",
+"reset_password": "Reset Password",
+"password_reset_success": "Password Reset Successful!",
+"password_reset_success_description": "Your password has been reset successfully. Please log in with your new password.",
+"continue_signin": "Continue to Sign In",
+"go_back": "Go Back"
   },
   "validation": {
     "enter_email_or_mobile_and_password": "Email/mobile and password are required",
@@ -66,8 +66,8 @@
     "fullname_required": "Full name is required",
     "registration_failed": "Registration failed. Please try again.",
     "password_min_hint": "Password must be at least 6 characters",
-    "passwords_not_match": "Passwords do not match",
-    "reset_failed": "Password reset failed. Please try again."
+"passwords_not_match": "Passwords do not match",
+"reset_failed": "Password reset failed. Please try again."
   },
   "profile": {
     "orders": "Orders",
@@ -92,9 +92,10 @@
     "settings": "Settings",
     "settings_sub": "Theme, sound, permissions",
     "logout": "Logout",
-    "raise-complaint": "Raise a Complaint",
-    "my_complaints": "My Complaints",
-    "my_complaints_sub": "Track the status of complaints you've raised"
+      "raise-complaint": "Raise a Complaint",
+      "my_complaints": "My Complaints",
+      "my_complaints_sub": "Track the status of complaints you've raised"
+
   },
   "home": {
     "active_order": "ACTIVE ORDER",
@@ -143,13 +144,13 @@
     "linen": "Linen",
     "linen_desc": "Bedsheets, curtains, towels",
     "order_issue": "Order Issue",
-    "delivery_delay": "Delivery Delay",
-    "payment_problem": "Payment Problem",
-    "staff_behaviour": "Staff Behaviour",
-    "app_/_technical": "App / Technical",
-    "other": "Other",
-    "damaged_item": "Damaged Item",
-    "missing_item": "Missing Item"
+"delivery_delay": "Delivery Delay",
+"payment_problem": "Payment Problem",
+"staff_behaviour": "Staff Behaviour",
+"app_/_technical": "App / Technical",
+"other": "Other",
+"damaged_item": "Damaged Item",
+"missing_item": "Missing Item"
   },
   "subcategory": {
     "laundry_service": "Laundry Service",
@@ -164,14 +165,14 @@
     "total": "Total",
     "add_to_cart": "Add to Cart",
     "piece": "piece",
-    "guest": "Guest",
+    "incl_gst": "Incl. GST",
     "loading": "Loading...",
     "optional": "optional",
-    "permission_needed": "Permission Needed",
-    "photo_permission_message": "We need access to your photo library to attach images.",
-    "yes": "Yes",
-    "no": "No",
-    "continue": "Continue"
+  "permission_needed": "Permission Needed",
+  "photo_permission_message": "We need access to your photo library to attach images.",
+  "camera_permission_message": "We need access to your camera to take a photo.",
+  "yes": "Yes",
+  "no": "No"
   },
   "tabs": {
     "home": "Home",
@@ -255,11 +256,12 @@
     "tomorrow": "Tomorrow",
     "delivery": "Delivery",
     "free": "FREE",
+    "gst_included": "GST (included)",
+    "inclusive_of_taxes": "Prices shown are inclusive of all taxes — no extra charges at checkout",
     "terms_text": "I agree to the",
     "terms_link": "Terms & Conditions",
     "terms_suffix": "of KORA.care.",
-    "proceed_to_pay": "Proceed to Pay \u2022 \u20b9{{total}}",
-    "tax": "Tax (5%)"
+    "proceed_to_pay": "Proceed to Pay • ₹{{total}}"
   },
   "orders": {
     "my_services": "My Services",
@@ -272,10 +274,10 @@
     "live_tracking": "Live Tracking",
     "free_cancellation": "Free cancellation available",
     "cancellation_closed": "Cancellation window closed",
-    "cancellation_mins_left": "Free cancellation \u2014 {{mins}} mins left in 2hr window",
-    "cancel_confirm_message": "Are you sure you want to cancel this order? A \u20b950 fee applies if the free 2-hour window has passed.",
+    "cancellation_mins_left": "Free cancellation — {{mins}} mins left in 2hr window",
+    "cancel_confirm_message": "Are you sure you want to cancel this order? A 25 fee applies if the free 2-hour window has passed.",
     "cancel_success_free": "Your order was cancelled free of charge. Any amount paid will be refunded to your wallet.",
-    "cancel_success_fee": "Order cancelled. A \u20b9{{fee}} late cancellation fee was applied and \u20b9{{refund}} has been credited to your wallet.",
+    "cancel_success_fee": "Order cancelled. A ₹{{fee}} late cancellation fee was applied and ₹{{refund}} has been credited to your wallet.",
     "cancel_failed": "We couldn't cancel this order. Please try again or contact support."
   },
   "cart": {
@@ -287,9 +289,10 @@
     "delivery": "Delivery",
     "free": "FREE",
     "total": "Total",
+    "gst_included": "GST (included)",
+    "inclusive_of_taxes": "Prices shown are inclusive of all taxes — no extra charges at checkout",
     "place_order": "Place Order",
-    "qty": "Qty: {{count}}",
-    "tax": "Tax (5%)"
+    "qty": "Qty: {{count}}"
   },
   "location": {
     "pickup_location": "Pickup Location",
@@ -333,6 +336,27 @@
     "error": "Error"
   },
   "complaint": {
+  "title": "Raise a Complaint",
+  "info_text": "Tell us what went wrong. Our team responds within 24 hours.",
+  "category": "Category",
+  "order_id": "Order ID",
+  "order_id_placeholder": "e.g. #KOR2451",
+  "subject": "Subject",
+  "subject_placeholder": "Brief title for your issue",
+  "description": "Describe the issue",
+  "description_placeholder": "Please share details so we can help you faster...",
+  "attach_photo": "Attach photo",
+  "submit": "Submit Complaint",
+  "select_category": "Please select a category",
+  "select_order_issue_sub": "Please select a sub‑category for Order Issue",
+  "subject_required": "Subject is required",
+  "description_required": "Description is required",
+  "description_too_long": "Description cannot exceed 1000 characters",
+  "success_title": "Complaint Submitted",
+  "success_message": "Thank you for your feedback. Our team will respond within 24 hours.",
+  "submit_failed": "Failed to submit complaint. Please try again."
+},
+ "complaint": {
     "title": "Raise a Complaint",
     "info_text": "Tell us what went wrong. Our team responds within 24 hours.",
     "category": "Category",
@@ -343,9 +367,12 @@
     "description": "Describe the issue",
     "description_placeholder": "Please share details so we can help you faster...",
     "attach_photo": "Attach photo",
+    "attach_photo_prompt": "Choose how you'd like to add a photo",
+    "take_photo": "Take Photo",
+    "choose_from_gallery": "Upload Image",
     "submit": "Submit Complaint",
     "select_category": "Please select a category",
-    "select_order_issue_sub": "Please select a sub\u2011category for Order Issue",
+    "select_order_issue_sub": "Please select a sub‑category for Order Issue",
     "subject_required": "Subject is required",
     "description_required": "Description is required",
     "description_too_long": "Description cannot exceed 1000 characters",
@@ -363,20 +390,5 @@
     "call": "Call",
     "email": "Email",
     "whatsapp": "WhatsApp"
-  },
-  "terms": {
-    "title": "Terms & Conditions",
-    "subtitle": "Please review before continuing",
-    "agreement_title": "Our Agreement With You",
-    "agree_checkbox_prefix": "I have read and agree to the",
-    "agree_checkbox_terms": "Terms & Conditions",
-    "agree_checkbox_and": "and",
-    "agree_checkbox_privacy": "Privacy Policy",
-    "agree_checkbox_suffix": ".",
-    "agree_button": "I Agree & Continue"
-  },
-  "onboarding": {
-    "mobile_title": "Add your mobile number",
-    "mobile_subtitle": "We'll use this to keep you updated about your orders and let our delivery team reach you."
   }
 }

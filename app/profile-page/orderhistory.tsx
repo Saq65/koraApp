@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { getOrderHistory } from "@/src/services/orderService";
+import { getOrderHistory } from "@/src/api/order";
 
 // ─── Responsive helpers ────────────────────────────────────────
 const { width: W, height: H } = Dimensions.get("window");
@@ -196,8 +196,12 @@ export default function OrderHistory() {
       else setLoading(true);
       setError(null);
 
-      const data = await getOrderHistory();
-      setOrders(data.map(normaliseOrder));    // ← no .data needed
+      const res = await getOrderHistory();
+      if (res?.success) {
+        setOrders((res.data ?? []).map(normaliseOrder));
+      } else {
+        setError(res?.message ?? "Something went wrong. Please try again.");
+      }
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong. Please try again.");
     } finally {

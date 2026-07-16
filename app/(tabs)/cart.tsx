@@ -24,10 +24,10 @@ export default function Cart() {
   const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const subtotal = useAppSelector(selectCartTotal);
-  // Matches backend's tax calc exactly (orderController.js: subtotal * 0.05)
-  // so what the user sees here is what actually gets charged.
-  const tax = +(subtotal * 0.05).toFixed(2);
-  const total = +(subtotal + tax).toFixed(2);
+  // Prices are GST-inclusive — this is just the GST portion already baked
+  // into `subtotal` for display, matching the backend's calculation. It is
+  // NOT added on top; `subtotal` is exactly what gets charged.
+  const gstIncluded = +(subtotal - subtotal / 1.05).toFixed(2);
 
   const handleIncrement = (item: CartItem) => {
     dispatch(addToCart({
@@ -145,14 +145,17 @@ export default function Cart() {
                     <Text style={styles.billFree}>{t("cart.free")}</Text>
                   </View>
                   <View style={styles.billRow}>
-                    <Text style={styles.billLabel}>{t("cart.tax") || "Tax (5%)"}</Text>
-                    <Text style={styles.billValue}>₹{tax}</Text>
+                    <Text style={styles.billLabelMuted}>{t("cart.gst_included", "GST (included)")}</Text>
+                    <Text style={styles.billValueMuted}>₹{gstIncluded}</Text>
                   </View>
                   <View style={styles.billDivider} />
                   <View style={styles.billRow}>
                     <Text style={styles.billTotal}>{t("cart.total")}</Text>
-                    <Text style={styles.billTotalValue}>₹{total}</Text>
+                    <Text style={styles.billTotalValue}>₹{subtotal}</Text>
                   </View>
+                  <Text style={styles.inclusiveNote}>
+                    {t("cart.inclusive_of_taxes", "Prices shown are inclusive of all taxes — no extra charges at checkout")}
+                  </Text>
                 </View>
               </ScrollView>
 
@@ -230,8 +233,11 @@ const getStyles = (theme: any) =>
     billLabel: { fontSize: 13, color: theme.subText },
     billValue: { fontSize: 13, color: theme.text, fontWeight: "600" },
     billFree: { fontSize: 13, color: theme.primary, fontWeight: "700" },
+    billLabelMuted: { fontSize: 12, color: theme.subText, fontStyle: "italic" },
+    billValueMuted: { fontSize: 12, color: theme.subText, fontStyle: "italic" },
     billDivider: { height: 1, backgroundColor: theme.border },
     billTotal: { fontSize: 15, fontWeight: "800", color: theme.text },
+    inclusiveNote: { fontSize: 11.5, color: theme.subText, marginTop: 8, textAlign: "center" },
     billTotalValue: { fontSize: 15, fontWeight: "800", color: theme.text },
     footer: { paddingHorizontal: 16, paddingVertical: 12 },
     placeOrderBtn: {

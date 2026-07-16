@@ -165,10 +165,13 @@ export default function PlaceOrder() {
   const cartItems = useAppSelector(selectCartItems);
   const totalItems = useAppSelector(selectCartCount);
   const itemsTotal = useAppSelector(selectCartTotal);
-  // Matches backend's tax calc exactly (orderController.js: subtotal * 0.05)
-  // so what's shown here is what actually gets charged at order creation.
-  const tax = +(itemsTotal * 0.05).toFixed(2);
-  const total = +(itemsTotal + tax + DELIVERY_CHARGE).toFixed(2);
+  // Prices are GST-inclusive — this matches the backend's calculation
+  // (createOrder in orderController.js) exactly: `tax` is just the GST
+  // portion already baked into itemsTotal, shown for transparency in the
+  // breakdown below. It is NOT added on top — what's shown on the cart
+  // screen is exactly what gets charged here and at payment.
+  const tax = +(itemsTotal - itemsTotal / 1.05).toFixed(2);
+  const total = +(itemsTotal + DELIVERY_CHARGE).toFixed(2);
 
   const openLocationScreen = (type: LocationType) => {
     router.push({ pathname: "/PickupLocation/PickupLocation", params: { type } });
@@ -325,14 +328,20 @@ export default function PlaceOrder() {
               <Text style={[styles.billFree, { color: theme.primary }]}>{t("place_order.free")}</Text>
             </View>
             <View style={styles.billRow}>
-              <Text style={[styles.billLabel, { color: theme.subText }]}>{t("place_order.tax") || "Tax (5%)"}</Text>
-              <Text style={[styles.billValue, { color: theme.text }]}>₹{tax}</Text>
+              <Text style={[styles.billLabelMuted, { color: theme.subText }]}>
+                {t("place_order.gst_included") || "GST (included)"}
+              </Text>
+              <Text style={[styles.billValueMuted, { color: theme.subText }]}>₹{tax}</Text>
             </View>
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
             <View style={styles.billRow}>
               <Text style={[styles.billTotal, { color: theme.text }]}>{t("common.total")}</Text>
               <Text style={[styles.billTotal, { color: theme.text }]}>₹{total}</Text>
             </View>
+            <Text style={[styles.inclusiveNote, { color: theme.subText }]}>
+              {t("place_order.inclusive_of_taxes") ||
+                "Prices shown are inclusive of all taxes — no extra charges at checkout"}
+            </Text>
           </View>
 
         </ScrollView>
@@ -399,7 +408,10 @@ const getGlobalStyles = (theme: any) => StyleSheet.create({
   billLabel: { fontSize: 13 },
   billValue: { fontSize: 13, fontWeight: "600" },
   billFree: { fontSize: 13, fontWeight: "700" },
+  billLabelMuted: { fontSize: 12, fontStyle: "italic" },
+  billValueMuted: { fontSize: 12, fontStyle: "italic" },
   billTotal: { fontSize: 15, fontWeight: "800" },
+  inclusiveNote: { fontSize: 11, marginTop: 8, textAlign: "center", fontStyle: "italic" },
   footer: { paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1 },
   payBtn: {
     borderRadius: 30, paddingVertical: 15,
