@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { registerUser, verifyEmail, loginUser, resendVerificationOtp } from "../../src/api/auth";
 // import { loginWithGoogle } from "../../src/services/auth0";
 import { handleSuccessfulLogin } from "../../src/utils/authHelpers"; // static import
+import { registerForPushNotificationsAsync } from "../../src/utils/pushNotifications";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
@@ -209,6 +210,8 @@ export default function RegisterScreen() {
 
             // 3. Persist session & fetch user profile
             await handleSuccessfulLogin(loginRes.token, loginRes.role);
+            // See login.tsx — a fresh login needs its own push-registration call.
+            registerForPushNotificationsAsync();
 
             // 4. Navigate to main app
             // Clear the whole pre-login stack (welcome/login/register/OTP

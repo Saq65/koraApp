@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import LanguageSelector from "./LanguageSelector";
+import { useNotificationContext } from "../src/context/NotificationContext";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -13,6 +14,7 @@ function getGreeting() {
 
 export default function Header({ theme, onMenuPress, userName }: any) {
   const { text, emoji } = getGreeting();
+  const { unreadCount } = useNotificationContext();
 
   return (
     <View
@@ -47,6 +49,13 @@ export default function Header({ theme, onMenuPress, userName }: any) {
           style={styles.iconButton}
         >
           <Ionicons name="notifications-outline" size={22} color={theme.text} />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -78,6 +87,25 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 8,
     backgroundColor: "rgba(0,0,0,0.05)",
+  },
+  badge: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#E53935",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: "#fff",
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "800",
   },
   greeting: {
     fontSize: 13,

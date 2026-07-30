@@ -22,6 +22,7 @@ import { loginUser } from "../../src/api/auth";
 import AppBackground from "@/components/AppBackground";
 import { useTranslation } from "react-i18next";
 import { handleSuccessfulLogin } from "../../src/utils/authHelpers";
+import { registerForPushNotificationsAsync } from "../../src/utils/pushNotifications";
 import i18n from "../../src/translations/i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FlatList } from "react-native";
@@ -176,6 +177,8 @@ export default function EmailLoginScreen() {
       }
 
       await handleSuccessfulLogin(data.token, data.role);
+      // See login.tsx — a fresh login needs its own push-registration call.
+      registerForPushNotificationsAsync();
       // See login.tsx — clears index/welcome/login screens out of the stack
       // so back-navigation from home can't return to them.
       if (router.canDismiss()) router.dismissAll();

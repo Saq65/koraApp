@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "509159429016",
+    "project_id": "mymapapi-491207",
+    "storage_bucket": "mymapapi-491207.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509159429016:android:e32e781e92a15e900051ed",
+        "android_client_info": {
+          "package_name": "com.nikhilraj2908.koraApp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "509159429016-6ambim1dpjb9h3l1b4meffphuo4aiigb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDr0XdzreXDAihQgM4Rujx9ZxzZvkTUlM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "509159429016-6ambim1dpjb9h3l1b4meffphuo4aiigb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

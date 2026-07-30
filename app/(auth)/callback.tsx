@@ -6,6 +6,7 @@ import * as AuthSession from "expo-auth-session";
 import axios from "axios";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { handleSuccessfulLogin } from "../../src/utils/authHelpers";
+import { registerForPushNotificationsAsync } from "../../src/utils/pushNotifications";
 import { getUser } from "../../src/utils/storage";
 
 const AUTH0_DOMAIN = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -79,6 +80,8 @@ export default function Callback() {
         // Wait for the FULL profile (including name) to be saved before
         // navigating — this is what fixes the "Guest" name flash.
         await handleSuccessfulLogin(res.data.token, res.data.user?.role);
+        // See login.tsx — a fresh login needs its own push-registration call.
+        registerForPushNotificationsAsync();
 
         // Google accounts never have a mobile number yet — riders need one
         // to contact the customer. Send them to a short onboarding step to

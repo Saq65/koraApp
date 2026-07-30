@@ -46,14 +46,14 @@
     "send_otp_failed": "Failed to send OTP. Please try again.",
     "invalid_otp": "Invalid or expired OTP",
     "create_new_password": "Create New Password",
-"password_reset_description": "Enter your new password below",
-"new_password": "New Password",
-"confirm_new_password": "Confirm New Password",
-"reset_password": "Reset Password",
-"password_reset_success": "Password Reset Successful!",
-"password_reset_success_description": "Your password has been reset successfully. Please log in with your new password.",
-"continue_signin": "Continue to Sign In",
-"go_back": "Go Back"
+    "password_reset_description": "Enter your new password below",
+    "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
+    "reset_password": "Reset Password",
+    "password_reset_success": "Password Reset Successful!",
+    "password_reset_success_description": "Your password has been reset successfully. Please log in with your new password.",
+    "continue_signin": "Continue to Sign In",
+    "go_back": "Go Back"
   },
   "validation": {
     "enter_email_or_mobile_and_password": "Email/mobile and password are required",
@@ -66,8 +66,8 @@
     "fullname_required": "Full name is required",
     "registration_failed": "Registration failed. Please try again.",
     "password_min_hint": "Password must be at least 6 characters",
-"passwords_not_match": "Passwords do not match",
-"reset_failed": "Password reset failed. Please try again."
+    "passwords_not_match": "Passwords do not match",
+    "reset_failed": "Password reset failed. Please try again."
   },
   "profile": {
     "orders": "Orders",
@@ -92,10 +92,9 @@
     "settings": "Settings",
     "settings_sub": "Theme, sound, permissions",
     "logout": "Logout",
-      "raise-complaint": "Raise a Complaint",
-      "my_complaints": "My Complaints",
-      "my_complaints_sub": "Track the status of complaints you've raised"
-
+    "raise-complaint": "Raise a Complaint",
+    "my_complaints": "My Complaints",
+    "my_complaints_sub": "Track the status of complaints you've raised"
   },
   "home": {
     "active_order": "ACTIVE ORDER",
@@ -144,13 +143,13 @@
     "linen": "Linen",
     "linen_desc": "Bedsheets, curtains, towels",
     "order_issue": "Order Issue",
-"delivery_delay": "Delivery Delay",
-"payment_problem": "Payment Problem",
-"staff_behaviour": "Staff Behaviour",
-"app_/_technical": "App / Technical",
-"other": "Other",
-"damaged_item": "Damaged Item",
-"missing_item": "Missing Item"
+    "delivery_delay": "Delivery Delay",
+    "payment_problem": "Payment Problem",
+    "staff_behaviour": "Staff Behaviour",
+    "app_/_technical": "App / Technical",
+    "other": "Other",
+    "damaged_item": "Damaged Item",
+    "missing_item": "Missing Item"
   },
   "subcategory": {
     "laundry_service": "Laundry Service",
@@ -168,11 +167,12 @@
     "incl_gst": "Incl. GST",
     "loading": "Loading...",
     "optional": "optional",
-  "permission_needed": "Permission Needed",
-  "photo_permission_message": "We need access to your photo library to attach images.",
-  "camera_permission_message": "We need access to your camera to take a photo.",
-  "yes": "Yes",
-  "no": "No"
+    "permission_needed": "Permission Needed",
+    "photo_permission_message": "We need access to your photo library to attach images.",
+    "camera_permission_message": "We need access to your camera to take a photo.",
+    "yes": "Yes",
+    "no": "No",
+    "retry": "Retry"
   },
   "tabs": {
     "home": "Home",
@@ -336,27 +336,6 @@
     "error": "Error"
   },
   "complaint": {
-  "title": "Raise a Complaint",
-  "info_text": "Tell us what went wrong. Our team responds within 24 hours.",
-  "category": "Category",
-  "order_id": "Order ID",
-  "order_id_placeholder": "e.g. #KOR2451",
-  "subject": "Subject",
-  "subject_placeholder": "Brief title for your issue",
-  "description": "Describe the issue",
-  "description_placeholder": "Please share details so we can help you faster...",
-  "attach_photo": "Attach photo",
-  "submit": "Submit Complaint",
-  "select_category": "Please select a category",
-  "select_order_issue_sub": "Please select a sub‑category for Order Issue",
-  "subject_required": "Subject is required",
-  "description_required": "Description is required",
-  "description_too_long": "Description cannot exceed 1000 characters",
-  "success_title": "Complaint Submitted",
-  "success_message": "Thank you for your feedback. Our team will respond within 24 hours.",
-  "submit_failed": "Failed to submit complaint. Please try again."
-},
- "complaint": {
     "title": "Raise a Complaint",
     "info_text": "Tell us what went wrong. Our team responds within 24 hours.",
     "category": "Category",
@@ -390,5 +369,57 @@
     "call": "Call",
     "email": "Email",
     "whatsapp": "WhatsApp"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "new_updates": "new updates",
+    "mark_all_read": "Mark all read",
+    "no_notifications": "No notifications yet",
+    "no_notifications_desc": "Updates about your orders will show up here",
+    "today": "TODAY",
+    "yesterday": "YESTERDAY",
+    "earlier": "EARLIER",
+    "load_failed": "Couldn't load notifications",
+    "just_now": "Just now",
+    "minutes_ago_one": "{{count}} min ago",
+    "minutes_ago_other": "{{count}} mins ago",
+    "hours_ago_one": "{{count}} hour ago",
+    "hours_ago_other": "{{count}} hours ago",
+    "yesterday_at": "Yesterday, {{time}}",
+    "date_at": "{{date}}, {{time}}",
+    "types": {
+      "order_placed": {
+        "title": "Order Placed! 🎉",
+        "body": "Your order {{orderNumber}} has been placed successfully."
+      },
+      "order_accepted": {
+        "title": "Order Accepted",
+        "body": "Your order {{orderNumber}} has been accepted."
+      },
+      "order_picked_up": {
+        "title": "Order Picked Up",
+        "body": "Your order {{orderNumber}} has been picked up."
+      },
+      "order_at_sp": {
+        "title": "Order at Service Provider",
+        "body": "Your order {{orderNumber}} has reached the service provider."
+      },
+      "order_cleaned": {
+        "title": "Cleaning Completed",
+        "body": "Cleaning for your order {{orderNumber}} has been completed."
+      },
+      "order_out_for_delivery": {
+        "title": "Out for Delivery",
+        "body": "Your order {{orderNumber}} is out for delivery."
+      },
+      "order_delivered": {
+        "title": "Order Delivered",
+        "body": "Your order {{orderNumber}} has been delivered successfully."
+      },
+      "order_cancelled": {
+        "title": "Order Cancelled",
+        "body": "Your order {{orderNumber}} has been cancelled."
+      }
+    }
   }
 }

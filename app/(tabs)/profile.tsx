@@ -10,6 +10,7 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
 import { getProfile } from "../../src/services/customer";
+import { getNotificationPreference, updateNotificationPreference } from "../../src/api/notifications";
 import { responsiveFontSize } from "react-native-responsive-dimensions";
 import { useTranslation } from "react-i18next";
 
@@ -24,6 +25,39 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState<{ orders: number; wallet: number | string; rating: number }>({
     orders: 0, wallet: 100, rating: 0,
   });
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notifPrefLoading, setNotifPrefLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getNotificationPreference();
+        if (res?.success) {
+          setNotificationsEnabled(res.data?.notificationsEnabled !== false);
+        }
+      } catch {
+        // Silent — defaults to enabled; the toggle will just reflect the
+        // real value next time this screen is opened with a network.
+      }
+    })();
+  }, []);
+
+  const handleToggleNotifications = async (value: boolean) => {
+    setNotificationsEnabled(value); // optimistic
+    setNotifPrefLoading(true);
+    try {
+      const res = await updateNotificationPreference(value);
+      if (res?.success) {
+        setNotificationsEnabled(res.data?.notificationsEnabled !== false);
+      } else {
+        setNotificationsEnabled(!value); // revert on failure
+      }
+    } catch {
+      setNotificationsEnabled(!value); // revert on failure
+    } finally {
+      setNotifPrefLoading(false);
+    }
+  };
 
   const formatCurrency = (amount: number) => `₹${amount}`;
 
@@ -229,6 +263,26 @@ export default function ProfileScreen() {
               title={t("profile.notifications")}
               subtitle={t("profile.notifications_sub")}
               onPress={() => router.push("/notifications" as any)}
+            />
+            <MenuItem
+              icon="notifications-circle-outline"
+              title={t("profile.push_notifications", "Push Notifications")}
+              subtitle={t(
+                "profile.push_notifications_sub",
+                notificationsEnabled
+                  ? "Get alerted about order updates"
+                  : "You won't be alerted about order updates"
+              )}
+              rightElement={
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={handleToggleNotifications}
+                  disabled={notifPrefLoading}
+                  trackColor={{ false: "#767577", true: theme.primary }}
+                  thumbColor={notificationsEnabled ? "#fff" : "#f4f3f4"}
+                />
+              }
+              onPress={() => {}}
             />
             <MenuItem
               icon="language-outline"
