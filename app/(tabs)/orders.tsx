@@ -150,11 +150,11 @@ function ActiveOrderCard() {
           return (
             <View key={index} style={styles.timelineRow}>
               <View style={styles.timelineLeft}>
-                {step.completed ? (
-                  <View style={styles.dotCompleted}>
-                    <MaterialCommunityIcons name="check-circle" size={20} color={theme.primary} />
-                  </View>
-                ) : (
+              {step.completed ? (
+  <View style={styles.dotCompleted}>
+    <MaterialCommunityIcons name="check-circle" size={20} color={TEAL} />
+  </View>
+) : (
                   <View style={[
                     styles.dotEmpty,
                     isNextPending && styles.dotCurrent,
@@ -233,7 +233,7 @@ function OrderCard({ order }: { order: Order }) {
         </View>
         <Text style={styles.orderDate}>{order.date}</Text>
       </View>
-      <MaterialIcons name="chevron-right" size={22} color={theme.subText} />
+<MaterialIcons name="chevron-right" size={22} color={GRAY_TEXT} />
     </TouchableOpacity>
   );
 };
@@ -243,9 +243,8 @@ export default function Orders() {
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={["top"]}>
-      <AppBackground>
-        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -283,15 +282,13 @@ export default function Orders() {
       >
         {activeTab === "active" ? (
           <ActiveOrderCard />
+        ) : HISTORY_ORDERS.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <MaterialCommunityIcons name="package-variant" size={52} color={GRAY_TEXT} />
+            <Text style={styles.emptyText}>No orders found</Text>
+          </View>
         ) : (
-          HISTORY_ORDERS.length === 0 ? (
-            <View style={styles.emptyWrap}>
-              <MaterialCommunityIcons name="package-variant" size={52} color={GRAY_TEXT} />
-              <Text style={styles.emptyText}>No orders found</Text>
-            </View>
-          ) : (
-            HISTORY_ORDERS.map((order) => <OrderCard key={order.id} order={order} />)
-          )
+          HISTORY_ORDERS.map((order) => <OrderCard key={order.id} order={order} />)
         )}
       </ScrollView>
     </SafeAreaView>
