@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import LanguageSelector from "./LanguageSelector";
 
+
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
