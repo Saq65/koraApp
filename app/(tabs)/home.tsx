@@ -326,7 +326,7 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route, theme, 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f4f6f5" },
+  container: { flex: 1 },
   cardWrap: { paddingHorizontal: PH, marginTop: vs(8) },
   orderCard: {
     borderRadius: R, padding: s(18), flexDirection: "row",

@@ -24,39 +24,61 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import AppBackground from "@/components/AppBackground";
-
-/* Colors */
-const TEAL = "#1A6B5A";
-const TEAL_LIGHT = "#E8F4F1";
-const GRAY_LIGHT = "#EFEFEA";
-const GRAY_TEXT = "#ABABAB";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MID = "#666666";
+import { useTheme } from "@/src/theme/ThemeProvider";
 
 /* UPI options */
 const UPI_OPTIONS = [
-  { id: "gpay", label: "Google Pay", icon: "google", iconColor: "#4285F4", iconBg: "#E8F0FE" },
-  { id: "phonepe", label: "PhonePe", icon: "phone", iconColor: "#6739B7", iconBg: "#EDE7F6" },
-  { id: "paytm", label: "Paytm", icon: "wallet", iconColor: "#00BAF2", iconBg: "#E3F7FE" },
-  { id: "otherupi", label: "Other UPI", icon: "dots-grid", iconColor: GRAY_TEXT, iconBg: "#F0F0EA" },
+  {
+    id: "gpay",
+    label: "Google Pay",
+    icon: "google",
+    iconColor: "#4285F4",
+    iconBg: "#E8F0FE",
+  },
+  {
+    id: "phonepe",
+    label: "PhonePe",
+    icon: "phone",
+    iconColor: "#6739B7",
+    iconBg: "#EDE7F6",
+  },
+  {
+    id: "paytm",
+    label: "Paytm",
+    icon: "wallet",
+    iconColor: "#00BAF2",
+    iconBg: "#E3F7FE",
+  },
+  {
+    id: "otherupi",
+    label: "Other UPI",
+    icon: "dots-grid",
+    iconColor: "#9CA3AF",
+    iconBg: "#F0F0EA",
+  },
 ];
 
 export default function Payment() {
   const pickupAddress = useAppSelector(selectPickupAddress);
   const dropoffAddress = useAppSelector(selectDropoffAddress);
+  const pickupCoordinates = useAppSelector(selectPickupCoordinates);
+  const dropoffCoordinates = useAppSelector(selectDropoffCoordinates);
+
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector((state) => state.cart.items);
+
   const [selected, setSelected] = useState("gpay");
   const [upiId, setUpiId] = useState("");
   const [loading, setLoading] = useState(false);
-  const pickupCoordinates = useAppSelector(selectPickupCoordinates);
-  const dropoffCoordinates = useAppSelector(selectDropoffCoordinates);
+
   const { total, pickupDay, timeSlot } = useLocalSearchParams<{
     total: string;
     pickupDay: string;
     timeSlot: string;
   }>();
+
   const totalAmount = Number(total) || 0;
+  const { theme, isDarkMode } = useTheme();
 
   const handlePayment = async () => {
     try {
@@ -64,50 +86,68 @@ export default function Payment() {
         Alert.alert("Cart Empty", "Please add items first");
         return;
       }
+
       setLoading(true);
 
-      const formattedItems = cartItems.map(item => ({
+      const formattedItems = cartItems.map((item) => ({
         serviceId: item.serviceId,
         serviceName: item.serviceName,
         categoryName: item.categoryName,
         subCategoryName: item.subCategoryName,
         quantity: item.quantity,
         price: item.price,
-        totalPrice: item.price * item.quantity
+        totalPrice: item.price * item.quantity,
       }));
 
       const payload = {
         items: formattedItems,
+
         pickupAddress: {
           address: pickupAddress,
-          coordinates: pickupCoordinates,   // ✅ include (could be null)
+          coordinates: pickupCoordinates,
         },
+
         deliveryAddress: {
           address: dropoffAddress,
-          coordinates: dropoffCoordinates,  // ✅ include
+          coordinates: dropoffCoordinates,
         },
+
         paymentMethod: "upi" as const,
         selectedUpiApp: selected,
         paymentStatus: "success",
-        pickupDay: pickupDay ?? "",    // ← add
+        pickupDay: pickupDay ?? "",
         timeSlot: timeSlot ?? "",
       };
 
       console.log("ORDER PAYLOAD:", JSON.stringify(payload, null, 2));
+
       const response = await createOrder(payload);
+
       console.log("BACKEND RESPONSE:", response);
 
       if (response.success) {
         dispatch(clearCart());
-        console.log('[Payment] navigating with orderNumber:', response.data?.orderNumber);
+
+        console.log(
+          "[Payment] navigating with orderNumber:",
+          response.data?.orderNumber
+        );
+
         Alert.alert("Success", "Order placed successfully", [
           {
             text: "OK",
-            onPress: () => router.replace(`/paymentsucces?orderNumber=${response.data.orderNumber}`)
-          }
+            onPress: () =>
+              router.replace(
+                `/paymentsucces?orderNumber=${response.data.orderNumber}`
+              ),
+          },
         ]);
+      } else {
+        Alert.alert(
+          "Payment Failed",
+          response?.message || "Unable to place your order"
+        );
       }
-
     } catch (error) {
       console.log("PAYMENT ERROR:", error);
       Alert.alert("Error", "Failed to place order");
@@ -117,88 +157,378 @@ export default function Payment() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        {
+          backgroundColor: theme.background,
+        },
+      ]}
+    >
       <AppBackground>
-        <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
+
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={[
+              styles.backBtn,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={20} color={theme.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Payment</Text>
-          <View style={{ width: 36 }} />
+
+          <Text
+            style={[
+              styles.headerTitle,
+              {
+                color: theme.text,
+              },
+            ]}
+          >
+            Payment
+          </Text>
+
+          <View style={styles.headerPlaceholder} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.card}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Amount to Pay Card */}
+          <View
+            style={[
+              styles.card,
+              styles.amountCard,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
             <View style={styles.upiHeader}>
-              <View style={styles.upiIconWrap}>
-                <MaterialCommunityIcons name="cash-multiple" size={20} color="#fff" />
+              <View
+                style={[
+                  styles.upiIconWrap,
+                  {
+                    backgroundColor: theme.primary,
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="cash-multiple"
+                  size={21}
+                  color={theme.white}
+                />
               </View>
-              <View>
-                <Text style={styles.upiTitle}>Amount to Pay</Text>
-                <Text style={styles.upiSubtitle}>Includes tax, as shown on the previous screen</Text>
+
+              <View style={styles.headerTextContainer}>
+                <Text
+                  style={[
+                    styles.upiTitle,
+                    {
+                      color: theme.text,
+                    },
+                  ]}
+                >
+                  Amount to Pay
+                </Text>
+
+                <Text
+                  style={[
+                    styles.upiSubtitle,
+                    {
+                      color: theme.subText,
+                    },
+                  ]}
+                >
+                  Includes tax, as shown on the previous screen
+                </Text>
               </View>
             </View>
-            <Text style={{ fontSize: 28, fontWeight: "800", color: TEXT_DARK, marginTop: 4 }}>
-              ₹{totalAmount}
-            </Text>
+
+            <View style={styles.amountContainer}>
+              <Text
+                style={[
+                  styles.currencySymbol,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                ₹
+              </Text>
+
+              <Text
+                style={[
+                  styles.amountText,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                {totalAmount.toFixed(2)}
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.card}>
+          {/* UPI Payment Card */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
             <View style={styles.upiHeader}>
-              <View style={styles.upiIconWrap}>
-                <MaterialCommunityIcons name="cellphone" size={20} color="#fff" />
+              <View
+                style={[
+                  styles.upiIconWrap,
+                  {
+                    backgroundColor: theme.primary,
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="cellphone"
+                  size={21}
+                  color={theme.white}
+                />
               </View>
-              <View>
-                <Text style={styles.upiTitle}>Pay via UPI</Text>
-                <Text style={styles.upiSubtitle}>Fast & secure payment</Text>
+
+              <View style={styles.headerTextContainer}>
+                <Text
+                  style={[
+                    styles.upiTitle,
+                    {
+                      color: theme.text,
+                    },
+                  ]}
+                >
+                  Pay via UPI
+                </Text>
+
+                <Text
+                  style={[
+                    styles.upiSubtitle,
+                    {
+                      color: theme.subText,
+                    },
+                  ]}
+                >
+                  Fast & secure payment
+                </Text>
               </View>
             </View>
 
+            {/* UPI Options */}
             <View style={styles.grid}>
               {UPI_OPTIONS.map((opt) => {
                 const isActive = selected === opt.id;
+
                 return (
                   <TouchableOpacity
                     key={opt.id}
-                    style={[styles.gridItem, isActive && styles.gridItemActive]}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.gridItem,
+                      {
+                        borderColor: theme.border,
+                        backgroundColor: theme.card,
+                      },
+                      isActive && {
+                        borderColor: theme.primary,
+                        backgroundColor: theme.primaryLight,
+                      },
+                    ]}
                     onPress={() => setSelected(opt.id)}
                   >
-                    <View style={[styles.gridIcon, { backgroundColor: opt.iconBg }]}>
-                      <MaterialCommunityIcons name={opt.icon} size={18} color={opt.iconColor} />
+                    <View
+                      style={[
+                        styles.gridIcon,
+                        {
+                          backgroundColor: opt.iconBg,
+                        },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name={opt.icon}
+                        size={18}
+                        color={opt.iconColor}
+                      />
                     </View>
-                    <Text style={[styles.gridLabel, isActive && styles.gridLabelActive]}>{opt.label}</Text>
+
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        styles.gridLabel,
+                        {
+                          color: theme.text,
+                        },
+                        isActive && {
+                          color: theme.primary,
+                        },
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+
+                    {isActive && (
+                      <MaterialCommunityIcons
+                        name="check-circle"
+                        size={17}
+                        color={theme.primary}
+                        style={styles.selectedIcon}
+                      />
+                    )}
                   </TouchableOpacity>
                 );
               })}
             </View>
 
-            <Text style={styles.orText}>Or enter UPI ID</Text>
-            <View style={styles.inputWrap}>
-              <TextInput
-                style={styles.input}
-                placeholder="yourname@upi"
-                placeholderTextColor={GRAY_TEXT}
-                value={upiId}
-                onChangeText={setUpiId}
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View
+                style={[
+                  styles.dividerLine,
+                  {
+                    backgroundColor: theme.border,
+                  },
+                ]}
+              />
+
+              <Text
+                style={[
+                  styles.orText,
+                  {
+                    color: theme.subText,
+                    backgroundColor: theme.card,
+                  },
+                ]}
+              >
+                Or enter UPI ID
+              </Text>
+
+              <View
+                style={[
+                  styles.dividerLine,
+                  {
+                    backgroundColor: theme.border,
+                  },
+                ]}
               />
             </View>
 
+            {/* UPI Input */}
+            <View
+              style={[
+                styles.inputWrap,
+                {
+                  borderColor: theme.border,
+                  backgroundColor: theme.background,
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="at"
+                size={20}
+                color={theme.subText}
+              />
+
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+                placeholder="yourname@upi"
+                placeholderTextColor={theme.subText}
+                value={upiId}
+                onChangeText={setUpiId}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+              />
+            </View>
+
+            {/* Security Message */}
             <View style={styles.secureRow}>
-              <MaterialCommunityIcons name="shield-check-outline" size={14} color={TEAL} />
-              <Text style={styles.secureText}>Secured by 256-bit encryption</Text>
+              <MaterialCommunityIcons
+                name="shield-check-outline"
+                size={16}
+                color={theme.primary}
+              />
+
+              <Text
+                style={[
+                  styles.secureText,
+                  {
+                    color: theme.subText,
+                  },
+                ]}
+              >
+                Secured by 256-bit encryption
+              </Text>
             </View>
           </View>
         </ScrollView>
 
-        <View style={styles.footer}>
-          <TouchableOpacity onPress={handlePayment} style={styles.payBtn} disabled={loading}>
+        {/* Footer */}
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: theme.background,
+              borderTopColor: theme.border,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handlePayment}
+            style={[
+              styles.payBtn,
+              {
+                backgroundColor: theme.primary,
+              },
+              loading && styles.disabledButton,
+            ]}
+            disabled={loading}
+          >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator size="small" color={theme.white} />
             ) : (
               <>
-                <MaterialCommunityIcons name="check-circle-outline" size={20} color="#fff" />
-                <Text style={styles.payBtnText}>Pay ₹{totalAmount}</Text>
+                <MaterialCommunityIcons
+                  name="check-circle-outline"
+                  size={21}
+                  color={theme.white}
+                />
+
+                <Text
+                  style={[
+                    styles.payBtnText,
+                    {
+                      color: theme.white,
+                    },
+                  ]}
+                >
+                  Pay ₹{totalAmount.toFixed(2)}
+                </Text>
               </>
             )}
           </TouchableOpacity>
@@ -208,25 +538,25 @@ export default function Payment() {
   );
 }
 
-// ... styles remain exactly the same as you had ...
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: GRAY_LIGHT,
   },
 
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 10,
   },
 
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#fff",
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -236,121 +566,204 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
+  headerPlaceholder: {
+    width: 38,
+  },
+
   scrollContent: {
-    padding: 16,
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 24,
   },
 
   card: {
-    backgroundColor: "#fff",
+    width: "100%",
     borderRadius: 20,
+    borderWidth: 1,
     padding: 16,
-    gap: 16,
+  },
+
+  /*
+   * Creates proper spacing between the Amount card
+   * and the UPI payment card.
+   */
+  amountCard: {
+    marginBottom: 20,
   },
 
   upiHeader: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
   },
 
   upiIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: TEAL,
+    width: 44,
+    height: 44,
+    borderRadius: 13,
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 0,
+    marginRight: 12,
+  },
+
+  /*
+   * flex: 1 and minWidth: 0 keep long text
+   * inside the available width.
+   */
+  headerTextContainer: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
   },
 
   upiTitle: {
+    fontSize: 16,
     fontWeight: "700",
-    fontSize: 15,
+    lineHeight: 21,
   },
 
   upiSubtitle: {
-    color: GRAY_TEXT,
+    width: "100%",
+    marginTop: 3,
+    fontSize: 12,
+    lineHeight: 17,
+    flexShrink: 1,
+  },
+
+  amountContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 18,
+  },
+
+  currencySymbol: {
+    fontSize: 22,
+    fontWeight: "700",
+    lineHeight: 34,
+    marginRight: 2,
+  },
+
+  amountText: {
+    fontSize: 30,
+    fontWeight: "800",
+    lineHeight: 36,
   },
 
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    justifyContent: "space-between",
+    marginTop: 20,
+    rowGap: 12,
   },
 
   gridItem: {
-    width: "47%",
+    width: "48.3%",
+    minHeight: 58,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    padding: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 11,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 12,
-  },
-
-  gridItemActive: {
-    borderColor: TEAL,
-    backgroundColor: TEAL_LIGHT,
+    borderRadius: 13,
   },
 
   gridIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 34,
+    height: 34,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 0,
+    marginRight: 8,
   },
 
   gridLabel: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 13,
     fontWeight: "600",
   },
 
-  gridLabelActive: {
-    color: TEAL,
+  selectedIcon: {
+    marginLeft: 4,
+  },
+
+  dividerRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 22,
+    marginBottom: 16,
+  },
+
+  dividerLine: {
+    flex: 1,
+    height: 1,
   },
 
   orText: {
-    color: TEXT_MID,
+    paddingHorizontal: 10,
+    fontSize: 12,
+    fontWeight: "500",
   },
 
   inputWrap: {
+    width: "100%",
+    minHeight: 52,
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 13,
+    paddingHorizontal: 14,
   },
 
   input: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 9,
+    paddingVertical: 13,
     fontSize: 14,
   },
 
   secureRow: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 5,
+    alignItems: "center",
+    marginTop: 14,
   },
 
   secureText: {
+    marginLeft: 6,
     fontSize: 12,
-    color: TEXT_MID,
+    lineHeight: 17,
   },
 
   footer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
 
   payBtn: {
-    backgroundColor: TEAL,
-    padding: 15,
-    borderRadius: 30,
+    minHeight: 54,
+    borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
-    gap: 8,
+    paddingHorizontal: 20,
   },
 
   payBtnText: {
-    color: "#fff",
+    marginLeft: 8,
+    fontSize: 16,
     fontWeight: "700",
+  },
+
+  disabledButton: {
+    opacity: 0.65,
   },
 });

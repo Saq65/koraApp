@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTheme } from '@/src/theme/ThemeProvider'
 import { getOrderHistory } from "@/src/api/order";
 
 // ─── Responsive helpers ────────────────────────────────────────
@@ -74,22 +75,23 @@ function normaliseOrder(raw: any): Order {
 
 // ─── Status badge ──────────────────────────────────────────────
 function StatusBadge({ status }: { status: OrderStatus }) {
+  const { theme } = useTheme()
   const cfg: Record<OrderStatus, { bg: string; text: string; icon: any; iconColor: string }> = {
     "Delivered": {
-      bg: C.tealLight, text: C.tealDark,
-      icon: "checkmark-circle-outline", iconColor: C.teal,
+      bg: theme.primaryLight, text: theme.primary,
+      icon: "checkmark-circle-outline", iconColor: theme.primary,
     },
     "Cancelled": {
-      bg: C.redLight, text: C.red,
-      icon: "close-circle-outline", iconColor: C.red,
+      bg: theme.card, text: theme.subText,
+      icon: "close-circle-outline", iconColor: theme.secondary ?? theme.primary,
     },
     "Processing": {
-      bg: "#fef3c7", text: "#92400e",
-      icon: "time-outline", iconColor: "#d97706",
+      bg: theme.card, text: theme.subText,
+      icon: "time-outline", iconColor: theme.primary,
     },
     "Out for Delivery": {
-      bg: "#e0eaff", text: "#1e3a8a",
-      icon: "bicycle-outline", iconColor: "#3b5bdb",
+      bg: theme.card, text: theme.subText,
+      icon: "bicycle-outline", iconColor: theme.primary,
     },
   };
 
@@ -120,20 +122,21 @@ const badgeStyles = StyleSheet.create({
 
 // ─── Skeleton card ─────────────────────────────────────────────
 function SkeletonCard() {
+  const { theme } = useTheme()
   return (
-    <View style={[styles.card, { gap: rv(12) }]}>
+    <View style={[styles.card, { gap: rv(12), backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.border }]}>
       <View style={styles.cardTop}>
-        <View style={[styles.iconCircle, { backgroundColor: C.skeletonBase }]} />
+        <View style={[styles.iconCircle, { backgroundColor: theme.primaryLight, borderColor: theme.primary }]} />
         <View style={{ flex: 1, gap: rv(6) }}>
-          <View style={[skeletonStyles.line, { width: "45%", height: rv(13) }]} />
-          <View style={[skeletonStyles.line, { width: "30%", height: rv(11) }]} />
+          <View style={[skeletonStyles.line, { width: "45%", height: rv(13), backgroundColor: theme.border }]} />
+          <View style={[skeletonStyles.line, { width: "30%", height: rv(11), backgroundColor: theme.border }]} />
         </View>
-        <View style={[skeletonStyles.line, { width: r(72), height: rv(24), borderRadius: r(20) }]} />
+        <View style={[skeletonStyles.line, { width: r(72), height: rv(24), borderRadius: r(20), backgroundColor: theme.border }]} />
       </View>
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: theme.border }]} />
       <View style={[styles.cardBottom]}>
-        <View style={[skeletonStyles.line, { width: "40%", height: rv(12) }]} />
-        <View style={[skeletonStyles.line, { width: r(52), height: rv(16) }]} />
+        <View style={[skeletonStyles.line, { width: "40%", height: rv(12), backgroundColor: theme.border }]} />
+        <View style={[skeletonStyles.line, { width: r(52), height: rv(16), backgroundColor: theme.border }]} />
       </View>
     </View>
   );
@@ -148,36 +151,37 @@ const skeletonStyles = StyleSheet.create({
 
 // ─── Order Card ────────────────────────────────────────────────
 function OrderCard({ order }: { order: Order }) {
+  const { theme } = useTheme()
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.border }]}
       activeOpacity={0.75}
       onPress={() => router.push(`/order/orderDetails?id=${order.id}`)}
     >
       <View style={styles.cardTop}>
-        <View style={styles.iconCircle}>
+        <View style={[styles.iconCircle, { backgroundColor: theme.primaryLight, borderColor: theme.primary }]}> 
           <MaterialCommunityIcons
             name="package-variant-closed"
             size={r(20)}
-            color={C.teal}
+            color={theme.primary}
           />
         </View>
 
         <View style={styles.orderMeta}>
-          <Text style={styles.orderId}>{order.orderId}</Text>
-          <Text style={styles.orderDate}>{order.date}</Text>
+          <Text style={[styles.orderId, { color: theme.text }]}>{order.orderId}</Text>
+          <Text style={[styles.orderDate, { color: theme.subText }]}>{order.date}</Text>
         </View>
 
         <StatusBadge status={order.status} />
       </View>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
       <View style={styles.cardBottom}>
-        <Text style={styles.services}>
+        <Text style={[styles.services, { color: theme.subText }]}> 
           {order.services} • {order.itemCount} items
         </Text>
-        <Text style={styles.amount}>₹{order.amount}</Text>
+        <Text style={[styles.amount, { color: theme.text }]}>₹{order.amount}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -185,6 +189,7 @@ function OrderCard({ order }: { order: Order }) {
 
 // ─── Main screen ───────────────────────────────────────────────
 export default function OrderHistory() {
+  const { theme, isDarkMode } = useTheme()
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -220,36 +225,36 @@ export default function OrderHistory() {
 
     if (error) {
       return (
-        <View style={styles.emptyState}>
-          <View style={[styles.emptyIcon, { backgroundColor: C.redLight, borderColor: "#f5c6c4" }]}>
-            <Ionicons name="alert-circle-outline" size={r(36)} color={C.red} />
-          </View>
-          <Text style={styles.emptyTitle}>Couldn't load orders</Text>
-          <Text style={styles.emptySubtitle}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={() => fetchOrders()}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="refresh-outline" size={r(15)} color={C.surface} style={{ marginRight: r(5) }} />
-            <Text style={styles.retryText}>Try again</Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.emptyState}>
+              <View style={[styles.emptyIcon, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <Ionicons name="alert-circle-outline" size={r(36)} color={theme.subText} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>Couldn't load orders</Text>
+              <Text style={[styles.emptySubtitle, { color: theme.subText }]}>{error}</Text>
+              <TouchableOpacity
+                style={[styles.retryBtn, { backgroundColor: theme.primary }]}
+                onPress={() => fetchOrders()}
+                activeOpacity={0.75}
+              >
+                <Ionicons name="refresh-outline" size={r(15)} color={theme.white} style={{ marginRight: r(5) }} />
+                <Text style={[styles.retryText, { color: theme.white }]}>Try again</Text>
+              </TouchableOpacity>
+            </View>
       );
     }
 
     if (orders.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <View style={styles.emptyIcon}>
+          <View style={[styles.emptyIcon, { backgroundColor: theme.primaryLight, borderColor: theme.primary }]}>
             <MaterialCommunityIcons
               name="package-variant-closed"
               size={r(40)}
-              color={C.teal}
+              color={theme.primary}
             />
           </View>
-          <Text style={styles.emptyTitle}>No orders yet</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>No orders yet</Text>
+          <Text style={[styles.emptySubtitle, { color: theme.subText }]}> 
             Your order history will appear here
           </Text>
         </View>
@@ -260,19 +265,19 @@ export default function OrderHistory() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={["top", "left", "right"]}>
       {/* ── HEADER ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: theme.border }]}> 
         <TouchableOpacity
-          style={styles.backBtn}
+          style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.border }]}
           onPress={() => router.back()}
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="arrow-back" size={r(20)} color={C.ink} />
+          <Ionicons name="arrow-back" size={r(20)} color={theme.text} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Order History</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Order History</Text>
         <View style={{ width: r(36) }} />
       </View>
 
@@ -284,8 +289,8 @@ export default function OrderHistory() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => fetchOrders(true)}
-            tintColor={C.teal}
-            colors={[C.teal]}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
           />
         }
       >

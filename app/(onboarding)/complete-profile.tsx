@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "../../src/theme/ThemeProvider";
 import { getProfile } from "../../src/services/customer";
 import { apiClient } from "../../src/api/client";
 
@@ -15,6 +16,7 @@ const normalizeIndianPhone = (rawPhone: string): string => {
 };
 
 export default function CompleteProfileScreen() {
+  const { theme, isDarkMode } = useTheme();
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingMobile, setSavingMobile] = useState(false);
 
@@ -129,27 +131,27 @@ export default function CompleteProfileScreen() {
 
   if (loadingProfile) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Complete your profile</Text>
-        <Text style={styles.subtitle}>Enter your phone number so we can contact you.</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}> 
+        <Text style={[styles.title, { color: theme.text }]}>Complete your profile</Text>
+        <Text style={[styles.subtitle, { color: theme.subText }]}>Enter your phone number so we can contact you.</Text>
 
         {step === "phone" ? (
           <>
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { borderColor: theme.border, backgroundColor: theme.card }]}> 
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="+91XXXXXXXXXX"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.subText}
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
@@ -160,7 +162,7 @@ export default function CompleteProfileScreen() {
             {serverMessage ? <Text style={styles.error}>{serverMessage}</Text> : null}
 
             <TouchableOpacity
-              style={[styles.button, savingMobile && { opacity: 0.7 }]}
+              style={[styles.button, { backgroundColor: theme.primary }, savingMobile && { opacity: 0.7 }]}
               onPress={requestMobileOtp}
               disabled={savingMobile}
             >
@@ -169,11 +171,11 @@ export default function CompleteProfileScreen() {
           </>
         ) : (
           <>
-            <View style={styles.inputWrap}>
+            <View style={[styles.inputWrap, { borderColor: theme.border, backgroundColor: theme.card }]}> 
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Enter 6 digit OTP"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.subText}
                 keyboardType="numeric"
                 value={otp}
                 onChangeText={setOtp}
@@ -184,7 +186,7 @@ export default function CompleteProfileScreen() {
             {serverMessage ? <Text style={styles.error}>{serverMessage}</Text> : null}
 
             <TouchableOpacity
-              style={[styles.button, savingMobile && { opacity: 0.7 }]}
+              style={[styles.button, { backgroundColor: theme.primary }, savingMobile && { opacity: 0.7 }]}
               onPress={verifyMobileOtp}
               disabled={savingMobile}
             >
@@ -199,7 +201,7 @@ export default function CompleteProfileScreen() {
               }}
               disabled={savingMobile}
             >
-              <Text style={styles.linkText}>Change phone</Text>
+              <Text style={[styles.linkText, { color: theme.primary }]}>Change phone</Text>
             </TouchableOpacity>
           </>
         )}
@@ -209,28 +211,25 @@ export default function CompleteProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f0f4f3" },
+  safe: { flex: 1 },
   container: {
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 30,
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "800", color: "#111" },
-  subtitle: { marginTop: 8, fontSize: 13, color: "#666", lineHeight: 18 },
+  title: { fontSize: 22, fontWeight: "800" },
+  subtitle: { marginTop: 8, fontSize: 13, lineHeight: 18 },
   inputWrap: {
     marginTop: 18,
-    backgroundColor: "#fff",
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: "#e6e6e6",
   },
-  input: { height: 44, fontSize: 16, color: "#111" },
+  input: { height: 44, fontSize: 16 },
   button: {
     marginTop: 16,
-    backgroundColor: "#1a7a6e",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",

@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../src/theme/ThemeProvider";
 import i18n from "../../src/translations/i18n";
 
 // Multilingual terms data
@@ -442,6 +443,7 @@ import i18n from "../../src/translations/i18n";
 ];
 
 export default function TermsScreen() {
+  const { theme, isDarkMode } = useTheme();
   const { t } = useTranslation();
   const [agreed, setAgreed] = useState(false);
   const currentLang = i18n.language; // 'en', 'hi', 'mr', 'gu'
@@ -459,11 +461,11 @@ export default function TermsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f0f4f3" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}> 
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.background }]}> 
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>{t("terms.title")}</Text>
           <Text style={styles.headerSubtitle}>{t("terms.subtitle")}</Text>
@@ -471,11 +473,11 @@ export default function TermsScreen() {
       </View>
 
       {/* Welcome Banner */}
-      <View style={styles.banner}>
+      <View style={[styles.banner, { backgroundColor: theme.primary }]}> 
         <Text style={styles.bannerIcon}>🛡️</Text>
         <View>
-          <Text style={styles.bannerTitle}>{t("app_name")}</Text>
-          <Text style={styles.bannerSubtitle}>{t("branding.your_care")}</Text>
+          <Text style={[styles.bannerTitle, { color: theme.white }]}>{t('app_name')}</Text>
+          <Text style={[styles.bannerSubtitle, { color: theme.primaryLight }]}>{t('branding.your_care')}</Text>
         </View>
       </View>
 
@@ -487,7 +489,7 @@ export default function TermsScreen() {
         <Text style={styles.agreementTitle}>{t("terms.agreement_title")}</Text>
 
         {TERMS_SECTIONS.map((section) => (
-          <View key={section.id} style={styles.section}>
+          <View key={section.id} style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }] }>
             <Text style={styles.sectionTitle}>{getLocalizedText(section.title)}</Text>
             {section.clauses.map((clause, index) => (
               <View key={index} style={styles.clause}>
@@ -502,7 +504,7 @@ export default function TermsScreen() {
       </ScrollView>
 
       {/* Checkbox + Button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }] }>
         <TouchableOpacity
           style={styles.checkboxRow}
           onPress={() => setAgreed(!agreed)}
@@ -521,7 +523,7 @@ export default function TermsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.agreeButton, !agreed && styles.agreeButtonDisabled]}
+          style={[styles.agreeButton, { backgroundColor: theme.primary }, !agreed && styles.agreeButtonDisabled]}
           onPress={handleAgree}
           activeOpacity={agreed ? 0.8 : 1}
         >
@@ -533,31 +535,31 @@ export default function TermsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0f4f3" },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, backgroundColor: "#f0f4f3" },
+  container: { flex: 1 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14 },
   headerTextContainer: { flex: 1 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111" },
-  headerSubtitle: { fontSize: 12, color: "#999", marginTop: 2 },
-  banner: { flexDirection: "row", alignItems: "center", backgroundColor: "#1a7a6e", marginHorizontal: 16, borderRadius: 12, padding: 14, gap: 12, marginBottom: 12 },
+  headerTitle: { fontSize: 18, fontWeight: "700" },
+  headerSubtitle: { fontSize: 12, marginTop: 2 },
+  banner: { flexDirection: "row", alignItems: "center", marginHorizontal: 16, borderRadius: 12, padding: 14, gap: 12, marginBottom: 12 },
   bannerIcon: { fontSize: 28 },
-  bannerTitle: { fontSize: 15, fontWeight: "700", color: "#fff" },
-  bannerSubtitle: { fontSize: 12, color: "#b2dfdb", marginTop: 2 },
+  bannerTitle: { fontSize: 15, fontWeight: "700" },
+  bannerSubtitle: { fontSize: 12, marginTop: 2 },
   scrollView: { flex: 1, paddingHorizontal: 16 },
-  agreementTitle: { fontSize: 13, fontWeight: "700", color: "#555", letterSpacing: 1, marginBottom: 12, marginTop: 4 },
-  section: { backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 10 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#1a7a6e", marginBottom: 10 },
+  agreementTitle: { fontSize: 13, fontWeight: "700", letterSpacing: 1, marginBottom: 12, marginTop: 4 },
+  section: { borderRadius: 12, padding: 14, marginBottom: 10 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", marginBottom: 10 },
   clause: { marginBottom: 10 },
-  clauseHeading: { fontSize: 13, fontWeight: "600", color: "#333", marginBottom: 3 },
-  clauseText: { fontSize: 12, color: "#666", lineHeight: 18 },
+  clauseHeading: { fontSize: 13, fontWeight: "600", marginBottom: 3 },
+  clauseText: { fontSize: 12, lineHeight: 18 },
   bottomSpacing: { height: 16 },
-  footer: { backgroundColor: "#f0f4f3", paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, borderTopWidth: 1, borderTopColor: "#e0e0e0" },
+  footer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, borderTopWidth: 1 },
   checkboxRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12, gap: 10 },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1.5, borderColor: "#1a7a6e", justifyContent: "center", alignItems: "center", marginTop: 1, flexShrink: 0 },
-  checkboxChecked: { backgroundColor: "#1a7a6e" },
+  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1.5, justifyContent: "center", alignItems: "center", marginTop: 1, flexShrink: 0 },
+  checkboxChecked: { borderRadius: 4 },
   checkboxTick: { color: "#fff", fontSize: 12, fontWeight: "700" },
-  checkboxLabel: { flex: 1, fontSize: 12, color: "#555", lineHeight: 18 },
-  linkText: { color: "#1a7a6e", fontWeight: "600" },
-  agreeButton: { backgroundColor: "#1a7a6e", borderRadius: 12, paddingVertical: 16, alignItems: "center" },
-  agreeButtonDisabled: { backgroundColor: "#a0c4c0" },
-  agreeButtonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  checkboxLabel: { flex: 1, fontSize: 12, lineHeight: 18 },
+  linkText: { fontWeight: "600" },
+  agreeButton: { borderRadius: 12, paddingVertical: 16, alignItems: "center" },
+  agreeButtonDisabled: { opacity: 0.55 },
+  agreeButtonText: { fontSize: 16, fontWeight: "700" },
 });

@@ -98,7 +98,7 @@ const ActiveOrderCard = ({ order, trackingSteps, cancelDeadline, theme, isDarkMo
                 ) : (
                   <View style={[
                     styles.dotEmpty,
-                    { borderColor: theme.border },
+                    { backgroundColor: theme.background, borderColor: theme.border },
                     isNextPending && { borderColor: theme.primary }
                   ]} />
                 )}
@@ -294,7 +294,7 @@ export default function Orders() {
           <Text style={[styles.headerTitle, { color: theme.text }]}>{t("orders.my_services")}</Text>
         </View>
 
-        <View style={[styles.tabRow, { backgroundColor: isDarkMode ? "#2D2D2D" : "#E2E2DA" }]}>
+        <View style={[styles.tabRow, { backgroundColor: theme.card }]}>
           <TouchableOpacity
             onPress={() => setActiveTab("active")}
             style={activeTab === "active" ? [styles.tabActive, { backgroundColor: theme.primary }] : styles.tabInactive}
