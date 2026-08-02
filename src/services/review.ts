@@ -24,3 +24,18 @@ export const getMyReview = async () => {
   return apiClient("/reviews/my", "GET", undefined, token || undefined);
 };
 
+export const updateMyReview = async (payload: {
+  overallRating: number;
+  categoryRatings?: {
+    pickup?: number;
+    quality?: number;
+    delivery?: number;
+    packaging?: number;
+  };
+  tags?: string[];
+  review?: string;
+}) => {
+  const token = await getToken();
+  return apiClient("/reviews/my", "PATCH", payload, token || undefined);
+}
+

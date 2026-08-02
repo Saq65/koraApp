@@ -15,6 +15,7 @@ import { setAddress } from '../../src/redux/store/addressSlice'
 import AppBackground from '@/components/AppBackground'
 import { getSavedAddresses, createSavedAddress } from '../../src/services/customer'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from '../../src/theme/ThemeProvider'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
 
@@ -56,13 +57,11 @@ const DEFAULT_REGION: Region = {
   latitudeDelta: 0.01, longitudeDelta: 0.01,
 }
 
-const TEAL = '#1A6B5A'
-const TEAL_LIGHT = '#E8F4F1'
-
 const SavedAddressIcon = ({ label }: { label: SavedAddress['label'] }) => {
-  if (label === 'home') return <MaterialCommunityIcons name="home" size={20} color="#555" />
-  if (label === 'office') return <MaterialCommunityIcons name="office-building" size={20} color="#555" />
-  return <MaterialIcons name="location-on" size={20} color="#555" />
+  const { theme } = useTheme()
+  if (label === 'home') return <MaterialCommunityIcons name="home" size={20} color={theme.primary} />
+  if (label === 'office') return <MaterialCommunityIcons name="office-building" size={20} color={theme.primary} />
+  return <MaterialIcons name="location-on" size={20} color={theme.primary} />
 }
 
 const getDisplayLabel = (addr: SavedAddress, t: any): string => {
@@ -75,17 +74,21 @@ const SearchBar = ({
   isOnMap = false,
   searchText, searchLoading, showDropdown, predictions, placeholder,
   onSearchChange, onClear, onPredictionSelect,
-}: SearchBarProps) => (
+}: SearchBarProps) => {
+  const { theme, isDarkMode } = useTheme()
+  const styles = createStyles(theme, isDarkMode)
+
+  return (
   <View style={{ zIndex: 999 }}>
     <View style={[styles.searchWrap, isOnMap && styles.searchWrapMap]}>
       {searchLoading
-        ? <ActivityIndicator size="small" color={TEAL} style={{ marginRight: 8 }} />
-        : <Ionicons name="search-outline" size={18} color="#999" style={{ marginRight: 8 }} />
+        ? <ActivityIndicator size="small" color={theme.primary} style={{ marginRight: 8 }} />
+        : <Ionicons name="search-outline" size={18} color={theme.subText} style={{ marginRight: 8 }} />
       }
       <TextInput
         style={styles.searchInput}
         placeholder={placeholder}
-        placeholderTextColor="#bbb"
+        placeholderTextColor={theme.subText}
         value={searchText}
         onChangeText={onSearchChange}
         autoCorrect={false}
@@ -94,7 +97,7 @@ const SearchBar = ({
       />
       {searchText.length > 0 && (
         <TouchableOpacity onPress={onClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="close-circle" size={18} color="#ccc" />
+          <Ionicons name="close-circle" size={18} color={theme.subText} />
         </TouchableOpacity>
       )}
     </View>
@@ -114,7 +117,7 @@ const SearchBar = ({
               onPress={() => onPredictionSelect(item, !isOnMap)}
             >
               <View style={styles.dropdownIcon}>
-                <MaterialIcons name="location-on" size={16} color={TEAL} />
+                <MaterialIcons name="location-on" size={16} color={theme.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.dropdownMain} numberOfLines={1}>{item.main_text}</Text>
@@ -122,19 +125,22 @@ const SearchBar = ({
                   <Text style={styles.dropdownSub} numberOfLines={1}>{item.secondary_text}</Text>
                 )}
               </View>
-              <Ionicons name="chevron-forward" size={14} color="#ddd" />
+              <Ionicons name="chevron-forward" size={14} color={theme.border} />
             </TouchableOpacity>
           )}
         />
       </View>
     )}
   </View>
-)
+  )
+}
 
 export default function PickupLocation() {
   const { type } = useLocalSearchParams<{ type: LocationType }>()
   const dispatch = useDispatch()
   const { t } = useTranslation()
+  const { theme, isDarkMode } = useTheme()
+  const styles = createStyles(theme, isDarkMode)
 
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [searchText, setSearchText] = useState('')
@@ -425,7 +431,7 @@ export default function PickupLocation() {
     if (addressesLoading) {
       return (
         <View style={styles.savedFeedback}>
-          <ActivityIndicator size="small" color={TEAL} />
+          <ActivityIndicator size="small" color={theme.primary} />
           <Text style={styles.savedFeedbackText}>{t('location.loading_addresses')}</Text>
         </View>
       )
@@ -433,15 +439,15 @@ export default function PickupLocation() {
     if (addressesError) {
       return (
         <TouchableOpacity style={styles.savedFeedback} onPress={fetchSavedAddresses}>
-          <MaterialIcons name="refresh" size={18} color={TEAL} />
-          <Text style={[styles.savedFeedbackText, { color: TEAL }]}>{t('location.failed_load')}</Text>
+          <MaterialIcons name="refresh" size={18} color={theme.primary} />
+          <Text style={[styles.savedFeedbackText, { color: theme.primary }]}>{t('location.failed_load')}</Text>
         </TouchableOpacity>
       )
     }
     if (savedAddresses.length === 0) {
       return (
         <View style={styles.savedFeedback}>
-          <MaterialIcons name="bookmark-border" size={18} color="#bbb" />
+          <MaterialIcons name="bookmark-border" size={18} color={theme.subText} />
           <Text style={styles.savedFeedbackText}>{t('location.no_saved')}</Text>
         </View>
       )
@@ -463,7 +469,7 @@ export default function PickupLocation() {
             </View>
             <Text style={styles.listRowSub} numberOfLines={1}>{addr.address}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#ccc" />
+          <Ionicons name="chevron-forward" size={18} color={theme.subText} />
         </TouchableOpacity>
         {idx < savedAddresses.length - 1 && <View style={styles.innerDivider} />}
       </React.Fragment>
@@ -478,7 +484,7 @@ export default function PickupLocation() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-              <Ionicons name="arrow-back" size={20} color="#1A1A1A" />
+              <Ionicons name="arrow-back" size={20} color={theme.text} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{title}</Text>
             <TouchableOpacity
@@ -487,8 +493,8 @@ export default function PickupLocation() {
               activeOpacity={0.8}
             >
               {viewMode === 'list'
-                ? <><MaterialIcons name="map" size={15} color={TEAL} /><Text style={styles.toggleText}> {t('location.map')}</Text></>
-                : <><MaterialIcons name="list" size={15} color={TEAL} /><Text style={styles.toggleText}> {t('location.list')}</Text></>
+                ? <><MaterialIcons name="map" size={15} color={theme.primary} /><Text style={styles.toggleText}> {t('location.map')}</Text></>
+                : <><MaterialIcons name="list" size={15} color={theme.primary} /><Text style={styles.toggleText}> {t('location.list')}</Text></>
               }
             </TouchableOpacity>
           </View>
@@ -534,8 +540,8 @@ export default function PickupLocation() {
                   />
                 </MapView>
               ) : (
-                <View style={[StyleSheet.absoluteFillObject, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8f8f8' }]}> 
-                  <ActivityIndicator size="large" color={TEAL} />
+                <View style={[StyleSheet.absoluteFillObject, { justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }]}> 
+                  <ActivityIndicator size="large" color={theme.primary} />
                 </View>
               )}
 
@@ -555,8 +561,8 @@ export default function PickupLocation() {
 
               <TouchableOpacity style={styles.fab} onPress={() => fetchCurrentLocation(false, true)} activeOpacity={0.85}>
                 {fetchingLocation
-                  ? <ActivityIndicator size="small" color={TEAL} />
-                  : <MaterialIcons name="my-location" size={22} color={TEAL} />
+                  ? <ActivityIndicator size="small" color={theme.primary} />
+                  : <MaterialIcons name="my-location" size={22} color={theme.primary} />
                 }
               </TouchableOpacity>
 
@@ -566,12 +572,12 @@ export default function PickupLocation() {
                 <Text style={styles.sheetLabel}>{sheetLabel}</Text>
                 {resolving ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                    <ActivityIndicator size="small" color={TEAL} />
-                    <Text style={{ fontSize: 14, color: '#888' }}>{t('location.fetching_address')}</Text>
+                    <ActivityIndicator size="small" color={theme.primary} />
+                    <Text style={{ fontSize: 14, color: theme.subText }}>{t('location.fetching_address')}</Text>
                   </View>
                 ) : (
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 16 }}>
-                    <MaterialIcons name="location-on" size={18} color={TEAL} style={{ marginTop: 2 }} />
+                    <MaterialIcons name="location-on" size={18} color={theme.primary} style={{ marginTop: 2 }} />
                     <Text style={styles.sheetAddress} numberOfLines={2}>
                       {resolvedAddress || t('location.drag_pin')}
                     </Text>
@@ -584,10 +590,10 @@ export default function PickupLocation() {
                     disabled={savingAddress}
                   >
                     {savingAddress ? (
-                      <ActivityIndicator size="small" color="#fff" />
+                      <ActivityIndicator size="small" color={theme.white} />
                     ) : (
                       <>
-                        <MaterialIcons name="save" size={18} color="#fff" />
+                        <MaterialIcons name="save" size={18} color={theme.white} />
                         <Text style={styles.saveBtnText}>  {t('location.save_location')}</Text>
                       </>
                     )}
@@ -598,7 +604,7 @@ export default function PickupLocation() {
                   disabled={!resolvedAddress || resolving}
                   onPress={() => resolvedAddress && handleSelect(resolvedAddress)}
                 >
-                  <MaterialIcons name="check-circle-outline" size={18} color="#fff" />
+                  <MaterialIcons name="check-circle-outline" size={18} color={theme.white} />
                   <Text style={styles.confirmText}>  {t('location.confirm_location')}</Text>
                 </TouchableOpacity>
               </View>
@@ -628,7 +634,7 @@ export default function PickupLocation() {
               >
                 <TouchableOpacity style={styles.mapRow} activeOpacity={0.85} onPress={() => setViewMode('map')}>
                   <View style={styles.mapRowIcon}>
-                    <MaterialCommunityIcons name="map-marker-radius" size={22} color="#fff" />
+                    <MaterialCommunityIcons name="map-marker-radius" size={22} color={theme.white} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.mapRowTitle}>{t('location.pick_on_map')}</Text>
@@ -642,15 +648,15 @@ export default function PickupLocation() {
                 <TouchableOpacity style={styles.listRow} activeOpacity={0.85} onPress={() => fetchCurrentLocation(true)}>
                   <View style={styles.listRowIcon}>
                     {fetchingLocation
-                      ? <ActivityIndicator size="small" color={TEAL} />
-                      : <MaterialIcons name="my-location" size={20} color={TEAL} />
+                      ? <ActivityIndicator size="small" color={theme.primary} />
+                      : <MaterialIcons name="my-location" size={20} color={theme.primary} />
                     }
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.listRowTitle}>{t('location.use_current')}</Text>
                     <Text style={styles.listRowSub}>{t('location.use_current_sub')}</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="#ccc" />
+                  <Ionicons name="chevron-forward" size={18} color={theme.subText} />
                 </TouchableOpacity>
 
                 <View style={styles.divider} />
@@ -685,7 +691,7 @@ export default function PickupLocation() {
                     }
                   }}
                 >
-                  <MaterialIcons name="add-location" size={22} color={TEAL} />
+                  <MaterialIcons name="add-location" size={22} color={theme.primary} />
                   <Text style={styles.addAddressText}>{t('location.add_current')}</Text>
                 </TouchableOpacity>
               </ScrollView>
@@ -697,79 +703,79 @@ export default function PickupLocation() {
   )
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
-  root: { flex: 1, backgroundColor: '#fff' },
+const createStyles = (theme: any, isDarkMode: boolean) => StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: theme.background },
+  root: { flex: 1, backgroundColor: 'transparent' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#f0f0f0', backgroundColor: '#fff',
+    borderBottomWidth: 1, borderBottomColor: '#f0f0f0', backgroundColor: theme.card,
   },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1a1a1a' },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: theme.text },
   toggleBtn: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 12, paddingVertical: 7,
-    backgroundColor: TEAL_LIGHT, borderRadius: 20, borderWidth: 1, borderColor: '#c8e8e4',
+    backgroundColor: theme.primaryLight, borderRadius: 20, borderWidth: 1, borderColor: theme.border,
   },
-  toggleText: { fontSize: 13, color: TEAL, fontWeight: '600' },
-  listSearchWrap: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: '#fff', zIndex: 999 },
+  toggleText: { fontSize: 13, color: theme.primary, fontWeight: '600' },
+  listSearchWrap: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: theme.card, zIndex: 999 },
   searchWrap: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderRadius: 12, borderWidth: 1, borderColor: '#e0e0e0', paddingHorizontal: 12, height: 48,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.card,
+    borderRadius: 12, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 12, height: 48,
   },
-  searchWrapMap: { elevation: 10, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, borderColor: '#fff' },
-  searchInput: { flex: 1, fontSize: 14, color: '#222', paddingVertical: 0 },
+  searchWrapMap: { elevation: 10, shadowColor: theme.text, shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, borderColor: theme.card },
+  searchInput: { flex: 1, fontSize: 14, color: theme.text, paddingVertical: 0 },
   dropdown: {
-    marginTop: 4, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e8e8e8',
-    maxHeight: 300, overflow: 'hidden', elevation: 12, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12,
+    marginTop: 4, backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.border,
+    maxHeight: 300, overflow: 'hidden', elevation: 12, shadowColor: theme.text, shadowOpacity: 0.12, shadowRadius: 12,
   },
   dropdownMap: { elevation: 20, shadowOpacity: 0.2 },
   dropdownRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13 },
-  dropdownIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: TEAL_LIGHT, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  dropdownMain: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
-  dropdownSub: { fontSize: 12, color: '#999', marginTop: 1 },
-  dropdownSep: { height: 1, backgroundColor: '#f5f5f5', marginLeft: 58 },
+  dropdownIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  dropdownMain: { fontSize: 14, fontWeight: '600', color: theme.text },
+  dropdownSub: { fontSize: 12, color: theme.subText, marginTop: 1 },
+  dropdownSep: { height: 1, backgroundColor: theme.background, marginLeft: 58 },
   mapSearchFloat: { position: 'absolute', top: 12, left: 12, right: 12, zIndex: 999 },
   fab: {
     position: 'absolute', right: 16, bottom: 240, width: 48, height: 48, borderRadius: 24,
-    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-    elevation: 6, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8,
+    backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center',
+    elevation: 6, shadowColor: theme.text, shadowOpacity: 0.15, shadowRadius: 8,
   },
   mapSheet: {
-    position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff',
+    position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: theme.card,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingBottom: 28, paddingTop: 12,
-    elevation: 20, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 16,
+    elevation: 20, shadowColor: theme.text, shadowOpacity: 0.15, shadowRadius: 16,
   },
-  sheetHandle: { width: 40, height: 4, backgroundColor: '#e0e0e0', borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
-  sheetLabel: { fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1, marginBottom: 8 },
-  sheetAddress: { flex: 1, fontSize: 15, fontWeight: '600', color: '#1a1a1a', lineHeight: 22 },
+  sheetHandle: { width: 40, height: 4, backgroundColor: theme.border, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
+  sheetLabel: { fontSize: 11, fontWeight: '700', color: theme.subText, letterSpacing: 1, marginBottom: 8 },
+  sheetAddress: { flex: 1, fontSize: 15, fontWeight: '600', color: theme.text, lineHeight: 22 },
   mapRow: {
     flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, marginBottom: 2,
-    backgroundColor: TEAL_LIGHT, borderRadius: 14, borderWidth: 1, borderColor: '#c8e8e4', padding: 14,
+    backgroundColor: theme.primaryLight, borderRadius: 14, borderWidth: 1, borderColor: theme.border, padding: 14,
   },
-  mapRowIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: TEAL, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  mapRowTitle: { fontSize: 15, fontWeight: '700', color: TEAL },
-  mapRowSub: { fontSize: 12, color: '#6aada6', marginTop: 2 },
+  mapRowIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  mapRowTitle: { fontSize: 15, fontWeight: '700', color: theme.primary },
+  mapRowSub: { fontSize: 12, color: theme.subText, marginTop: 2 },
   listRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
-  listRowIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f0fafa', alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: '#d0eeea' },
-  listRowTitle: { fontSize: 14, fontWeight: '600', color: '#1a1a1a', marginBottom: 2 },
-  listRowSub: { fontSize: 12, color: '#888' },
-  savedIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f5f5f5', alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: '#e8e8e8' },
+  listRowIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: theme.border },
+  listRowTitle: { fontSize: 14, fontWeight: '600', color: theme.text, marginBottom: 2 },
+  listRowSub: { fontSize: 12, color: theme.subText },
+  savedIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: theme.background, alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1, borderColor: theme.border },
   savedFeedback: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 14 },
-  savedFeedbackText: { fontSize: 13, color: '#aaa' },
-  defaultBadge: { backgroundColor: TEAL_LIGHT, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#c8e8e4' },
-  defaultBadgeText: { fontSize: 10, color: TEAL, fontWeight: '700' },
-  divider: { height: 8, backgroundColor: '#f5f5f5', marginVertical: 4 },
-  innerDivider: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 70, marginRight: 16 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#aaa', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
-  confirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: TEAL, borderRadius: 12, paddingVertical: 15, marginTop: 12 },
-  confirmDisabled: { backgroundColor: '#ccc' },
-  confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2c8c7a', borderRadius: 12, paddingVertical: 12, marginBottom: 8 },
-  saveBtnDisabled: { backgroundColor: '#a0c4bc' },
-  saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  addAddressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginVertical: 12, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: TEAL_LIGHT, borderRadius: 14, borderWidth: 1, borderColor: '#c8e8e4' },
-  addAddressText: { fontSize: 14, fontWeight: '500', color: TEAL },
+  savedFeedbackText: { fontSize: 13, color: theme.subText },
+  defaultBadge: { backgroundColor: theme.primaryLight, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: theme.border },
+  defaultBadgeText: { fontSize: 10, color: theme.primary, fontWeight: '700' },
+  divider: { height: 8, backgroundColor: theme.background, marginVertical: 4 },
+  innerDivider: { height: 1, backgroundColor: theme.border, marginLeft: 70, marginRight: 16 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: theme.subText, letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
+  confirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.primary, borderRadius: 12, paddingVertical: 15, marginTop: 12 },
+  confirmDisabled: { backgroundColor: theme.border },
+  confirmText: { color: theme.white, fontSize: 15, fontWeight: '700' },
+  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.primary, borderRadius: 12, paddingVertical: 12, marginBottom: 8 },
+  saveBtnDisabled: { backgroundColor: theme.border },
+  saveBtnText: { color: theme.white, fontSize: 14, fontWeight: '600' },
+  addAddressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginVertical: 12, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: theme.primaryLight, borderRadius: 14, borderWidth: 1, borderColor: theme.border },
+  addAddressText: { fontSize: 14, fontWeight: '500', color: theme.primary },
 })

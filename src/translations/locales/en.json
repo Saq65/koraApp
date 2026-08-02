@@ -531,5 +531,15 @@
     "address_text": "Address text (for saving)",
     "address_confirm_placeholder": "Type address or confirm",
     "back": "Back"
+  },
+   "side_drawer": {
+    "guest": "Guest",
+    "personal_details": "Personal Details",
+    "my_services": "My Services",
+    "refer_earn": "Refer & Earn",
+    "rewards": "Rewards",
+    "settings": "Settings",
+    "support": "Support",
+    "logout": "Log Out"
   }
 }

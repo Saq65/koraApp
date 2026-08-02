@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useTheme } from '../../src/theme/ThemeProvider';
 import AppBackground from '@/components/AppBackground';
-import { submitReview, getMyReview } from '../../src/services/review';
+import { submitReview, getMyReview, updateMyReview } from '../../src/services/review';
 
 const CATEGORIES = [
   { id: 'pickup', label: 'Pickup', icon: 'bicycle-outline' },
@@ -41,6 +41,7 @@ export default function RateUs() {
 
   // Existing review state
   const [existingReview, setExistingReview] = useState<any>(null)
+  const [editMode, setEditMode] = useState(false)
 
   // Form state
   const [rating, setRating] = useState(0)
@@ -89,7 +90,7 @@ export default function RateUs() {
     }
     try {
       setSubmitLoading(true)
-      const res = await submitReview({
+      const payload = {
         overallRating: rating,
         categoryRatings: {
           pickup: categoryRatings['pickup'] || undefined,
@@ -99,8 +100,16 @@ export default function RateUs() {
         },
         tags: selectedTags,
         review: review.trim(),
-      })
+      }
+
+      let res: any
+      if (existingReview) {
+        res = await updateMyReview(payload)
+      } else {
+        res = await submitReview(payload)
+      }
       setExistingReview(res.data)
+      setEditMode(false)
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Could not submit review. Please try again.')
     } finally {
@@ -125,7 +134,7 @@ export default function RateUs() {
   }
 
   // ── Already Reviewed Screen ──────────────────
-  if (existingReview) {
+  if (existingReview && !editMode) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
         <AppBackground>
@@ -229,6 +238,20 @@ export default function RateUs() {
               onPress={() => router.back()}
             >
               <Text style={[styles.submitText, { color: '#fff' }]}>Back to Profile</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.submitBtn, { backgroundColor: '#6B7280', marginTop: 8 }]}
+              onPress={() => {
+                // start edit: prefill form
+                setRating(existingReview.overallRating || 0)
+                setCategoryRatings(existingReview.categoryRatings || {})
+                setSelectedTags(existingReview.tags || [])
+                setReview(existingReview.review || '')
+                setEditMode(true)
+              }}
+            >
+              <Text style={[styles.submitText, { color: '#fff' }]}>Edit Review</Text>
             </TouchableOpacity>
 
             <View style={{ height: 30 }} />

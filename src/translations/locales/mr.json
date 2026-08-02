@@ -531,5 +531,15 @@
     "address_text": "जतन करण्यासाठी पत्ता",
     "address_confirm_placeholder": "पत्ता टाइप करा किंवा पुष्टी करा",
     "back": "मागे"
+  },
+  "side_drawer": {
+    "guest": "अतिथी",
+    "personal_details": "वैयक्तिक तपशील",
+    "my_services": "माझ्या सेवा",
+    "refer_earn": "रेफर करा आणि कमवा",
+    "rewards": "बक्षिसे",
+    "settings": "सेटिंग्ज",
+    "support": "सहाय्य",
+    "logout": "लॉग आउट"
   }
 }

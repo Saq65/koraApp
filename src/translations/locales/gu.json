@@ -531,5 +531,15 @@
     "address_text": "સાચવવા માટેનું સરનામું",
     "address_confirm_placeholder": "સરનામું લખો અથવા પુષ્ટિ કરો",
     "back": "પાછા"
+  },
+  "side_drawer": {
+    "guest": "મહેમાન",
+    "personal_details": "વ્યક્તિગત વિગતો",
+    "my_services": "મારી સેવાઓ",
+    "refer_earn": "રેફર કરો અને કમાઓ",
+    "rewards": "રિવોર્ડ્સ",
+    "settings": "સેટિંગ્સ",
+    "support": "સહાય",
+    "logout": "લોગ આઉટ"
   }
 }

@@ -105,12 +105,12 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
           </LinearGradient>
 
           {[
-            { labelKey: "profile.personal_details", route: "/profile-page/personal-details" },
-            { labelKey: "profile.my_services", route: "/(tabs)/orders" },
-            { labelKey: "profile.refer_earn", route: "/refer" },
-            { labelKey: "profile.rewards", route: "/rewards" },
-            { labelKey: "profile.settings", route: "/settings" },
-            { labelKey: "profile.support", route: "/support" },
+            { labelKey: "side_drawer.personal_details", route: "/profile-page/personal-details" },
+            { labelKey: "side_drawer.my_services", route: "/(tabs)/orders" },
+            { labelKey: "side_drawer.refer_earn", route: "/refer" },
+            { labelKey: "side_drawer.rewards", route: "/rewards" },
+            { labelKey: "side_drawer.settings", route: "/settings" },
+            { labelKey: "side_drawer.support", route: "/support" },
           ].map((item, i) => (
             <TouchableOpacity
               key={i}
