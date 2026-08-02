@@ -456,7 +456,8 @@ const styles = StyleSheet.create({
   },
   headerCenter: {
     flex: 1,
-    alignItems: "center",
+    // alignItems: "left",
+    marginLeft: r(12),
   },
   headerTitle: {
     fontSize: rm(18),

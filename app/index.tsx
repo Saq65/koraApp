@@ -11,7 +11,7 @@ export default function Index() {
         await SplashScreen.preventAutoHideAsync();
 
         const [hasSelectedLanguage, termsAccepted] = await Promise.all([
-          AsyncStorage.getItem("selectedLanguage"),
+          AsyncStorage.getItem("selectedLanguage") || AsyncStorage.getItem("app-language"),
           AsyncStorage.getItem("termsAccepted"),
         ]);
         const token = await getToken();

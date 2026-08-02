@@ -39,7 +39,21 @@
     "password_reset_success": "पासवर्ड रीसेट सफल!",
     "password_reset_success_description": "आपका पासवर्ड सफलतापूर्वक रीसेट हो गया है। कृपया अपने नए पासवर्ड से लॉगिन करें।",
     "continue_signin": "साइन इन करने के लिए आगे बढ़ें",
-    "go_back": "वापस जाएं"
+    "go_back": "वापस जाएं",
+    "email": "ईमेल",
+    "full_name": "पूरा नाम",
+    "full_name_placeholder": "अपना पूरा नाम दर्ज करें",
+    "create_account": "खाता बनाएं",
+    "create_account_btn": "खाता बनाएं",
+    "go_back_login": "पहले से खाता है? लॉगिन करें",
+    "signup_google": "Google के साथ साइन अप करें",
+    "email_placeholder": "आपका@ईमेल.कॉम",
+    "min_6_characters": "कम से कम 6 अक्षर",
+    "mobile_number": "मोबाइल नंबर",
+    "dob_optional": "जन्म तिथि (वैकल्पिक)",
+    "select_dob": "जन्म तिथि चुनें",
+    "registration_success_title": "पंजीकरण सफल",
+    "registration_success_message": "आपका खाता बना दिया गया है। कृपया जारी रखने के लिए लॉगिन करें।"
   },
   "validation": {
     "valid_phone": "कृपया 10 अंकों का सही फ़ोन नंबर दर्ज करें",
@@ -90,7 +104,12 @@
     "settings": "सेटिंग्स",
     "settings_sub": "थीम, ध्वनि, अनुमतियां",
     "logout": "लॉग आउट",
-    "raise-complaint": "शिकायत दर्ज करें"
+    "refer_earn": "रेफर और कमाएं",
+    "rewards": "इनाम",
+    "support": "सपोर्ट",
+    "raise-complaint": "शिकायत दर्ज करें",
+    "my_complaints": "मेरी शिकायतें",
+    "my_complaints_sub": "दर्ज की गई शिकायतों की स्थिति ट्रैक करें"
   },
   "services": {
     "laundry": "लॉन्ड्री",
@@ -125,7 +144,15 @@
     "children": "बच्चे",
     "children_desc": "बच्चों के कपड़े और यूनिफॉर्म",
     "linen": "लिनन",
-    "linen_desc": "बेडशीट, पर्दे, तौलिए"
+    "linen_desc": "बेडशीट, पर्दे, तौलिए",
+    "order_issue": "ऑर्डर संबंधी समस्या",
+    "delivery_delay": "डिलीवरी में देरी",
+    "payment_problem": "भुगतान समस्या",
+    "staff_behaviour": "स्टाफ का व्यवहार",
+    "app_/_technical": "ऐप / तकनीकी समस्या",
+    "other": "अन्य",
+    "damaged_item": "क्षतिग्रस्त आइटम",
+    "missing_item": "गायब आइटम"
   },
   "subcategory": {
     "laundry_service": "लॉन्ड्री सेवा",
@@ -140,12 +167,17 @@
     "total": "कुल",
     "add_to_cart": "कार्ट में डालें",
     "piece": "पीस",
+    "incl_gst": "GST सहित",
     "guest": "अतिथि",
     "loading": "लोड हो रहा है...",
     "permission_needed": "अनुमति आवश्यक",
     "photo_permission_message": "फोटो संलग्न करने के लिए हमें आपकी फोटो लाइब्रेरी तक पहुंच चाहिए।",
+    "camera_permission_message": "फोटो लेने के लिए हमें आपके कैमरे तक पहुँच की आवश्यकता है।",
     "optional": "वैकल्पिक",
-    "continue": "जारी रखें"
+    "continue": "जारी रखें",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "retry": "पुनः प्रयास करें"
   },
   "tabs": {
     "home": "होम",
@@ -229,6 +261,8 @@
     "tomorrow": "कल",
     "delivery": "डिलीवरी",
     "free": "मुफ्त",
+    "gst_included": "GST (शामिल)",
+    "inclusive_of_taxes": "दिखाई गई कीमतों में सभी कर शामिल हैं — चेकआउट पर कोई अतिरिक्त शुल्क नहीं",
     "terms_text": "मैं सहमत हूँ",
     "terms_link": "नियम और शर्तें",
     "terms_suffix": "KORA.care की।",
@@ -245,7 +279,11 @@
     "live_tracking": "लाइव ट्रैकिंग",
     "free_cancellation": "मुफ्त रद्दीकरण उपलब्ध है",
     "cancellation_closed": "रद्दीकरण विंडो बंद हो गई",
-    "cancellation_mins_left": "मुफ्त रद्दीकरण — {{mins}} मिनट शेष 2 घंटे की विंडो में"
+    "cancellation_mins_left": "मुफ्त रद्दीकरण — {{mins}} मिनट शेष 2 घंटे की विंडो में",
+    "cancel_confirm_message": "क्या आप वाकई इस ऑर्डर को रद्द करना चाहते हैं? यदि मुफ्त 2-घंटे की अवधि बीत चुकी है तो ₹25 का शुल्क लागू होता है।",
+    "cancel_success_free": "आपका ऑर्डर मुफ्त में रद्द कर दिया गया। कोई भी भुगतान की गई राशि आपके वॉलेट में वापस कर दी जाएगी।",
+    "cancel_success_fee": "ऑर्डर रद्द कर दिया गया। ₹{{fee}} का विलंब रद्दीकरण शुल्क लागू किया गया और ₹{{refund}} आपके वॉलेट में जमा कर दिया गया है।",
+    "cancel_failed": "हम इस ऑर्डर को रद्द नहीं कर पाए। कृपया पुनः प्रयास करें या सहायता से संपर्क करें।"
   },
   "cart": {
     "my_cart": "मेरी कार्ट",
@@ -256,6 +294,8 @@
     "delivery": "डिलीवरी",
     "free": "मुफ्त",
     "total": "कुल",
+    "gst_included": "GST (शामिल)",
+    "inclusive_of_taxes": "दिखाई गई कीमतों में सभी कर शामिल हैं — चेकआउट पर कोई अतिरिक्त शुल्क नहीं",
     "place_order": "ऑर्डर दें",
     "qty": "मात्रा: {{count}}"
   },
@@ -311,6 +351,9 @@
     "description": "समस्या का विवरण",
     "description_placeholder": "विवरण दें ताकि हम आपकी जल्द मदद कर सकें...",
     "attach_photo": "फोटो संलग्न करें",
+    "attach_photo_prompt": "चुनें कि आप फोटो कैसे जोड़ना चाहते हैं",
+    "take_photo": "फोटो लें",
+    "choose_from_gallery": "छवि अपलोड करें",
     "submit": "शिकायत सबमिट करें",
     "select_category": "कृपया एक श्रेणी चुनें",
     "select_order_issue_sub": "कृपया ऑर्डर समस्या के लिए उप-श्रेणी चुनें",
@@ -346,5 +389,61 @@
   "onboarding": {
     "mobile_title": "अपना मोबाइल नंबर जोड़ें",
     "mobile_subtitle": "हम इसका उपयोग आपके ऑर्डर की जानकारी देने और डिलीवरी टीम को आप तक पहुँचने में मदद के लिए करेंगे।"
-  }
+  },
+  "notifications": {
+    "title": "सूचनाएं",
+    "new_updates": "नए अपडेट",
+    "mark_all_read": "सभी को पढ़ा हुआ चिह्नित करें",
+    "no_notifications": "अभी तक कोई सूचना नहीं",
+    "no_notifications_desc": "आपके ऑर्डर के बारे में अपडेट यहां दिखेंगे",
+    "today": "आज",
+    "yesterday": "कल",
+    "earlier": "पहले",
+    "load_failed": "सूचनाएं लोड नहीं हो सकीं",
+    "just_now": "अभी",
+    "minutes_ago_one": "{{count}} मिनट पहले",
+    "minutes_ago_other": "{{count}} मिनट पहले",
+    "hours_ago_one": "{{count}} घंटे पहले",
+    "hours_ago_other": "{{count}} घंटे पहले",
+    "yesterday_at": "कल, {{time}}",
+    "date_at": "{{date}}, {{time}}",
+    "types": {
+      "order_placed": {
+        "title": "ऑर्डर दिया गया! 🎉",
+        "body": "आपका ऑर्डर {{orderNumber}} सफलतापूर्वक दिया गया है।"
+      },
+      "order_accepted": {
+        "title": "ऑर्डर स्वीकार किया गया",
+        "body": "आपका ऑर्डर {{orderNumber}} स्वीकार कर लिया गया है।"
+      },
+      "order_picked_up": {
+        "title": "ऑर्डर उठा लिया गया",
+        "body": "आपका ऑर्डर {{orderNumber}} उठा लिया गया है।"
+      },
+      "order_at_sp": {
+        "title": "ऑर्डर सेवा प्रदाता पर",
+        "body": "आपका ऑर्डर {{orderNumber}} सेवा प्रदाता तक पहुंच गया है।"
+      },
+      "order_cleaned": {
+        "title": "सफाई पूरी हुई",
+        "body": "आपके ऑर्डर {{orderNumber}} की सफाई पूरी हो गई है।"
+      },
+      "order_out_for_delivery": {
+        "title": "डिलीवरी के लिए निकल गया",
+        "body": "आपका ऑर्डर {{orderNumber}} डिलीवरी के लिए निकल गया है।"
+      },
+      "order_delivered": {
+        "title": "ऑर्डर डिलीवर हो गया",
+        "body": "आपका ऑर्डर {{orderNumber}} सफलतापूर्वक डिलीवर हो गया है।"
+      },
+      "order_cancelled": {
+        "title": "ऑर्डर रद्द कर दिया गया",
+        "body": "आपका ऑर्डर {{orderNumber}} रद्द कर दिया गया है।"
+      }
+    }
+  },
+  "your_care": "आपकी देखभाल, हमारी प्राथमिकता",
+  "choose_language": "अपनी भाषा चुनें",
+  "change_language_anytime": "आप प्रोफ़ाइल सेटिंग्स से कभी भी भाषा बदल सकते हैं।",
+  "continue": "जारी रखें"
 }

@@ -92,6 +92,9 @@
     "settings": "Settings",
     "settings_sub": "Theme, sound, permissions",
     "logout": "Logout",
+    "refer_earn": "Refer & Earn",
+    "rewards": "Rewards",
+    "support": "Support",
     "raise-complaint": "Raise a Complaint",
     "my_complaints": "My Complaints",
     "my_complaints_sub": "Track the status of complaints you've raised"
@@ -172,7 +175,9 @@
     "camera_permission_message": "We need access to your camera to take a photo.",
     "yes": "Yes",
     "no": "No",
-    "retry": "Retry"
+    "retry": "Retry",
+    "guest": "Guest",
+    "continue": "Continue"
   },
   "tabs": {
     "home": "Home",
@@ -421,5 +426,24 @@
         "body": "Your order {{orderNumber}} has been cancelled."
       }
     }
+  },
+  "your_care": "Your Care, Our Priority",
+  "choose_language": "Choose Your Language",
+  "change_language_anytime": "You can change the language anytime from your profile settings.",
+  "continue": "Continue",
+  "terms": {
+    "title": "Terms & Conditions",
+    "subtitle": "Please read these before continuing",
+    "agreement_title": "Our Agreement With You",
+    "agree_checkbox_prefix": "I have read and agree to the",
+    "agree_checkbox_terms": "Terms & Conditions",
+    "agree_checkbox_and": "and",
+    "agree_checkbox_privacy": "Privacy Policy",
+    "agree_checkbox_suffix": ".",
+    "agree_button": "I Agree & Continue"
+  },
+  "onboarding": {
+    "mobile_title": "Add Your Mobile Number",
+    "mobile_subtitle": "We’ll use it to share order updates and help the delivery team reach you."
   }
 }

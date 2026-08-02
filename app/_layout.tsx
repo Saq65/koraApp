@@ -11,7 +11,9 @@ import { NotificationProvider } from "../src/context/NotificationContext";
 export default function RootLayout() {
   useEffect(() => {
     const restoreLanguage = async () => {
-      const saved = await AsyncStorage.getItem("app-language");
+      const saved =
+        (await AsyncStorage.getItem("app-language")) ||
+        (await AsyncStorage.getItem("selectedLanguage"));
       if (saved) await i18n.changeLanguage(saved);
     };
     restoreLanguage();

@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../src/theme/ThemeProvider";
+import { loadLanguage } from "../src/translations/i18n";
 
 const LANGUAGES = [
   { label: "EN", value: "en" },
@@ -16,20 +17,34 @@ const LANGUAGES = [
 export default function LanguageSelector() {
   const { i18n } = useTranslation();
   const { theme } = useTheme();
-  const [selected, setSelected] = useState("en");
+  const [selected, setSelected] = useState(i18n.language || "en");
 
-  // Load saved language on mount
   useEffect(() => {
-    AsyncStorage.getItem("app-language").then((saved) => {
-      if (saved) setSelected(saved);
-    });
-  }, []);
+    const loadSaved = async () => {
+      const saved =
+        (await AsyncStorage.getItem("app-language")) ||
+        (await AsyncStorage.getItem("selectedLanguage")) ||
+        i18n.language ||
+        "en";
+      setSelected(saved);
+    };
+
+    loadSaved();
+
+    const onLanguageChanged = (lng: string) => {
+      setSelected(lng);
+    };
+
+    i18n.on("languageChanged", onLanguageChanged);
+    return () => {
+      i18n.off("languageChanged", onLanguageChanged);
+    };
+  }, [i18n]);
 
   const handleChange = async (item: { label: string; value: string }) => {
-    if (!item?.value) return;             // ← guard against undefined crash
+    if (!item?.value) return;
     setSelected(item.value);
-    await AsyncStorage.setItem("app-language", item.value);
-    await i18n.changeLanguage(item.value);
+    await loadLanguage(item.value);
   };
 
   return (

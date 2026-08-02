@@ -510,14 +510,18 @@ export default function TermsScreen() {
           onPress={() => setAgreed(!agreed)}
           activeOpacity={0.7}
         >
-          <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
-            {agreed && <Text style={styles.checkboxTick}>✓</Text>}
+          <View style={[
+            styles.checkbox,
+            { borderColor: theme.subText },
+            agreed && { backgroundColor: theme.primary, borderColor: theme.primary },
+          ]}>
+            {agreed && <Text style={[styles.checkboxTick, { color: theme.white }]}>✓</Text>}
           </View>
-          <Text style={styles.checkboxLabel}>
-            {t("terms.agree_checkbox_prefix")}{" "}
-            <Text style={styles.linkText}>{t("terms.agree_checkbox_terms")}</Text>{" "}
-            {t("terms.agree_checkbox_and")}{" "}
-            <Text style={styles.linkText}>{t("terms.agree_checkbox_privacy")}</Text>{" "}
+          <Text style={[styles.checkboxLabel, { color: theme.text }]}> 
+            {t("terms.agree_checkbox_prefix")} {" "}
+            <Text style={[styles.linkText, { color: theme.primary }]}>{t("terms.agree_checkbox_terms")}</Text>{" "}
+            {t("terms.agree_checkbox_and")} {" "}
+            <Text style={[styles.linkText, { color: theme.primary }]}>{t("terms.agree_checkbox_privacy")}</Text>{" "}
             {t("terms.agree_checkbox_suffix")}
           </Text>
         </TouchableOpacity>
@@ -554,10 +558,10 @@ const styles = StyleSheet.create({
   bottomSpacing: { height: 16 },
   footer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, borderTopWidth: 1 },
   checkboxRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12, gap: 10 },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1.5, justifyContent: "center", alignItems: "center", marginTop: 1, flexShrink: 0 },
-  checkboxChecked: { borderRadius: 4 },
-  checkboxTick: { color: "#fff", fontSize: 12, fontWeight: "700" },
-  checkboxLabel: { flex: 1, fontSize: 12, lineHeight: 18 },
+  checkbox: { width: 20, height: 20, borderRadius: 6, borderWidth: 1.5, justifyContent: "center", alignItems: "center", marginTop: 1, flexShrink: 0 },
+  checkboxChecked: { borderRadius: 6 },
+  checkboxTick: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  checkboxLabel: { flex: 1, fontSize: 12, lineHeight: 20 },
   linkText: { fontWeight: "600" },
   agreeButton: { borderRadius: 12, paddingVertical: 16, alignItems: "center" },
   agreeButtonDisabled: { opacity: 0.55 },

@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
-import i18n from "../../src/translations/i18n";
+import i18n, { loadLanguage } from "../../src/translations/i18n";
 import AppBackground from "@/components/AppBackground";
 import { useTheme } from "../../src/theme/ThemeProvider";
 
@@ -44,10 +44,12 @@ export default function LanguageScreen() {
 
     const loadSavedLanguage = async () => {
         try {
-            const savedLanguage = await AsyncStorage.getItem("selectedLanguage");
+            const savedLanguage =
+                (await AsyncStorage.getItem("selectedLanguage")) ||
+                (await AsyncStorage.getItem("app-language"));
             if (savedLanguage && LANGUAGES.some(lang => lang.code === savedLanguage)) {
                 setSelected(savedLanguage);
-                await i18n.changeLanguage(savedLanguage);
+                await loadLanguage(savedLanguage);
             }
         } catch (error) {
             console.log("Error loading language:", error);
@@ -60,9 +62,7 @@ export default function LanguageScreen() {
         setSelected(langCode);
 
         try {
-            await AsyncStorage.setItem("selectedLanguage", langCode);
-            await AsyncStorage.setItem("app-language", langCode);
-            await i18n.changeLanguage(langCode);
+            await loadLanguage(langCode);
 
             Alert.alert(
                 t("language_changed", "Language Changed"),

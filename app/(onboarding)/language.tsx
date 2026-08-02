@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getToken } from "../../src/utils/storage";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../src/theme/ThemeProvider";
-import i18n from "../../src/translations/i18n";
+import i18n, { loadLanguage } from "../../src/translations/i18n";
 const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
@@ -31,14 +31,22 @@ export default function LanguageScreen() {
   const { theme, isDarkMode } = useTheme();
   const [selected, setSelected] = useState("en");
 
+  React.useEffect(() => {
+    const restoreLanguage = async () => {
+      const saved =
+        (await AsyncStorage.getItem("selectedLanguage")) ||
+        (await AsyncStorage.getItem("app-language")) ||
+        (await i18n.language) ||
+        "en";
+      if (saved) setSelected(saved);
+    };
+    restoreLanguage();
+  }, []);
+
   async function handleContinue() {
-  await AsyncStorage.setItem("selectedLanguage", selected);
-
-  // change language instantly
-  await i18n.changeLanguage(selected);
-
-  router.replace("/(onboarding)/terms");
-}
+    await loadLanguage(selected);
+    router.replace("/(onboarding)/terms");
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}> 
