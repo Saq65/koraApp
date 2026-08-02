@@ -144,11 +144,9 @@ export default function PickupLocation() {
   const [fetchingLocation, setFetchingLocation] = useState(false)
   const [savingAddress, setSavingAddress] = useState(false)
 
-  const [region, setRegion] = useState<Region>(DEFAULT_REGION)
-  const [markerCoord, setMarkerCoord] = useState({
-    latitude: DEFAULT_REGION.latitude,
-    longitude: DEFAULT_REGION.longitude,
-  })
+  const [region, setRegion] = useState<Region | null>(null)
+  const [markerCoord, setMarkerCoord] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locationResolved, setLocationResolved] = useState(false)
   const [resolvedAddress, setResolvedAddress] = useState('')
   const [resolving, setResolving] = useState(false)
 
@@ -182,6 +180,19 @@ export default function PickupLocation() {
 
   useEffect(() => { fetchSavedAddresses() }, [fetchSavedAddresses])
 
+  useEffect(() => {
+    const initializeLocation = async () => {
+      try {
+        await fetchCurrentLocation(false, false)
+      } catch (error) {
+        console.log('Initial location fetch failed', error)
+      }
+    }
+
+    initializeLocation()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleSaveCurrentLocation = async () => {
     if (!resolvedAddress) {
       Alert.alert(t('location.no_location'), t('location.select_first'))
@@ -203,7 +214,7 @@ export default function PickupLocation() {
                 { text: t('location.cancel'), style: 'cancel' },
                 {
                   text: t('location.save'),
-                  onPress: (customLabel) => {
+                  onPress: (customLabel?: string) => {
                     if (customLabel && customLabel.trim())
                       saveAddressWithLabel('other', customLabel.trim())
                     else Alert.alert(t('location.error'), t('location.label_empty'))
@@ -229,8 +240,11 @@ export default function PickupLocation() {
     setSavingAddress(true)
     try {
       const addressToSave = addressOverride ?? resolvedAddress
-      const latToSave = coordsOverride?.latitude ?? markerCoord.latitude
-      const lngToSave = coordsOverride?.longitude ?? markerCoord.longitude
+      if (!coordsOverride && !markerCoord) {
+        throw new Error('No location selected')
+      }
+      const latToSave = coordsOverride?.latitude ?? markerCoord!.latitude
+      const lngToSave = coordsOverride?.longitude ?? markerCoord!.longitude
       await createSavedAddress({
         label,
         customLabel: label === 'other' ? (customLabel ?? null) : null,
@@ -339,22 +353,34 @@ export default function PickupLocation() {
 
   const handleSelect = (address: string, coords?: { latitude: number; longitude: number }) => {
     const finalCoords = coords || markerCoord
+    if (!finalCoords) return
     dispatch(setAddress({ type: locationType, address, coordinates: [finalCoords.latitude, finalCoords.longitude] }))
     router.back()
   }
 
-  const fetchCurrentLocation = async (confirmNow = false) => {
+  const setFallbackLocation = () => {
+    setRegion(DEFAULT_REGION)
+    setMarkerCoord({ latitude: DEFAULT_REGION.latitude, longitude: DEFAULT_REGION.longitude })
+    setLocationResolved(true)
+  }
+
+  const fetchCurrentLocation = async (confirmNow = false, showAlertOnError = true) => {
     setFetchingLocation(true)
     try {
       const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert(t('location.permission_denied'), t('location.allow_location'))
+        if (showAlertOnError) {
+          Alert.alert(t('location.permission_denied'), t('location.allow_location'))
+        }
+        setFallbackLocation()
         return
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
       const newCoord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude }
       const newRegion = { ...newCoord, latitudeDelta: 0.005, longitudeDelta: 0.005 }
-      setMarkerCoord(newCoord); setRegion(newRegion)
+      setMarkerCoord(newCoord)
+      setRegion(newRegion)
+      setLocationResolved(true)
       mapRef.current?.animateToRegion(newRegion, 800)
       if (confirmNow) {
         const url = `${NOMINATIM_URL}/reverse?format=json&lat=${newCoord.latitude}&lon=${newCoord.longitude}&zoom=18`
@@ -366,7 +392,10 @@ export default function PickupLocation() {
         await reverseGeocode(newCoord.latitude, newCoord.longitude)
       }
     } catch (e: any) {
-      Alert.alert(t('location.error'), e?.message ?? 'Could not fetch location.')
+      if (showAlertOnError) {
+        Alert.alert(t('location.error'), e?.message ?? 'Could not fetch location.')
+      }
+      if (!locationResolved) setFallbackLocation()
     } finally {
       setFetchingLocation(false)
     }
@@ -380,17 +409,17 @@ export default function PickupLocation() {
   }
 
   useEffect(() => {
-    if (viewMode === 'map' && markerCoord.latitude && markerCoord.longitude) {
+    if (viewMode === 'map' && markerCoord?.latitude && markerCoord?.longitude) {
       debouncedReverseGeocode(markerCoord.latitude, markerCoord.longitude)
     }
     return () => { if (reverseGeocodeTimeoutRef.current) clearTimeout(reverseGeocodeTimeoutRef.current) }
-  }, [markerCoord.latitude, markerCoord.longitude, viewMode])
+  }, [markerCoord?.latitude, markerCoord?.longitude, viewMode])
 
   useEffect(() => {
-    if (viewMode === 'map' && markerCoord.latitude && markerCoord.longitude && !resolvedAddress) {
+    if (viewMode === 'map' && markerCoord?.latitude && markerCoord?.longitude && !resolvedAddress) {
       reverseGeocode(markerCoord.latitude, markerCoord.longitude)
     }
-  }, [viewMode])
+  }, [viewMode, markerCoord, resolvedAddress])
 
   const renderSavedAddresses = () => {
     if (addressesLoading) {
@@ -467,35 +496,48 @@ export default function PickupLocation() {
           {/* MAP VIEW */}
           {viewMode === 'map' ? (
             <View style={{ flex: 1 }}>
-              <MapView
-                ref={mapRef}
-                provider={PROVIDER_DEFAULT}
-                style={StyleSheet.absoluteFillObject}
-                region={region}
-                onRegionChangeComplete={(r) => { setMarkerCoord({ latitude: r.latitude, longitude: r.longitude }); setRegion(r) }}
-                onPress={(e) => {
-                  const { coordinate } = e.nativeEvent
-                  if (coordinate) {
-                    setMarkerCoord({ latitude: coordinate.latitude, longitude: coordinate.longitude })
-                    const newRegion = { ...coordinate, latitudeDelta: region.latitudeDelta, longitudeDelta: region.longitudeDelta }
-                    setRegion(newRegion)
-                    mapRef.current?.animateToRegion(newRegion, 300)
-                  }
-                  setShowDropdown(false)
-                }}
-                showsUserLocation
-                showsMyLocationButton={false}
-              >
-                <Marker
-                  draggable
-                  coordinate={markerCoord}
-                  onDragEnd={(e) => {
-                    const coord = e.nativeEvent.coordinate
-                    setMarkerCoord(coord)
-                    reverseGeocode(coord.latitude, coord.longitude)
+              {region && markerCoord ? (
+                <MapView
+                  ref={mapRef}
+                  provider={PROVIDER_DEFAULT}
+                  style={StyleSheet.absoluteFillObject}
+                  region={region}
+                  onRegionChangeComplete={(r) => {
+                    setMarkerCoord({ latitude: r.latitude, longitude: r.longitude })
+                    setRegion(r)
                   }}
-                />
-              </MapView>
+                  onPress={(e) => {
+                    const { coordinate } = e.nativeEvent
+                    if (coordinate) {
+                      setMarkerCoord({ latitude: coordinate.latitude, longitude: coordinate.longitude })
+                      const newRegion = {
+                        ...coordinate,
+                        latitudeDelta: region.latitudeDelta,
+                        longitudeDelta: region.longitudeDelta,
+                      }
+                      setRegion(newRegion)
+                      mapRef.current?.animateToRegion(newRegion, 300)
+                    }
+                    setShowDropdown(false)
+                  }}
+                  showsUserLocation
+                  showsMyLocationButton={false}
+                >
+                  <Marker
+                    draggable
+                    coordinate={markerCoord}
+                    onDragEnd={(e) => {
+                      const coord = e.nativeEvent.coordinate
+                      setMarkerCoord(coord)
+                      reverseGeocode(coord.latitude, coord.longitude)
+                    }}
+                  />
+                </MapView>
+              ) : (
+                <View style={[StyleSheet.absoluteFillObject, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8f8f8' }]}> 
+                  <ActivityIndicator size="large" color={TEAL} />
+                </View>
+              )}
 
               <View style={styles.mapSearchFloat}>
                 <SearchBar
@@ -511,7 +553,7 @@ export default function PickupLocation() {
                 />
               </View>
 
-              <TouchableOpacity style={styles.fab} onPress={() => fetchCurrentLocation(false)} activeOpacity={0.85}>
+              <TouchableOpacity style={styles.fab} onPress={() => fetchCurrentLocation(false, true)} activeOpacity={0.85}>
                 {fetchingLocation
                   ? <ActivityIndicator size="small" color={TEAL} />
                   : <MaterialIcons name="my-location" size={22} color={TEAL} />

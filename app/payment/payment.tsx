@@ -3,6 +3,7 @@ import { clearCart } from "@/src/redux/store/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/hooks";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   selectPickupAddress,
   selectDropoffAddress,
@@ -30,28 +31,28 @@ import { useTheme } from "@/src/theme/ThemeProvider";
 const UPI_OPTIONS = [
   {
     id: "gpay",
-    label: "Google Pay",
+    translationKey: "payment.google_pay",
     icon: "google",
     iconColor: "#4285F4",
     iconBg: "#E8F0FE",
   },
   {
     id: "phonepe",
-    label: "PhonePe",
+    translationKey: "payment.phonepe",
     icon: "phone",
     iconColor: "#6739B7",
     iconBg: "#EDE7F6",
   },
   {
     id: "paytm",
-    label: "Paytm",
+    translationKey: "payment.paytm",
     icon: "wallet",
     iconColor: "#00BAF2",
     iconBg: "#E3F7FE",
   },
   {
     id: "otherupi",
-    label: "Other UPI",
+    translationKey: "payment.other_upi",
     icon: "dots-grid",
     iconColor: "#9CA3AF",
     iconBg: "#F0F0EA",
@@ -79,11 +80,12 @@ export default function Payment() {
 
   const totalAmount = Number(total) || 0;
   const { theme, isDarkMode } = useTheme();
+  const { t } = useTranslation();
 
   const handlePayment = async () => {
     try {
       if (cartItems.length === 0) {
-        Alert.alert("Cart Empty", "Please add items first");
+        Alert.alert(t("payment.cart_empty_title"), t("payment.cart_empty_message"));
         return;
       }
 
@@ -133,9 +135,9 @@ export default function Payment() {
           response.data?.orderNumber
         );
 
-        Alert.alert("Success", "Order placed successfully", [
+        Alert.alert(t("payment.success_title"), t("payment.success_message"), [
           {
-            text: "OK",
+            text: t("common.ok"),
             onPress: () =>
               router.replace(
                 `/paymentsucces?orderNumber=${response.data.orderNumber}`
@@ -144,13 +146,13 @@ export default function Payment() {
         ]);
       } else {
         Alert.alert(
-          "Payment Failed",
-          response?.message || "Unable to place your order"
+          t("payment.payment_failed_title"),
+          response?.message || t("payment.payment_failed_message")
         );
       }
     } catch (error) {
       console.log("PAYMENT ERROR:", error);
-      Alert.alert("Error", "Failed to place order");
+      Alert.alert(t("payment.error_title"), t("payment.error_message"));
     } finally {
       setLoading(false);
     }
@@ -195,7 +197,7 @@ export default function Payment() {
               },
             ]}
           >
-            Payment
+            {t("payment.title")}
           </Text>
 
           <View style={styles.headerPlaceholder} />
@@ -242,7 +244,7 @@ export default function Payment() {
                     },
                   ]}
                 >
-                  Amount to Pay
+                  {t("payment.amount_to_pay")}
                 </Text>
 
                 <Text
@@ -253,7 +255,7 @@ export default function Payment() {
                     },
                   ]}
                 >
-                  Includes tax, as shown on the previous screen
+                  {t("payment.includes_tax")}
                 </Text>
               </View>
             </View>
@@ -318,7 +320,7 @@ export default function Payment() {
                     },
                   ]}
                 >
-                  Pay via UPI
+                  {t("payment.pay_via_upi")}
                 </Text>
 
                 <Text
@@ -329,7 +331,7 @@ export default function Payment() {
                     },
                   ]}
                 >
-                  Fast & secure payment
+                  {t("payment.fast_secure_payment")}
                 </Text>
               </View>
             </View>
@@ -383,7 +385,7 @@ export default function Payment() {
                         },
                       ]}
                     >
-                      {opt.label}
+                      {t(opt.translationKey)}
                     </Text>
 
                     {isActive && (
@@ -419,7 +421,7 @@ export default function Payment() {
                   },
                 ]}
               >
-                Or enter UPI ID
+                {t("payment.or_enter_upi")}
               </Text>
 
               <View
@@ -455,7 +457,7 @@ export default function Payment() {
                     color: theme.text,
                   },
                 ]}
-                placeholder="yourname@upi"
+                placeholder={t("payment.upi_placeholder")}
                 placeholderTextColor={theme.subText}
                 value={upiId}
                 onChangeText={setUpiId}
@@ -481,7 +483,7 @@ export default function Payment() {
                   },
                 ]}
               >
-                Secured by 256-bit encryption
+                {t("payment.secured_encryption")}
               </Text>
             </View>
           </View>
@@ -527,7 +529,7 @@ export default function Payment() {
                     },
                   ]}
                 >
-                  Pay ₹{totalAmount.toFixed(2)}
+                  {t("payment.pay_amount", { amount: totalAmount.toFixed(2) })}
                 </Text>
               </>
             )}

@@ -294,7 +294,7 @@ export default function ProfileScreen() {
               icon="settings-outline"
               title={t("profile.settings")}
               subtitle={t("profile.settings_sub")}
-              onPress={() => console.log("Settings")}
+              onPress={() => router.push("/settings")}
             />
           </View>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,20 +6,25 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  Platform,
   Alert,
   TextInput,
-  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import MapView, { Marker, Region } from "react-native-maps";
+import * as Location from "expo-location";
+import { useTranslation } from "react-i18next";
+
 import { useTheme } from "../../src/theme/ThemeProvider";
 import AppBackground from "@/components/AppBackground";
-import { getSavedAddresses, createSavedAddress, deleteSavedAddress, setDefaultAddress } from "../../src/services/customer";
+import {
+  getSavedAddresses,
+  createSavedAddress,
+  deleteSavedAddress,
+  setDefaultAddress,
+} from "../../src/services/customer";
 
-// ─── Responsive helpers ────────────────────────────────────────
 const { width: W, height: H } = Dimensions.get("window");
 const r = (n: number) => Math.round((W / 375) * n);
 const rv = (n: number) => Math.round((H / 812) * n);
@@ -45,20 +50,28 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 0.01,
 };
 
-function displayLabel(a: SavedAddress): string {
-  if (a.label === "other" && a.customLabel) return a.customLabel;
-  return a.label.charAt(0).toUpperCase() + a.label.slice(1);
-}
-
-function AddressIcon({ type }: { type: AddressType }) {
-  // Keep icons consistent; colors come from theme styles below.
+function AddressIcon({
+  type,
+  color,
+}: {
+  type: AddressType;
+  color: string;
+}) {
   switch (type) {
     case "home":
-      return <Ionicons name="home-outline" size={r(22)} />;
+      return <Ionicons name="home-outline" size={r(22)} color={color} />;
     case "office":
-      return <MaterialCommunityIcons name="briefcase-outline" size={r(22)} />;
+      return (
+        <MaterialCommunityIcons
+          name="briefcase-outline"
+          size={r(22)}
+          color={color}
+        />
+      );
     default:
-      return <Ionicons name="location-outline" size={r(22)} />;
+      return (
+        <Ionicons name="location-outline" size={r(22)} color={color} />
+      );
   }
 }
 
@@ -71,30 +84,66 @@ function AddressCard({
   onSetDefault: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
-  const { theme, isDarkMode } = (useTheme as any)();
-  const labelText = displayLabel(address);
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+
+  const labelText =
+    address.label === "other" && address.customLabel
+      ? address.customLabel
+      : t(`saved_address_page.${address.label}`);
 
   return (
-    <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card, shadowColor: theme.text }]}>
-      <View style={[styles.iconCircle, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}> 
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
-          <AddressIcon type={address.label} />
-        </View>
+    <View
+      style={[
+        styles.card,
+        {
+          borderColor: theme.border,
+          backgroundColor: theme.card,
+          shadowColor: theme.text,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.iconCircle,
+          {
+            backgroundColor: theme.primaryLight,
+            borderColor: theme.border,
+          },
+        ]}
+      >
+        <AddressIcon type={address.label} color={theme.primary} />
       </View>
 
       <View style={styles.cardContent}>
         <View style={styles.labelRow}>
-          <Text style={[styles.cardLabel, { color: theme.text }]}>{labelText}</Text>
+          <Text style={[styles.cardLabel, { color: theme.text }]}>
+            {labelText}
+          </Text>
+
           {address.isDefault && (
-            <View style={[styles.defaultBadge, { backgroundColor: theme.primaryLight }]}>
-              <Text style={[styles.defaultBadgeText, { color: theme.secondary ?? theme.primary }]}>
-                DEFAULT
+            <View
+              style={[
+                styles.defaultBadge,
+                { backgroundColor: theme.primaryLight },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.defaultBadgeText,
+                  { color: theme.secondary ?? theme.primary },
+                ]}
+              >
+                {t("saved_address_page.default")}
               </Text>
             </View>
           )}
         </View>
 
-        <Text style={[styles.addressLine, { color: theme.subText }]} numberOfLines={2}>
+        <Text
+          style={[styles.addressLine, { color: theme.subText }]}
+          numberOfLines={2}
+        >
           {address.address}
         </Text>
 
@@ -105,20 +154,45 @@ function AddressCard({
               onPress={() => onSetDefault(address._id)}
               activeOpacity={0.7}
             >
-              <Ionicons name="star-outline" size={r(13)} color={theme.primary} style={{ marginRight: r(4) }} />
-              <Text style={[styles.defaultBtnText, { color: theme.primary }]}>
-                Set as default
+              <Ionicons
+                name="star-outline"
+                size={r(13)}
+                color={theme.primary}
+                style={{ marginRight: r(4) }}
+              />
+              <Text
+                style={[
+                  styles.defaultBtnText,
+                  { color: theme.primary },
+                ]}
+              >
+                {t("saved_address_page.set_as_default")}
               </Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={[styles.removeBtn, address.isDefault && { marginLeft: 0 }]}
+            style={[
+              styles.removeBtn,
+              address.isDefault && { marginLeft: 0 },
+            ]}
             onPress={() => onRemove(address._id)}
             activeOpacity={0.7}
           >
-            <Ionicons name="trash-outline" size={r(13)} color={theme.red ?? "#e53935"} style={{ marginRight: r(4) }} />
-            <Text style={[styles.removeBtnText, { color: theme.red ?? "#e53935" }]}>Remove</Text>
+            <Ionicons
+              name="trash-outline"
+              size={r(13)}
+              color={theme.red ?? "#e53935"}
+              style={{ marginRight: r(4) }}
+            />
+            <Text
+              style={[
+                styles.removeBtnText,
+                { color: theme.red ?? "#e53935" },
+              ]}
+            >
+              {t("saved_address_page.remove")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -127,54 +201,92 @@ function AddressCard({
 }
 
 function AddAddressForm({
-  mode,
   initialLabel,
   onCancel,
   onPickOnMap,
   onSave,
 }: {
-  mode: FormMode;
   initialLabel: AddressType;
   onCancel: () => void;
-  onPickOnMap: (label: AddressType, customLabel: string | null) => void;
-  onSave: (payload: { label: AddressType; customLabel: string | null; address: string }) => void;
+  onPickOnMap: (
+    label: AddressType,
+    customLabel: string | null
+  ) => void;
+  onSave: (payload: {
+    label: AddressType;
+    customLabel: string | null;
+    address: string;
+  }) => void;
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
+
   const [label, setLabel] = useState<AddressType>(initialLabel);
-  const [customLabel, setCustomLabel] = useState<string>("");
-  const [addressText, setAddressText] = useState<string>("");
+  const [customLabel, setCustomLabel] = useState("");
+  const [addressText, setAddressText] = useState("");
 
   useEffect(() => {
     setLabel(initialLabel);
   }, [initialLabel]);
 
+  const labelOptions: Array<{ key: AddressType; text: string }> = [
+    { key: "home", text: t("saved_address_page.home") },
+    { key: "office", text: t("saved_address_page.office") },
+    { key: "other", text: t("saved_address_page.other") },
+  ];
+
   return (
     <View style={{ gap: rv(12) }}>
-      <View style={[styles.formCard, { borderColor: theme.border, backgroundColor: theme.card }]}>
-        <Text style={[styles.formTitle, { color: theme.text }]}>Add saved address</Text>
+      <View
+        style={[
+          styles.formCard,
+          {
+            borderColor: theme.border,
+            backgroundColor: theme.card,
+          },
+        ]}
+      >
+        <Text style={[styles.formTitle, { color: theme.text }]}>
+          {t("saved_address_page.add_saved_address")}
+        </Text>
 
-        <Text style={[styles.formLabel, { color: theme.subText }]}>Label</Text>
-        <View style={{ flexDirection: "row", gap: r(8), flexWrap: "wrap" }}>
-          {([
-            { key: "home", text: "Home" },
-            { key: "office", text: "Office" },
-            { key: "other", text: "Other" },
-          ] as const).map((it) => {
-            const active = label === it.key;
+        <Text style={[styles.formLabel, { color: theme.subText }]}>
+          {t("saved_address_page.label")}
+        </Text>
+
+        <View style={styles.pillRow}>
+          {labelOptions.map((item) => {
+            const active = label === item.key;
+
             return (
               <TouchableOpacity
-                key={it.key}
+                key={item.key}
                 style={[
                   styles.pill,
                   {
-                    borderColor: theme.border,
-                    backgroundColor: active ? theme.primaryLight : theme.card,
+                    borderColor: active
+                      ? theme.primary
+                      : theme.border,
+                    backgroundColor: active
+                      ? theme.primaryLight
+                      : theme.card,
                   },
                 ]}
-                onPress={() => setLabel(it.key)}
+                onPress={() => setLabel(item.key)}
                 activeOpacity={0.8}
               >
-                <Text style={[styles.pillText, { color: active ? theme.primary : theme.subText }]}>{it.text}</Text>
+                <Text
+                  style={[
+                    styles.pillText,
+                    {
+                      color: active
+                        ? theme.primary
+                        : theme.subText,
+                    },
+                  ]}
+                >
+                  {item.text}
+                </Text>
               </TouchableOpacity>
             );
           })}
@@ -182,10 +294,30 @@ function AddAddressForm({
 
         {label === "other" && (
           <>
-            <Text style={[styles.formLabel, { color: theme.subText, marginTop: rv(10) }]}>Custom label</Text>
+            <Text
+              style={[
+                styles.formLabel,
+                {
+                  color: theme.subText,
+                  marginTop: rv(10),
+                },
+              ]}
+            >
+              {t("saved_address_page.custom_label")}
+            </Text>
+
             <TextInput
-              style={[styles.input, { borderColor: theme.border, backgroundColor: theme.background, color: theme.text }]}
-              placeholder="e.g. Friend's house"
+              style={[
+                styles.input,
+                {
+                  borderColor: theme.border,
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                },
+              ]}
+              placeholder={t(
+                "saved_address_page.custom_label_placeholder"
+              )}
               placeholderTextColor={theme.subText}
               value={customLabel}
               onChangeText={setCustomLabel}
@@ -193,48 +325,131 @@ function AddAddressForm({
           </>
         )}
 
-        <Text style={[styles.formLabel, { color: theme.subText, marginTop: rv(10) }]}>Address</Text>
+        <Text
+          style={[
+            styles.formLabel,
+            {
+              color: theme.subText,
+              marginTop: rv(10),
+            },
+          ]}
+        >
+          {t("saved_address_page.address")}
+        </Text>
+
         <TextInput
-          style={[styles.input, { borderColor: theme.border, backgroundColor: theme.background, color: theme.text }]}
-          placeholder="Type address (optional if using map)"
+          style={[
+            styles.input,
+            styles.multilineInput,
+            {
+              borderColor: theme.border,
+              backgroundColor: theme.background,
+              color: theme.text,
+            },
+          ]}
+          placeholder={t(
+            "saved_address_page.address_placeholder"
+          )}
           placeholderTextColor={theme.subText}
           value={addressText}
           onChangeText={setAddressText}
           multiline
+          textAlignVertical="top"
         />
 
-        <View style={{ flexDirection: "row", gap: r(10), marginTop: rv(12) }}>
+        <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={[styles.btnSecondary, { borderColor: theme.border }]}
-            onPress={() => onPickOnMap(label, label === "other" ? (customLabel.trim() || null) : null)}
+            style={[
+              styles.btnSecondary,
+              { borderColor: theme.border },
+            ]}
+            onPress={() =>
+              onPickOnMap(
+                label,
+                label === "other"
+                  ? customLabel.trim() || null
+                  : null
+              )
+            }
             activeOpacity={0.8}
           >
-            <Ionicons name="map-outline" size={r(16)} color={theme.primary} style={{ marginRight: r(6) }} />
-            <Text style={[styles.btnSecondaryText, { color: theme.primary }]}>Pick on map</Text>
+            <Ionicons
+              name="map-outline"
+              size={r(16)}
+              color={theme.primary}
+              style={{ marginRight: r(6) }}
+            />
+            <Text
+              style={[
+                styles.btnSecondaryText,
+                { color: theme.primary },
+              ]}
+            >
+              {t("saved_address_page.pick_on_map")}
+            </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.btnPrimary, { backgroundColor: theme.primary }]}
+            style={[
+              styles.btnPrimary,
+              { backgroundColor: theme.primary },
+            ]}
             onPress={() => {
-              const addr = addressText.trim();
-              const cust = label === "other" ? (customLabel.trim() ? customLabel.trim() : null) : null;
-              if (!addr) {
-                Alert.alert("Missing address", "Either type address or use Pick on map.");
+              const address = addressText.trim();
+              const custom =
+                label === "other"
+                  ? customLabel.trim() || null
+                  : null;
+
+              if (!address) {
+                Alert.alert(
+                  t("saved_address_page.missing_address_title"),
+                  t("saved_address_page.missing_address_message")
+                );
                 return;
               }
-              if (label === "other" && !cust) {
-                Alert.alert("Missing custom label", "Please provide a name for this address.");
+
+              if (label === "other" && !custom) {
+                Alert.alert(
+                  t(
+                    "saved_address_page.missing_custom_label_title"
+                  ),
+                  t(
+                    "saved_address_page.missing_custom_label_message"
+                  )
+                );
                 return;
               }
-              onSave({ label, customLabel: cust, address: addr });
+
+              onSave({
+                label,
+                customLabel: custom,
+                address,
+              });
             }}
             activeOpacity={0.85}
           >
-            <Text style={[styles.btnPrimaryText, { color: theme.white }]}>{"Save"}</Text>
+            <Text
+              style={[
+                styles.btnPrimaryText,
+                { color: theme.white },
+              ]}
+            >
+              {t("saved_address_page.save")}
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={{ marginTop: rv(10) }} onPress={onCancel} activeOpacity={0.8}>
-          <Text style={[styles.cancelText, { color: theme.subText }]}>Cancel</Text>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={onCancel}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[styles.cancelText, { color: theme.subText }]}
+          >
+            {t("saved_address_page.cancel")}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -243,25 +458,60 @@ function AddAddressForm({
 
 export default function SavedAddressScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation();
+
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [mode, setMode] = useState<FormMode>("list");
-  const [activeLabel, setActiveLabel] = useState<AddressType>("other");
-  const [activeCustomLabel, setActiveCustomLabel] = useState<string | null>(null);
+  const [activeLabel, setActiveLabel] =
+    useState<AddressType>("other");
+  const [activeCustomLabel, setActiveCustomLabel] =
+    useState<string | null>(null);
 
-  // map selection
-  const [region, setRegion] = useState<Region>(DEFAULT_REGION);
-  const [marker, setMarker] = useState<{ latitude: number; longitude: number }>({ latitude: DEFAULT_REGION.latitude, longitude: DEFAULT_REGION.longitude });
-  const [pickedAddressText, setPickedAddressText] = useState<string>("");
+  const [region, setRegion] =
+    useState<Region>(DEFAULT_REGION);
+  const [marker, setMarker] = useState({
+    latitude: DEFAULT_REGION.latitude,
+    longitude: DEFAULT_REGION.longitude,
+  });
+  const [pickedAddressText, setPickedAddressText] =
+    useState("");
+  const [isLoadingLocation, setIsLoadingLocation] =
+    useState(false);
+
+  const getCurrentLocation = async () => {
+    const { status } =
+      await Location.requestForegroundPermissionsAsync();
+
+    if (status !== "granted") {
+      throw new Error(
+        t("saved_address_page.location_permission_denied")
+      );
+    }
+
+    const location =
+      await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+    return {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    };
+  };
 
   const fetchAll = async () => {
     setLoading(true);
+
     try {
       const data = await getSavedAddresses();
       setAddresses(data);
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Failed to load saved addresses");
+    } catch (error: any) {
+      Alert.alert(
+        t("saved_address_page.error"),
+        error?.message ??
+          t("saved_address_page.load_failed")
+      );
       setAddresses([]);
     } finally {
       setLoading(false);
@@ -276,27 +526,42 @@ export default function SavedAddressScreen() {
     try {
       await setDefaultAddress(id);
       await fetchAll();
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Failed to set default address");
+    } catch (error: any) {
+      Alert.alert(
+        t("saved_address_page.error"),
+        error?.message ??
+          t("saved_address_page.set_default_failed")
+      );
     }
   };
 
-  const onRemove = async (id: string) => {
-    Alert.alert("Remove Address", "Are you sure you want to remove this address?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteSavedAddress(id);
-            await fetchAll();
-          } catch (e: any) {
-            Alert.alert("Error", e?.message ?? "Failed to remove address");
-          }
+  const onRemove = (id: string) => {
+    Alert.alert(
+      t("saved_address_page.remove_address_title"),
+      t("saved_address_page.remove_address_message"),
+      [
+        {
+          text: t("saved_address_page.cancel"),
+          style: "cancel",
         },
-      },
-    ]);
+        {
+          text: t("saved_address_page.remove"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteSavedAddress(id);
+              await fetchAll();
+            } catch (error: any) {
+              Alert.alert(
+                t("saved_address_page.error"),
+                error?.message ??
+                  t("saved_address_page.remove_failed")
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const openAdd = (label: AddressType = "other") => {
@@ -305,72 +570,166 @@ export default function SavedAddressScreen() {
     setMode("add");
   };
 
-  const openPickMap = (label: AddressType, customLabel: string | null) => {
+  const openPickMap = async (
+    label: AddressType,
+    customLabel: string | null
+  ) => {
     setActiveLabel(label);
     setActiveCustomLabel(customLabel);
     setPickedAddressText("");
     setMode("pick");
+
+    try {
+      setIsLoadingLocation(true);
+
+      const currentLocation = await getCurrentLocation();
+      const newRegion = {
+        ...currentLocation,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+
+      setRegion(newRegion);
+      setMarker(currentLocation);
+    } catch (error: any) {
+      Alert.alert(
+        t("saved_address_page.location_error"),
+        error?.message ??
+          t("saved_address_page.current_location_failed")
+      );
+    } finally {
+      setIsLoadingLocation(false);
+    }
   };
 
-  const saveFromForm = async (payload: { label: AddressType; customLabel: string | null; address: string }) => {
+  const saveFromForm = async (payload: {
+    label: AddressType;
+    customLabel: string | null;
+    address: string;
+  }) => {
     try {
-      // Without geocoding we can't guarantee coords; ask user to pick on map.
-      Alert.alert("Location needed", "Please pick this address on map to save coordinates.");
-      // We keep user in pick mode.
+      Alert.alert(
+        t("saved_address_page.location_needed_title"),
+        t("saved_address_page.location_needed_message")
+      );
+
       setActiveLabel(payload.label);
       setActiveCustomLabel(payload.customLabel);
       setPickedAddressText(payload.address);
       setMode("pick");
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Failed to prepare save");
+    } catch (error: any) {
+      Alert.alert(
+        t("saved_address_page.error"),
+        error?.message ??
+          t("saved_address_page.prepare_save_failed")
+      );
     }
   };
 
   const saveFromMap = async () => {
     try {
-      const addr = pickedAddressText.trim();
-      if (!addr) {
-        Alert.alert("Missing address", "Please type/confirm address text before saving.");
+      const address = pickedAddressText.trim();
+
+      if (!address) {
+        Alert.alert(
+          t("saved_address_page.confirm_address_title"),
+          t("saved_address_page.confirm_address_message")
+        );
         return;
       }
 
       await createSavedAddress({
         label: activeLabel,
-        customLabel: activeLabel === "other" ? activeCustomLabel : null,
-        address: addr,
-        coordinates: { lat: marker.latitude, lng: marker.longitude },
+        customLabel:
+          activeLabel === "other"
+            ? activeCustomLabel
+            : null,
+        address,
+        coordinates: {
+          lat: marker.latitude,
+          lng: marker.longitude,
+        },
         isDefault: false,
       } as any);
 
       await fetchAll();
       setMode("list");
-    } catch (e: any) {
-      Alert.alert("Error", e?.message ?? "Failed to create address");
+    } catch (error: any) {
+      Alert.alert(
+        t("saved_address_page.error"),
+        error?.message ??
+          t("saved_address_page.create_failed")
+      );
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: theme.background,
+      }}
+      edges={["top", "left", "right"]}
+    >
       <AppBackground>
-        <View style={[styles.header, { backgroundColor: "transparent" }]}>
+        <View style={styles.header}>
           <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
+            style={[
+              styles.backBtn,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
             onPress={() => router.back()}
             activeOpacity={0.7}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{
+              top: 10,
+              bottom: 10,
+              left: 10,
+              right: 10,
+            }}
           >
-            <Ionicons name="arrow-back" size={r(20)} color={theme.text} />
+            <Ionicons
+              name="arrow-back"
+              size={r(20)}
+              color={theme.text}
+            />
           </TouchableOpacity>
 
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Saved Addresses</Text>
+          <Text
+            style={[
+              styles.headerTitle,
+              { color: theme.text },
+            ]}
+          >
+            {t("saved_address_page.title")}
+          </Text>
 
           <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}
+            style={[
+              styles.addBtn,
+              {
+                backgroundColor: theme.primaryLight,
+                borderColor: theme.primary,
+              },
+            ]}
             onPress={() => openAdd("other")}
             activeOpacity={0.85}
           >
-            <Ionicons name="add" size={r(16)} color={theme.primary} />
-            <Text style={[styles.addBtnText, { color: theme.primary }]}>Add</Text>
+            <Ionicons
+              name="add"
+              size={r(16)}
+              color={theme.primary}
+            />
+            <Text
+              style={[
+                styles.addBtnText,
+                { color: theme.primary },
+              ]}
+            >
+              {t("saved_address_page.add")}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -381,39 +740,92 @@ export default function SavedAddressScreen() {
             keyboardShouldPersistTaps="handled"
           >
             {loading ? (
-              <View style={{ paddingVertical: rv(40), alignItems: "center" }}>
-                <Text style={{ color: theme.subText }}>Loading...</Text>
+              <View style={styles.loadingContainer}>
+                <Text style={{ color: theme.subText }}>
+                  {t("saved_address_page.loading")}
+                </Text>
               </View>
             ) : addresses.length === 0 ? (
-              <View style={[styles.emptyState]}>
-                <View style={[styles.emptyIcon, { backgroundColor: theme.primaryLight, borderColor: theme.border }]}>
-                  <Ionicons name="location-outline" size={r(40)} color={theme.primary} />
+              <View style={styles.emptyState}>
+                <View
+                  style={[
+                    styles.emptyIcon,
+                    {
+                      backgroundColor: theme.primaryLight,
+                      borderColor: theme.primary,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="location-outline"
+                    size={r(40)}
+                    color={theme.primary}
+                  />
                 </View>
-                <Text style={[styles.emptyTitle, { color: theme.text }]}>No saved addresses</Text>
-                <Text style={[styles.emptySubtitle, { color: theme.subText }]}>
-                  Add an address to speed up checkout
+
+                <Text
+                  style={[
+                    styles.emptyTitle,
+                    { color: theme.text },
+                  ]}
+                >
+                  {t(
+                    "saved_address_page.no_saved_addresses"
+                  )}
                 </Text>
+
+                <Text
+                  style={[
+                    styles.emptySubtitle,
+                    { color: theme.subText },
+                  ]}
+                >
+                  {t("saved_address_page.empty_subtitle")}
+                </Text>
+
                 <TouchableOpacity
-                  style={[styles.emptyAddBtn, { backgroundColor: theme.primary }]}
+                  style={[
+                    styles.emptyAddBtn,
+                    { backgroundColor: theme.primary },
+                  ]}
                   onPress={() => openAdd("other")}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="add" size={r(16)} color={theme.white} />
-                  <Text style={styles.emptyAddBtnText}>Add Address</Text>
+                  <Ionicons
+                    name="add"
+                    size={r(16)}
+                    color={theme.white}
+                  />
+                  <Text
+                    style={[
+                      styles.emptyAddBtnText,
+                      { color: theme.white },
+                    ]}
+                  >
+                    {t("saved_address_page.add_address")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              addresses.map((a) => (
-                <AddressCard key={a._id} address={a} onSetDefault={onSetDefault} onRemove={onRemove} />
+              addresses.map((address) => (
+                <AddressCard
+                  key={address._id}
+                  address={address}
+                  onSetDefault={onSetDefault}
+                  onRemove={onRemove}
+                />
               ))
             )}
           </ScrollView>
         )}
 
         {mode === "add" && (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
+          >
             <AddAddressForm
-              mode={mode}
               initialLabel={activeLabel}
               onCancel={() => setMode("list")}
               onPickOnMap={openPickMap}
@@ -423,43 +835,152 @@ export default function SavedAddressScreen() {
         )}
 
         {mode === "pick" && (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
-            <View style={[styles.mapCard, { borderColor: theme.border, backgroundColor: theme.card }]}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View
+              style={[
+                styles.mapCard,
+                {
+                  borderColor: theme.border,
+                  backgroundColor: theme.card,
+                },
+              ]}
             >
-              <View style={{ height: rv(360), borderRadius: r(16), overflow: "hidden" }}>
+              <View style={styles.mapContainer}>
                 <MapView
-                  style={{ flex: 1 }}
+                  style={styles.map}
                   initialRegion={region}
                   region={region}
-                  onRegionChangeComplete={(r) => setRegion(r)}
-                  onPress={(e) => {
-                    const c = e.nativeEvent.coordinate;
-                    setMarker({ latitude: c.latitude, longitude: c.longitude });
+                  onRegionChangeComplete={setRegion}
+                  onPress={(event) => {
+                    const coordinate =
+                      event.nativeEvent.coordinate;
+
+                    setMarker({
+                      latitude: coordinate.latitude,
+                      longitude: coordinate.longitude,
+                    });
                   }}
                 >
-                  <Marker coordinate={marker} draggable />
+                  <Marker
+                    coordinate={marker}
+                    draggable
+                    onDragEnd={(event) => {
+                      const coordinate =
+                        event.nativeEvent.coordinate;
+
+                      setMarker({
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                      });
+                    }}
+                  />
                 </MapView>
               </View>
 
-              <View style={{ padding: r(14), gap: rv(10) }}>
-                <Text style={[styles.formTitle, { color: theme.text }]}>Pick exact location</Text>
-                <Text style={[styles.formLabel, { color: theme.subText }]}>Address text (for saving)</Text>
+              {isLoadingLocation && (
+                <View
+                  style={[
+                    styles.locationLoadingOverlay,
+                    {
+                      backgroundColor:
+                        theme.background + "E6",
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.locationLoadingText,
+                      { color: theme.text },
+                    ]}
+                  >
+                    {t(
+                      "saved_address_page.getting_current_location"
+                    )}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.mapFormContent}>
+                <Text
+                  style={[
+                    styles.formTitle,
+                    { color: theme.text },
+                  ]}
+                >
+                  {t(
+                    "saved_address_page.pick_exact_location"
+                  )}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.formLabel,
+                    { color: theme.subText },
+                  ]}
+                >
+                  {t("saved_address_page.address_text")}
+                </Text>
+
                 <TextInput
-                  style={[styles.input, { borderColor: theme.border, backgroundColor: theme.background, color: theme.text }]}
-                  placeholder="Type address or confirm"
+                  style={[
+                    styles.input,
+                    styles.multilineInput,
+                    {
+                      borderColor: theme.border,
+                      backgroundColor: theme.background,
+                      color: theme.text,
+                    },
+                  ]}
+                  placeholder={t(
+                    "saved_address_page.address_confirm_placeholder"
+                  )}
                   placeholderTextColor={theme.subText}
                   value={pickedAddressText}
                   onChangeText={setPickedAddressText}
                   multiline
+                  textAlignVertical="top"
                 />
 
-                <View style={{ flexDirection: "row", gap: r(10) }}>
-                  <TouchableOpacity style={[styles.btnSecondary, { borderColor: theme.border }]} onPress={() => setMode("add")} activeOpacity={0.85}>
-                    <Text style={[styles.btnSecondaryText, { color: theme.primary }]}>Back</Text>
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.btnSecondary,
+                      { borderColor: theme.border },
+                    ]}
+                    onPress={() => setMode("add")}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.btnSecondaryText,
+                        { color: theme.primary },
+                      ]}
+                    >
+                      {t("saved_address_page.back")}
+                    </Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: theme.primary }]} onPress={saveFromMap} activeOpacity={0.85}>
-                    <Text style={[styles.btnPrimaryText, { color: theme.white }]}>Save</Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.btnPrimary,
+                      { backgroundColor: theme.primary },
+                    ]}
+                    onPress={saveFromMap}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.btnPrimaryText,
+                        { color: theme.white },
+                      ]}
+                    >
+                      {t("saved_address_page.save")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -489,15 +1010,19 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: r(8),
     fontSize: rm(18),
     fontWeight: "700",
     textAlign: "center",
   },
   addBtn: {
+    minWidth: r(70),
     flexDirection: "row",
     alignItems: "center",
-    gap: r(6),
-    paddingHorizontal: r(12),
+    justifyContent: "center",
+    gap: r(5),
+    paddingHorizontal: r(10),
     paddingVertical: rv(8),
     borderRadius: r(20),
     borderWidth: 1,
@@ -506,20 +1031,37 @@ const styles = StyleSheet.create({
     fontSize: rm(13),
     fontWeight: "700",
   },
-
   listContent: {
     paddingHorizontal: r(16),
     paddingTop: rv(10),
     paddingBottom: rv(32),
-    gap: rv(12),
   },
-
+  loadingContainer: {
+    paddingVertical: rv(40),
+    alignItems: "center",
+  },
+  locationLoadingOverlay: {
+    position: "absolute",
+    top: rv(16),
+    left: r(16),
+    right: r(16),
+    padding: rv(10),
+    borderRadius: r(12),
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
+  locationLoadingText: {
+    fontSize: rm(14),
+    fontWeight: "600",
+    textAlign: "center",
+  },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
     paddingTop: rv(70),
     paddingHorizontal: r(24),
-    gap: rv(10),
   },
   emptyIcon: {
     width: r(88),
@@ -528,22 +1070,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
+    marginBottom: rv(14),
   },
   emptyTitle: {
     fontSize: rm(17),
     fontWeight: "700",
+    textAlign: "center",
+    marginBottom: rv(7),
   },
   emptySubtitle: {
     fontSize: rm(13),
-    fontWeight: "400",
     textAlign: "center",
     lineHeight: rm(19),
   },
   emptyAddBtn: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: r(6),
-    marginTop: rv(16),
+    marginTop: rv(20),
     borderRadius: r(14),
     paddingHorizontal: r(24),
     paddingVertical: rv(13),
@@ -551,15 +1096,13 @@ const styles = StyleSheet.create({
   emptyAddBtnText: {
     fontSize: rm(14),
     fontWeight: "700",
-    color: "#fff",
   },
-
   card: {
     flexDirection: "row",
     borderRadius: r(16),
     padding: r(16),
-    gap: r(14),
     borderWidth: 1,
+    marginBottom: rv(12),
   },
   iconCircle: {
     width: r(44),
@@ -568,19 +1111,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
+    marginRight: r(14),
   },
   cardContent: {
     flex: 1,
+    minWidth: 0,
   },
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: r(8),
+    flexWrap: "wrap",
     marginBottom: rv(4),
   },
   cardLabel: {
     fontSize: rm(15),
     fontWeight: "700",
+    marginRight: r(8),
   },
   defaultBadge: {
     borderRadius: r(6),
@@ -593,18 +1140,19 @@ const styles = StyleSheet.create({
   },
   addressLine: {
     fontSize: rm(12.5),
-    fontWeight: "400",
     lineHeight: rm(18),
   },
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     marginTop: rv(10),
-    gap: r(16),
   },
   defaultBtn: {
     flexDirection: "row",
     alignItems: "center",
+    marginRight: r(16),
+    marginBottom: rv(4),
   },
   defaultBtnText: {
     fontSize: rm(12),
@@ -613,28 +1161,44 @@ const styles = StyleSheet.create({
   removeBtn: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: "auto" as any,
+    marginLeft: "auto",
+    marginBottom: rv(4),
   },
   removeBtnText: {
     fontSize: rm(12),
     fontWeight: "600",
   },
-
-  // Add / Form
   formCard: {
     borderRadius: r(16),
     borderWidth: 1,
     padding: r(16),
-    gap: rv(8),
   },
   formTitle: {
     fontSize: rm(16),
     fontWeight: "800",
+    marginBottom: rv(12),
   },
   formLabel: {
     fontSize: rm(13),
     fontWeight: "600",
-    marginTop: rv(2),
+    marginBottom: rv(7),
+  },
+  pillRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: rv(4),
+  },
+  pill: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: r(12),
+    paddingVertical: rv(8),
+    marginRight: r(8),
+    marginBottom: rv(8),
+  },
+  pillText: {
+    fontSize: rm(13),
+    fontWeight: "700",
   },
   input: {
     borderWidth: 1,
@@ -643,51 +1207,69 @@ const styles = StyleSheet.create({
     paddingVertical: rv(10),
     minHeight: rv(44),
     fontSize: rm(14),
+    marginBottom: rv(4),
   },
-  pill: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: r(12),
-    paddingVertical: rv(8),
+  multilineInput: {
+    minHeight: rv(76),
   },
-  pillText: {
-    fontSize: rm(13),
-    fontWeight: "700",
+  buttonRow: {
+    flexDirection: "row",
+    marginTop: rv(12),
   },
-
-  // Buttons
   btnPrimary: {
     flex: 1,
+    minHeight: rv(46),
     borderRadius: r(14),
-    paddingVertical: rv(12),
+    paddingHorizontal: r(10),
+    paddingVertical: rv(11),
     alignItems: "center",
     justifyContent: "center",
+    marginLeft: r(5),
   },
   btnPrimaryText: {
     fontSize: rm(14),
     fontWeight: "800",
+    textAlign: "center",
   },
   btnSecondary: {
     flex: 1,
+    minHeight: rv(46),
+    flexDirection: "row",
     borderRadius: r(14),
-    paddingVertical: rv(12),
+    paddingHorizontal: r(8),
+    paddingVertical: rv(11),
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    backgroundColor: "transparent",
+    marginRight: r(5),
   },
   btnSecondaryText: {
+    flexShrink: 1,
     fontSize: rm(14),
     fontWeight: "700",
+    textAlign: "center",
+  },
+  cancelButton: {
+    alignItems: "center",
+    marginTop: rv(14),
   },
   cancelText: {
     fontSize: rm(13),
     fontWeight: "600",
   },
-
   mapCard: {
     borderRadius: r(16),
     borderWidth: 1,
     overflow: "hidden",
+  },
+  mapContainer: {
+    height: rv(360),
+    overflow: "hidden",
+  },
+  map: {
+    flex: 1,
+  },
+  mapFormContent: {
+    padding: r(14),
   },
 });
