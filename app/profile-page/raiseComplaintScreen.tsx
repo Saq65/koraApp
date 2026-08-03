@@ -13,6 +13,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Dimensions,
 } from "react-native";
 
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -79,6 +80,13 @@ const DEFAULT_CATEGORIES: Category[] = [
   },
 ];
 
+const { width: W, height: H } = Dimensions.get("window");
+  
+const r = (n: number) => Math.round((W / 375) * n);
+const rv = (n: number) => Math.round((H / 812) * n);
+const rm = (n: number, f = 0.45) => n + (r(n) - n) * f;
+
+
 export default function RaiseComplaintScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -94,7 +102,7 @@ export default function RaiseComplaintScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+  
   // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
@@ -296,9 +304,29 @@ export default function RaiseComplaintScreen() {
             >
               {/* Header */}
               <View style={styles.headerRow}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                  <Ionicons name="arrow-back" size={24} color={theme.primary} />
-                </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[
+                              styles.backBtn,
+                              {
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                              },
+                            ]}
+                            onPress={() => router.back()}
+                            activeOpacity={0.7}
+                            hitSlop={{
+                              top: 10,
+                              bottom: 10,
+                              left: 10,
+                              right: 10,
+                            }}
+                          >
+                            <Ionicons
+                              name="arrow-back"
+                              size={r(20)}
+                              color={theme.text}
+                            />
+                          </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: theme.text }]}>
                   {t("complaint.title", "Raise a Complaint")}
                 </Text>
@@ -501,15 +529,21 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
     marginBottom: 24,
   },
-  backButton: {
-    padding: 8,
+  backBtn: {
+   width: r(36),
+    height: r(36),
+    borderRadius: r(18),
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
+    marginLeft: r(10),
   },
   contactRow: {
     flexDirection: "row",

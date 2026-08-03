@@ -1014,7 +1014,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: r(8),
     fontSize: rm(18),
     fontWeight: "700",
-    textAlign: "center",
+    // textAlign: "center",
   },
   addBtn: {
     minWidth: r(70),

@@ -331,7 +331,8 @@ const styles = StyleSheet.create({
     fontSize: rm(18),
     fontWeight: "700",
     color: C.ink,
-    textAlign: "center",
+    // textAlign: "center",
+marginLeft: r(10),
     letterSpacing: -0.3,
   },
 

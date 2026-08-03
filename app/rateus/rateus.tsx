@@ -9,6 +9,7 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -16,25 +17,33 @@ import { router } from 'expo-router'
 import { useTheme } from '../../src/theme/ThemeProvider';
 import AppBackground from '@/components/AppBackground';
 import { submitReview, getMyReview, updateMyReview } from '../../src/services/review';
+import { useTranslation } from 'react-i18next';
+
+const { width: W, height: H } = Dimensions.get("window");
+const r = (n: number) => Math.round((W / 375) * n);
+const rv = (n: number) => Math.round((H / 812) * n);
+const rm = (n: number, f = 0.45) => n + (r(n) - n) * f;
+
 
 const CATEGORIES = [
-  { id: 'pickup', label: 'Pickup', icon: 'bicycle-outline' },
-  { id: 'quality', label: 'Wash Quality', icon: 'shirt-outline' },
-  { id: 'delivery', label: 'Delivery', icon: 'cube-outline' },
-  { id: 'packaging', label: 'Packaging', icon: 'gift-outline' },
+  { id: 'pickup', labelKey: 'rate_us_page.categories.pickup', icon: 'bicycle-outline' },
+  { id: 'quality', labelKey: 'rate_us_page.categories.quality', icon: 'shirt-outline' },
+  { id: 'delivery', labelKey: 'rate_us_page.categories.delivery', icon: 'cube-outline' },
+  { id: 'packaging', labelKey: 'rate_us_page.categories.packaging', icon: 'gift-outline' },
 ]
 
 const QUICK_TAGS = [
-  'On time delivery',
-  'Great quality',
-  'Fresh smell',
-  'Careful handling',
-  'Friendly staff',
-  'Will order again',
+  { id: 'on_time_delivery', labelKey: 'rate_us_page.tags.on_time_delivery' },
+  { id: 'great_quality', labelKey: 'rate_us_page.tags.great_quality' },
+  { id: 'fresh_smell', labelKey: 'rate_us_page.tags.fresh_smell' },
+  { id: 'careful_handling', labelKey: 'rate_us_page.tags.careful_handling' },
+  { id: 'friendly_staff', labelKey: 'rate_us_page.tags.friendly_staff' },
+  { id: 'will_order_again', labelKey: 'rate_us_page.tags.will_order_again' },
 ]
 
 export default function RateUs() {
   const { theme, isDarkMode } = useTheme()
+  const { t } = useTranslation()
 
   const [pageLoading, setPageLoading] = useState(true)
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -68,12 +77,12 @@ export default function RateUs() {
 
   const getRatingLabel = (r: number) => {
     switch (r) {
-      case 1: return 'Very Poor 😞'
-      case 2: return 'Poor 😕'
-      case 3: return 'Okay 😐'
-      case 4: return 'Good 😊'
-      case 5: return 'Excellent 🤩'
-      default: return 'Tap to rate'
+      case 1: return t('rate_us_page.ratings.very_poor')
+      case 2: return t('rate_us_page.ratings.poor')
+      case 3: return t('rate_us_page.ratings.okay')
+      case 4: return t('rate_us_page.ratings.good')
+      case 5: return t('rate_us_page.ratings.excellent')
+      default: return t('rate_us_page.ratings.tap_to_rate')
     }
   }
 
@@ -85,7 +94,7 @@ export default function RateUs() {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      Alert.alert('Rating required', 'Please give at least an overall star rating.')
+      Alert.alert(t('rate_us_page.rating_required_title'), t('rate_us_page.rating_required_message'))
       return
     }
     try {
@@ -111,7 +120,7 @@ export default function RateUs() {
       setExistingReview(res.data)
       setEditMode(false)
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Could not submit review. Please try again.')
+      Alert.alert(t('rate_us_page.error_title'), error?.message || t('rate_us_page.submit_failed'))
     } finally {
       setSubmitLoading(false)
     }
@@ -146,7 +155,7 @@ export default function RateUs() {
             >
               <Ionicons name="arrow-back" size={20} color={theme.text} />
             </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>Your Review</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>{t('rate_us_page.your_review')}</Text>
             <View style={{ width: 36 }} />
           </View>
 
@@ -154,13 +163,13 @@ export default function RateUs() {
             {/* Thank you banner */}
             <View style={[styles.heroCard, { backgroundColor: theme.primary }]}>
               <Text style={styles.heroEmoji}>🎉</Text>
-              <Text style={styles.heroTitle}>Thank You for your feedback!</Text>
-              <Text style={styles.heroSubtitle}>You have already submitted a review</Text>
+              <Text style={styles.heroTitle}>{t('rate_us_page.thank_you_title')}</Text>
+              <Text style={styles.heroSubtitle}>{t('rate_us_page.already_submitted')}</Text>
             </View>
 
             {/* Review Card */}
             <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
-              <Text style={[styles.cardTitle, { color: theme.text }]}>Overall Rating</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.overall_rating')}</Text>
               <View style={styles.starsRow}>
                 {[1, 2, 3, 4, 5].map(s => (
                   <Ionicons
@@ -180,7 +189,7 @@ export default function RateUs() {
             {/* Category ratings */}
             {Object.values(existingReview.categoryRatings || {}).some(v => v) && (
               <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
-                <Text style={[styles.cardTitle, { color: theme.text }]}>Category Ratings</Text>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.category_ratings')}</Text>
                 {CATEGORIES.map(cat => {
                   const val = existingReview.categoryRatings?.[cat.id]
                   if (!val) return null
@@ -190,7 +199,7 @@ export default function RateUs() {
                         <View style={[styles.catIconBox, { backgroundColor: theme.primaryLight || (isDarkMode ? '#374151' : '#E6F4F1') }]}>
                           <Ionicons name={cat.icon as any} size={16} color={theme.primary} />
                         </View>
-                        <Text style={[styles.categoryLabel, { color: theme.text }]}>{cat.label}</Text>
+                        <Text style={[styles.categoryLabel, { color: theme.text }]}>{t(cat.labelKey)}</Text>
                       </View>
                       <View style={styles.miniStars}>
                         {[1, 2, 3, 4, 5].map(s => (
@@ -212,11 +221,11 @@ export default function RateUs() {
             {/* Tags */}
             {existingReview.tags?.length > 0 && (
               <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
-                <Text style={[styles.cardTitle, { color: theme.text }]}>What you liked</Text>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.what_you_liked')}</Text>
                 <View style={styles.tagsWrap}>
                   {existingReview.tags.map((tag: string) => (
-                    <View key={tag} style={[styles.tag, { backgroundColor: theme.primary, borderColor: theme.primary }]}>
-                      <Text style={[styles.tagText, { color: '#fff' }]}>✓ {tag}</Text>
+                    <View  style={[styles.tag, { backgroundColor: theme.primary, borderColor: theme.primary }]}>
+                      <Text style={[styles.tagText, { color: '#fff' }]}>✓ {QUICK_TAGS.find(item => item.id === tag) ? t(QUICK_TAGS.find(item => item.id === tag)!.labelKey) : tag}</Text>
                     </View>
                   ))}
                 </View>
@@ -226,7 +235,7 @@ export default function RateUs() {
             {/* Written review */}
             {existingReview.review ? (
               <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
-                <Text style={[styles.cardTitle, { color: theme.text }]}>Your Review</Text>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.your_review')}</Text>
                 <Text style={[styles.reviewText, { color: theme.textSecondary || (isDarkMode ? '#9CA3AF' : '#6B7280') }]}>
                   "{existingReview.review}"
                 </Text>
@@ -237,7 +246,7 @@ export default function RateUs() {
               style={[styles.submitBtn, { backgroundColor: theme.primary }]}
               onPress={() => router.back()}
             >
-              <Text style={[styles.submitText, { color: '#fff' }]}>Back to Profile</Text>
+              <Text style={[styles.submitText, { color: '#fff' }]}>{t('rate_us_page.back_to_profile')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -251,7 +260,7 @@ export default function RateUs() {
                 setEditMode(true)
               }}
             >
-              <Text style={[styles.submitText, { color: '#fff' }]}>Edit Review</Text>
+              <Text style={[styles.submitText, { color: '#fff' }]}>{t('rate_us_page.edit_review')}</Text>
             </TouchableOpacity>
 
             <View style={{ height: 30 }} />
@@ -279,7 +288,7 @@ export default function RateUs() {
           >
             <Ionicons name="arrow-back" size={20} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Rate Us</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t('rate_us_page.rate_us')}</Text>
           <View style={{ width: 36 }} />
         </View>
 
@@ -288,13 +297,13 @@ export default function RateUs() {
           {/* Hero */}
           <View style={[styles.heroCard, { backgroundColor: theme.primary }]}>
             <Text style={styles.heroEmoji}>👕</Text>
-            <Text style={styles.heroTitle}>How was your experience?</Text>
-            <Text style={styles.heroSubtitle}>Your feedback makes KORA better for everyone</Text>
+            <Text style={styles.heroTitle}>{t('rate_us_page.experience_title')}</Text>
+            <Text style={styles.heroSubtitle}>{t('rate_us_page.experience_subtitle')}</Text>
           </View>
 
           {/* Overall Rating */}
           <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Overall Rating</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.overall_rating')}</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(star => (
                 <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7}>
@@ -314,14 +323,14 @@ export default function RateUs() {
 
           {/* Category Ratings */}
           <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Rate by Category</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.rate_by_category')}</Text>
             {CATEGORIES.map(cat => (
               <View key={cat.id} style={styles.categoryRow}>
                 <View style={styles.categoryLeft}>
                   <View style={[styles.catIconBox, { backgroundColor: theme.primaryLight || (isDarkMode ? '#374151' : '#E6F4F1') }]}>
                     <Ionicons name={cat.icon as any} size={16} color={theme.primary} />
                   </View>
-                  <Text style={[styles.categoryLabel, { color: theme.text }]}>{cat.label}</Text>
+                  <Text style={[styles.categoryLabel, { color: theme.text }]}>{t(cat.labelKey)}</Text>
                 </View>
                 <View style={styles.miniStars}>
                   {[1, 2, 3, 4, 5].map(s => (
@@ -341,21 +350,21 @@ export default function RateUs() {
 
           {/* Quick Tags */}
           <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>What did you like?</Text>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.what_did_you_like')}</Text>
             <View style={styles.tagsWrap}>
               {QUICK_TAGS.map(tag => {
-                const selected = selectedTags.includes(tag)
+                const selected = selectedTags.includes(tag.id)
                 return (
                   <TouchableOpacity
-                    key={tag}
+                    key={tag.id}
                     style={[styles.tag, {
                       backgroundColor: selected ? theme.primary : 'transparent',
                       borderColor: selected ? theme.primary : (isDarkMode ? '#374151' : '#E5E7EB'),
                     }]}
-                    onPress={() => toggleTag(tag)}
+                    onPress={() => toggleTag(tag.id)}
                   >
                     <Text style={[styles.tagText, { color: selected ? '#fff' : (isDarkMode ? '#9CA3AF' : '#6B7280') }]}>
-                      {selected && '✓ '}{tag}
+                      {selected && '✓ '}{t(tag.labelKey)}
                     </Text>
                   </TouchableOpacity>
                 )
@@ -366,8 +375,8 @@ export default function RateUs() {
           {/* Review Box */}
           <View style={[styles.card, { backgroundColor: theme.card || (isDarkMode ? '#1F2937' : '#fff') }]}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>
-              Write a Review{' '}
-              <Text style={{ color: isDarkMode ? '#6B7280' : '#9CA3AF', fontWeight: '400', fontSize: 13 }}>(optional)</Text>
+              {t('rate_us_page.write_review')}{' '}
+              <Text style={{ color: isDarkMode ? '#6B7280' : '#9CA3AF', fontWeight: '400', fontSize: 13 }}>({t('rate_us_page.optional')})</Text>
             </Text>
             <TextInput
               style={[styles.textInput, {
@@ -375,7 +384,7 @@ export default function RateUs() {
                 color: theme.text,
                 borderColor: isDarkMode ? '#374151' : '#E5E7EB',
               }]}
-              placeholder="Share your experience with KORA laundry..."
+              placeholder={t('rate_us_page.review_placeholder')}
               placeholderTextColor={isDarkMode ? '#6B7280' : '#9CA3AF'}
               multiline
               numberOfLines={4}
@@ -424,10 +433,10 @@ export default function RateUs() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
+  centered: { flex: 1, alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   backBtn: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '700' },
+  headerTitle: { fontSize: 18, fontWeight: '700', marginLeft:r(10) },
   heroCard: { margin: 16, borderRadius: 16, padding: 24, alignItems: 'center' },
   heroEmoji: { fontSize: 48, marginBottom: 10 },
   heroTitle: { fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center' },

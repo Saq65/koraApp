@@ -191,7 +191,7 @@ const getStyles = (theme: any) =>
         header: {
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
+            // justifyContent: "space-between",
             paddingHorizontal: 16,
             paddingVertical: 12,
         },
@@ -211,6 +211,8 @@ const getStyles = (theme: any) =>
             fontSize: 18,
             fontWeight: "700",
             color: theme.text,
+            marginLeft: 10,
+
         },
         logoContainer: {
             alignItems: "center",

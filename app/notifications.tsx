@@ -107,7 +107,7 @@ function groupFor(iso: string): Group {
 }
 
 // ─── Notif icon renderer ───────────────────────────────────────
-function NotifIconView({ icon, theme }: { icon: NotifIcon; theme: any }) {
+function NotifIconView({ icon, theme, isDarkMode }: { icon: NotifIcon; theme: any; isDarkMode: boolean }) {
   const getColor = () => {
     if (icon === "cancelled") return "#e53935";
     if (icon === "package" || icon === "delivery") return "#f59e0b";
@@ -115,9 +115,9 @@ function NotifIconView({ icon, theme }: { icon: NotifIcon; theme: any }) {
   };
 
   const getBg = () => {
-    if (icon === "cancelled") return "#fde8e8";
-    if (icon === "package" || icon === "delivery") return "#fef3c7";
-    return theme.primary + "15";
+    if (icon === "cancelled") return isDarkMode ? "rgba(229, 57, 53, 0.18)" : "#fde8e8";
+    if (icon === "package" || icon === "delivery") return isDarkMode ? "rgba(245, 158, 11, 0.18)" : "#fef3c7";
+    return isDarkMode ? theme.primary + "22" : theme.primary + "15";
   };
 
   const iconMap: Record<NotifIcon, React.ReactNode> = {
@@ -187,11 +187,13 @@ function NotifRow({
   onPress,
   theme,
   t,
+  isDarkMode,
 }: {
   notif: NotificationItem;
   onPress: (notif: NotificationItem) => void;
   theme: any;
   t: any;
+  isDarkMode: boolean;
 }) {
   const isUnread = !notif.read;
   const translated = getNotificationText(notif, t);
@@ -202,7 +204,7 @@ function NotifRow({
         {
           backgroundColor: isUnread
             ? theme.card
-            : theme.background === "#000000"
+            : isDarkMode
               ? theme.card
               : "#F5F7F7",
           borderColor: isUnread ? theme.primary + "38" : theme.border,
@@ -211,7 +213,7 @@ function NotifRow({
       activeOpacity={0.75}
       onPress={() => onPress(notif)}
     >
-      <NotifIconView icon={TYPE_TO_ICON[notif.type] ?? "location"} theme={theme} />
+      <NotifIconView icon={TYPE_TO_ICON[notif.type] ?? "location"} theme={theme} isDarkMode={isDarkMode} />
 
       <View style={styles.notifBody}>
         <Text style={[styles.notifTitle, { color: theme.text }]}>{translated.title}</Text>
@@ -394,7 +396,7 @@ export default function Notifications() {
               <>
                 <SectionHeader title={t("notifications.today")} theme={theme} />
                 {today.map((n) => (
-                  <NotifRow key={n._id} notif={n} onPress={handlePress} theme={theme} t={t} />
+                  <NotifRow key={n._id} notif={n} onPress={handlePress} theme={theme} t={t} isDarkMode={isDarkMode} />
                 ))}
               </>
             )}
@@ -404,7 +406,7 @@ export default function Notifications() {
               <>
                 <SectionHeader title={t("notifications.yesterday")} theme={theme} />
                 {yesterdayGroup.map((n) => (
-                  <NotifRow key={n._id} notif={n} onPress={handlePress} theme={theme} t={t} />
+                  <NotifRow key={n._id} notif={n} onPress={handlePress} theme={theme} t={t} isDarkMode={isDarkMode} />
                 ))}
               </>
             )}
@@ -414,7 +416,7 @@ export default function Notifications() {
               <>
                 <SectionHeader title={t("notifications.earlier")} theme={theme} />
                 {earlier.map((n) => (
-                  <NotifRow key={n._id} notif={n} onPress={handlePress} theme={theme} t={t} />
+                  <NotifRow key={n._id} notif={n} onPress={handlePress} theme={theme} t={t} isDarkMode={isDarkMode} />
                 ))}
               </>
             )}
