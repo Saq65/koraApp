@@ -224,7 +224,7 @@ export default function RateUs() {
                 <Text style={[styles.cardTitle, { color: theme.text }]}>{t('rate_us_page.what_you_liked')}</Text>
                 <View style={styles.tagsWrap}>
                   {existingReview.tags.map((tag: string) => (
-                    <View  style={[styles.tag, { backgroundColor: theme.primary, borderColor: theme.primary }]}>
+                    <View key={tag} style={[styles.tag, { backgroundColor: theme.primary, borderColor: theme.primary }]}>
                       <Text style={[styles.tagText, { color: '#fff' }]}>✓ {QUICK_TAGS.find(item => item.id === tag) ? t(QUICK_TAGS.find(item => item.id === tag)!.labelKey) : tag}</Text>
                     </View>
                   ))}
