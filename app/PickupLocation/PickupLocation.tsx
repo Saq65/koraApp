@@ -52,10 +52,7 @@ type SearchBarProps = {
   onPredictionSelect: (prediction: Prediction, confirmNow: boolean) => void
 }
 
-const DEFAULT_REGION: Region = {
-  latitude: 19.076, longitude: 72.8777,
-  latitudeDelta: 0.01, longitudeDelta: 0.01,
-}
+
 
 const SavedAddressIcon = ({ label }: { label: SavedAddress['label'] }) => {
   const { theme } = useTheme()
@@ -364,11 +361,12 @@ export default function PickupLocation() {
     router.back()
   }
 
-  const setFallbackLocation = () => {
-    setRegion(DEFAULT_REGION)
-    setMarkerCoord({ latitude: DEFAULT_REGION.latitude, longitude: DEFAULT_REGION.longitude })
-    setLocationResolved(true)
-  }
+const setFallbackLocation = () => {
+  setRegion(null)
+  setMarkerCoord(null)
+  setResolvedAddress('')
+  setLocationResolved(false)
+}
 
   const fetchCurrentLocation = async (confirmNow = false, showAlertOnError = true) => {
     setFetchingLocation(true)

@@ -56,7 +56,8 @@ export default function HomeScreen() {
       case "picked_up": return t("order.status_picked_up");
       case "delivered": return t("order.status_delivered");
       case "cancelled": return t("order.status_cancelled");
-      default: return status;
+      default:
+      return t(`order.${status}`, { defaultValue: status });
     }
   };
 

@@ -123,6 +123,25 @@
     "my_complaints": "मेरी शिकायतें",
     "my_complaints_sub": "दर्ज की गई शिकायतों की स्थिति ट्रैक करें"
   },
+"home": {
+  "active_order": "सक्रिय ऑर्डर",
+  "no_active_order": "कोई सक्रिय ऑर्डर नहीं है",
+  "place_first_order": "पहला ऑर्डर दें",
+  "services": "सेवाएं",
+  "recent_orders": "हाल के ऑर्डर",
+  "no_orders_yet": "अभी तक कोई ऑर्डर नहीं है",
+  "book_pickup": "पिकअप बुक करें",
+  "special_offer": "विशेष ऑफर",
+  "promo_title": "पहले ऑर्डर पर 30% छूट!",
+  "promo_code": "चेकआउट के समय KORA30 कोड का उपयोग करें",
+  "language_sub": "ऐप की भाषा बदलें",
+  "settings": "सेटिंग्स",
+  "settings_sub": "थीम, ध्वनि और अनुमतियां",
+  "logout": "लॉग आउट",
+  "raise-complaint": "शिकायत दर्ज करें",
+  "my_complaints": "मेरी शिकायतें",
+  "my_complaints_sub": "दर्ज की गई शिकायतों की स्थिति ट्रैक करें"
+},
   "services": {
     "laundry": "लॉन्ड्री",
     "laundry_sub": "धुलाई, इस्त्री और अधिक",
@@ -138,7 +157,9 @@
     "status_picked_up": "पिक अप हो गया",
     "status_delivered": "डिलीवर हो गया",
     "status_cancelled": "रद्द",
-    "items": "आइटम"
+    "items": "आइटम",
+    "rider_pickup_assigned":"राइडर असाइन किया गया"
+
   },
   "greeting": {
     "morning": "सुप्रभात",
