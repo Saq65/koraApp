@@ -1,99 +1,324 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Switch, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  StatusBar,
+  Switch,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
+
 import AppBackground from "@/components/AppBackground";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { clearAll } from "../../src/utils/storage";
 
 export default function SettingsScreen() {
   const { theme, isDarkMode, toggleTheme } = useTheme();
+  const { t } = useTranslation();
 
-  const handleLogout = async () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Log Out",
-        style: "destructive",
-        onPress: async () => {
-          await clearAll();
-          router.replace("/(auth)/email-login");
+  const handleLogout = () => {
+    Alert.alert(
+      t("settings_page.logout"),
+      t("settings_page.logout_confirm"),
+      [
+        {
+          text: t("settings_page.cancel"),
+          style: "cancel",
         },
-      },
-    ]);
+        {
+          text: t("settings_page.logout"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAll();
+              router.replace("/(auth)/email-login");
+            } catch (error) {
+              console.log("Logout error:", error);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={["top"]}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        {
+          backgroundColor: theme.background,
+        },
+      ]}
+      edges={["top"]}
+    >
       <AppBackground>
-        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
 
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.card }]} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color={theme.text} />
+          <TouchableOpacity
+            activeOpacity={0.75}
+            style={[
+              styles.backBtn,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => router.back()}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={20}
+              color={theme.text}
+            />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Settings</Text>
+
+          <Text
+            style={[
+              styles.headerTitle,
+              {
+                color: theme.text,
+              },
+            ]}
+          >
+            {t("settings_page.title")}
+          </Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Dark mode toggle */}
-          <View style={[styles.row, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={[styles.iconWrap, { backgroundColor: theme.primaryLight }]}>
-              <Ionicons name={isDarkMode ? "moon" : "moon-outline"} size={20} color={theme.primary} />
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Dark mode */}
+          <View
+            style={[
+              styles.row,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.iconWrap,
+                {
+                  backgroundColor: theme.primaryLight,
+                },
+              ]}
+            >
+              <Ionicons
+                name={isDarkMode ? "moon" : "moon-outline"}
+                size={20}
+                color={theme.primary}
+              />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.rowLabel, { color: theme.text }]}>Dark Mode</Text>
-              <Text style={[styles.rowSubtitle, { color: theme.subText }]}>
-                {isDarkMode ? "Currently on" : "Currently off"}
+
+            <View style={styles.rowTextContainer}>
+              <Text
+                style={[
+                  styles.rowLabel,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                {t("settings_page.dark_mode")}
+              </Text>
+
+              <Text
+                style={[
+                  styles.rowSubtitle,
+                  {
+                    color: theme.subText,
+                  },
+                ]}
+              >
+                {isDarkMode
+                  ? t("settings_page.currently_on")
+                  : t("settings_page.currently_off")}
               </Text>
             </View>
-            <Switch value={isDarkMode} onValueChange={toggleTheme} trackColor={{ true: theme.primary }} />
+
+            <Switch
+              value={isDarkMode}
+              onValueChange={toggleTheme}
+              trackColor={{
+                false: theme.border,
+                true: theme.primary,
+              }}
+              thumbColor={theme.white}
+              ios_backgroundColor={theme.border}
+            />
           </View>
 
           {/* Language */}
           <TouchableOpacity
-            style={[styles.row, { backgroundColor: theme.card, borderColor: theme.border }]}
+            style={[
+              styles.row,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
             onPress={() => router.push("/profile-page/language")}
             activeOpacity={0.75}
           >
-            <View style={[styles.iconWrap, { backgroundColor: theme.primaryLight }]}>
-              <Ionicons name="language-outline" size={20} color={theme.primary} />
+            <View
+              style={[
+                styles.iconWrap,
+                {
+                  backgroundColor: theme.primaryLight,
+                },
+              ]}
+            >
+              <Ionicons
+                name="language-outline"
+                size={20}
+                color={theme.primary}
+              />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.rowLabel, { color: theme.text }]}>Language</Text>
-              <Text style={[styles.rowSubtitle, { color: theme.subText }]}>Change app language</Text>
+
+            <View style={styles.rowTextContainer}>
+              <Text
+                style={[
+                  styles.rowLabel,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                {t("settings_page.language")}
+              </Text>
+
+              <Text
+                style={[
+                  styles.rowSubtitle,
+                  {
+                    color: theme.subText,
+                  },
+                ]}
+              >
+                {t("settings_page.change_app_language")}
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={theme.subText} />
+
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.subText}
+            />
           </TouchableOpacity>
 
           {/* Saved addresses */}
           <TouchableOpacity
-            style={[styles.row, { backgroundColor: theme.card, borderColor: theme.border }]}
+            style={[
+              styles.row,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
             onPress={() => router.push("/profile-page/savedaddress")}
             activeOpacity={0.75}
           >
-            <View style={[styles.iconWrap, { backgroundColor: theme.primaryLight }]}>
-              <Ionicons name="location-outline" size={20} color={theme.primary} />
+            <View
+              style={[
+                styles.iconWrap,
+                {
+                  backgroundColor: theme.primaryLight,
+                },
+              ]}
+            >
+              <Ionicons
+                name="location-outline"
+                size={20}
+                color={theme.primary}
+              />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.rowLabel, { color: theme.text }]}>Saved Addresses</Text>
-              <Text style={[styles.rowSubtitle, { color: theme.subText }]}>Manage your pickup/delivery addresses</Text>
+
+            <View style={styles.rowTextContainer}>
+              <Text
+                style={[
+                  styles.rowLabel,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                {t("settings_page.saved_addresses")}
+              </Text>
+
+              <Text
+                style={[
+                  styles.rowSubtitle,
+                  {
+                    color: theme.subText,
+                  },
+                ]}
+              >
+                {t("settings_page.manage_addresses")}
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={theme.subText} />
+
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.subText}
+            />
           </TouchableOpacity>
 
           {/* Logout */}
           <TouchableOpacity
-            style={[styles.row, { backgroundColor: theme.card, borderColor: theme.border }]}
+            style={[
+              styles.row,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
             onPress={handleLogout}
             activeOpacity={0.75}
           >
-            <View style={[styles.iconWrap, { backgroundColor: "#FDEAEA" }]}>
-              <Ionicons name="log-out-outline" size={20} color="#E53935" />
+            <View
+              style={[
+                styles.iconWrap,
+                {
+                  backgroundColor: isDarkMode
+                    ? "rgba(229, 57, 53, 0.16)"
+                    : "#FDEAEA",
+                },
+              ]}
+            >
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color="#E53935"
+              />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.rowLabel, { color: "#E53935" }]}>Log Out</Text>
+
+            <View style={styles.rowTextContainer}>
+              <Text
+                style={[
+                  styles.rowLabel,
+                  {
+                    color: "#E53935",
+                    marginBottom: 0,
+                  },
+                ]}
+              >
+                {t("settings_page.logout")}
+              </Text>
             </View>
           </TouchableOpacity>
         </ScrollView>
@@ -103,12 +328,76 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, gap: 10 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "700" },
-  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 12 },
-  row: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 14, borderWidth: 1 },
-  iconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  rowLabel: { fontSize: 15, fontWeight: "600", marginBottom: 2 },
-  rowSubtitle: { fontSize: 12.5 },
+  safeArea: {
+    flex: 1,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    marginRight: 12,
+  },
+
+  headerTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
+
+  row: {
+    width: "100%",
+    minHeight: 70,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    marginRight: 12,
+  },
+
+  rowTextContainer: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 8,
+  },
+
+  rowLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 20,
+    marginBottom: 2,
+  },
+
+  rowSubtitle: {
+    fontSize: 12.5,
+    lineHeight: 18,
+    flexShrink: 1,
+  },
 });

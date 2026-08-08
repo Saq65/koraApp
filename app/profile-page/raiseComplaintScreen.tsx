@@ -13,6 +13,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Dimensions,
 } from "react-native";
 
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -79,6 +80,13 @@ const DEFAULT_CATEGORIES: Category[] = [
   },
 ];
 
+const { width: W, height: H } = Dimensions.get("window");
+  
+const r = (n: number) => Math.round((W / 375) * n);
+const rv = (n: number) => Math.round((H / 812) * n);
+const rm = (n: number, f = 0.45) => n + (r(n) - n) * f;
+
+
 export default function RaiseComplaintScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -91,10 +99,10 @@ export default function RaiseComplaintScreen() {
   const [orderId, setOrderId] = useState("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageUris, setImageUris] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+  
   // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
@@ -124,38 +132,82 @@ export default function RaiseComplaintScreen() {
   }, []);
 
   const handlePickFromGallery = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(t("common.permission_needed", "Permission needed"), t("common.photo_permission_message", "Please grant permission to access photos"));
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
+  const { status } =
+    await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (status !== "granted") {
+    Alert.alert(
+      t("common.permission_needed", "Permission needed"),
+      t(
+        "common.photo_permission_message",
+        "Please grant permission to access photos"
+      )
+    );
+    return;
+  }
+
+  if (imageUris.length >= 3) {
+    Alert.alert(
+      "Maximum images",
+      "You can attach maximum 3 images."
+    );
+    return;
+  }
+
+  const remainingSlots = 3 - imageUris.length;
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsMultipleSelection: true,
+    selectionLimit: remainingSlots,
+    quality: 0.7,
+  });
+
+  if (!result.canceled) {
+    const newUris = result.assets.map((asset) => asset.uri);
+
+    setImageUris((previous) => [
+      ...previous,
+      ...newUris,
+    ].slice(0, 3));
+  }
+};
 
   const handleTakePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        t("common.permission_needed", "Permission needed"),
-        t("common.camera_permission_message", "Please grant permission to use the camera")
-      );
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
+  if (imageUris.length >= 3) {
+    Alert.alert(
+      "Maximum images",
+      "You can attach maximum 3 images."
+    );
+    return;
+  }
+
+  const { status } =
+    await ImagePicker.requestCameraPermissionsAsync();
+
+  if (status !== "granted") {
+    Alert.alert(
+      t("common.permission_needed", "Permission needed"),
+      t(
+        "common.camera_permission_message",
+        "Please grant permission to use the camera"
+      )
+    );
+    return;
+  }
+
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: true,
+    quality: 0.7,
+  });
+
+  if (!result.canceled) {
+    setImageUris((previous) => [
+      ...previous,
+      result.assets[0].uri,
+    ].slice(0, 3));
+  }
+};
 
   const validateForm = () => {
     if (!selectedMainCategory) {
@@ -196,7 +248,7 @@ export default function RaiseComplaintScreen() {
       orderId: orderId.trim() || undefined,
       subject: subject.trim(),
       description: description.trim(),
-      photoUri: imageUri,
+      photoUris: imageUris,
     };
 
     try {
@@ -296,9 +348,29 @@ export default function RaiseComplaintScreen() {
             >
               {/* Header */}
               <View style={styles.headerRow}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                  <Ionicons name="arrow-back" size={24} color={theme.primary} />
-                </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[
+                              styles.backBtn,
+                              {
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                              },
+                            ]}
+                            onPress={() => router.back()}
+                            activeOpacity={0.7}
+                            hitSlop={{
+                              top: 10,
+                              bottom: 10,
+                              left: 10,
+                              right: 10,
+                            }}
+                          >
+                            <Ionicons
+                              name="arrow-back"
+                              size={r(20)}
+                              color={theme.text}
+                            />
+                          </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: theme.text }]}>
                   {t("complaint.title", "Raise a Complaint")}
                 </Text>
@@ -456,17 +528,47 @@ export default function RaiseComplaintScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-              {imageUri && (
-                <View style={styles.previewContainer}>
-                  <Image source={{ uri: imageUri }} style={styles.previewImage} />
-                  <TouchableOpacity
-                    style={styles.removeImageButton}
-                    onPress={() => setImageUri(null)}
-                  >
-                    <Ionicons name="close-circle" size={24} color="#ff4444" />
-                  </TouchableOpacity>
-                </View>
-              )}
+             {imageUris.length > 0 && (
+  <>
+    <Text
+      style={{
+        color: theme.subText,
+        marginBottom: 10,
+      }}
+    >
+      {imageUris.length}/3 images selected
+    </Text>
+
+    <View style={styles.previewRow}>
+      {imageUris.map((uri, index) => (
+        <View
+          key={`${uri}-${index}`}
+          style={styles.previewContainer}
+        >
+          <Image
+            source={{ uri }}
+            style={styles.previewImage}
+          />
+
+          <TouchableOpacity
+            style={styles.removeImageButton}
+            onPress={() =>
+              setImageUris((previous) =>
+                previous.filter((_, i) => i !== index)
+              )
+            }
+          >
+            <Ionicons
+              name="close-circle"
+              size={24}
+              color="#ff4444"
+            />
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  </>
+)}
 
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -501,15 +603,21 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
     marginBottom: 24,
   },
-  backButton: {
-    padding: 8,
+  backBtn: {
+   width: r(36),
+    height: r(36),
+    borderRadius: r(18),
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
+    marginLeft: r(10),
   },
   contactRow: {
     flexDirection: "row",
@@ -650,6 +758,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
+  previewRow: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  gap: 12,
+  marginBottom: 16,
+},
   previewContainer: {
     position: 'relative',
     alignSelf: 'flex-start',

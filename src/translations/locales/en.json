@@ -46,14 +46,14 @@
     "send_otp_failed": "Failed to send OTP. Please try again.",
     "invalid_otp": "Invalid or expired OTP",
     "create_new_password": "Create New Password",
-"password_reset_description": "Enter your new password below",
-"new_password": "New Password",
-"confirm_new_password": "Confirm New Password",
-"reset_password": "Reset Password",
-"password_reset_success": "Password Reset Successful!",
-"password_reset_success_description": "Your password has been reset successfully. Please log in with your new password.",
-"continue_signin": "Continue to Sign In",
-"go_back": "Go Back"
+    "password_reset_description": "Enter your new password below",
+    "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
+    "reset_password": "Reset Password",
+    "password_reset_success": "Password Reset Successful!",
+    "password_reset_success_description": "Your password has been reset successfully. Please log in with your new password.",
+    "continue_signin": "Continue to Sign In",
+    "go_back": "Go Back"
   },
   "validation": {
     "enter_email_or_mobile_and_password": "Email/mobile and password are required",
@@ -66,8 +66,8 @@
     "fullname_required": "Full name is required",
     "registration_failed": "Registration failed. Please try again.",
     "password_min_hint": "Password must be at least 6 characters",
-"passwords_not_match": "Passwords do not match",
-"reset_failed": "Password reset failed. Please try again."
+    "passwords_not_match": "Passwords do not match",
+    "reset_failed": "Password reset failed. Please try again."
   },
   "profile": {
     "orders": "Orders",
@@ -92,10 +92,24 @@
     "settings": "Settings",
     "settings_sub": "Theme, sound, permissions",
     "logout": "Logout",
-      "raise-complaint": "Raise a Complaint",
-      "my_complaints": "My Complaints",
-      "my_complaints_sub": "Track the status of complaints you've raised"
-
+    "raise-complaint": "Raise a Complaint",
+    "my_complaints": "My Complaints",
+    "my_complaints_sub": "Track the status of complaints you've raised"
+  },
+  "refer": {
+    "title": "Refer & Earn",
+    "coming_soon": "Coming Soon",
+    "description": "We're building a referral program so you can earn rewards for inviting friends to Kora. Check back soon!"
+  },
+  "home": {
+    "active_order": "ACTIVE ORDER",
+    "language_sub": "Change app language",
+    "settings": "Settings",
+    "settings_sub": "Theme, sound, permissions",
+    "logout": "Logout",
+    "raise-complaint": "Raise a Complaint",
+    "my_complaints": "My Complaints",
+    "my_complaints_sub": "Track the status of complaints you've raised"
   },
   "home": {
     "active_order": "ACTIVE ORDER",
@@ -144,13 +158,13 @@
     "linen": "Linen",
     "linen_desc": "Bedsheets, curtains, towels",
     "order_issue": "Order Issue",
-"delivery_delay": "Delivery Delay",
-"payment_problem": "Payment Problem",
-"staff_behaviour": "Staff Behaviour",
-"app_/_technical": "App / Technical",
-"other": "Other",
-"damaged_item": "Damaged Item",
-"missing_item": "Missing Item"
+    "delivery_delay": "Delivery Delay",
+    "payment_problem": "Payment Problem",
+    "staff_behaviour": "Staff Behaviour",
+    "app_/_technical": "App / Technical",
+    "other": "Other",
+    "damaged_item": "Damaged Item",
+    "missing_item": "Missing Item"
   },
   "subcategory": {
     "laundry_service": "Laundry Service",
@@ -168,11 +182,14 @@
     "incl_gst": "Incl. GST",
     "loading": "Loading...",
     "optional": "optional",
-  "permission_needed": "Permission Needed",
-  "photo_permission_message": "We need access to your photo library to attach images.",
-  "camera_permission_message": "We need access to your camera to take a photo.",
-  "yes": "Yes",
-  "no": "No"
+    "permission_needed": "Permission Needed",
+    "photo_permission_message": "We need access to your photo library to attach images.",
+    "camera_permission_message": "We need access to your camera to take a photo.",
+    "yes": "Yes",
+    "no": "No",
+    "retry": "Retry",
+    "guest": "Guest",
+    "continue": "Continue"
   },
   "tabs": {
     "home": "Home",
@@ -336,27 +353,6 @@
     "error": "Error"
   },
   "complaint": {
-  "title": "Raise a Complaint",
-  "info_text": "Tell us what went wrong. Our team responds within 24 hours.",
-  "category": "Category",
-  "order_id": "Order ID",
-  "order_id_placeholder": "e.g. #KOR2451",
-  "subject": "Subject",
-  "subject_placeholder": "Brief title for your issue",
-  "description": "Describe the issue",
-  "description_placeholder": "Please share details so we can help you faster...",
-  "attach_photo": "Attach photo",
-  "submit": "Submit Complaint",
-  "select_category": "Please select a category",
-  "select_order_issue_sub": "Please select a sub‑category for Order Issue",
-  "subject_required": "Subject is required",
-  "description_required": "Description is required",
-  "description_too_long": "Description cannot exceed 1000 characters",
-  "success_title": "Complaint Submitted",
-  "success_message": "Thank you for your feedback. Our team will respond within 24 hours.",
-  "submit_failed": "Failed to submit complaint. Please try again."
-},
- "complaint": {
     "title": "Raise a Complaint",
     "info_text": "Tell us what went wrong. Our team responds within 24 hours.",
     "category": "Category",
@@ -390,5 +386,330 @@
     "call": "Call",
     "email": "Email",
     "whatsapp": "WhatsApp"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "new_updates": "new updates",
+    "mark_all_read": "Mark all read",
+    "no_notifications": "No notifications yet",
+    "no_notifications_desc": "Updates about your orders will show up here",
+    "today": "TODAY",
+    "yesterday": "YESTERDAY",
+    "earlier": "EARLIER",
+    "load_failed": "Couldn't load notifications",
+    "just_now": "Just now",
+    "minutes_ago_one": "{{count}} min ago",
+    "minutes_ago_other": "{{count}} mins ago",
+    "hours_ago_one": "{{count}} hour ago",
+    "hours_ago_other": "{{count}} hours ago",
+    "yesterday_at": "Yesterday, {{time}}",
+    "date_at": "{{date}}, {{time}}",
+    "types": {
+      "order_placed": {
+        "title": "Order Placed! 🎉",
+        "body": "Your order {{orderNumber}} has been placed successfully."
+      },
+      "order_accepted": {
+        "title": "Order Accepted",
+        "body": "Your order {{orderNumber}} has been accepted."
+      },
+      "order_picked_up": {
+        "title": "Order Picked Up",
+        "body": "Your order {{orderNumber}} has been picked up."
+      },
+      "order_at_sp": {
+        "title": "Order at Service Provider",
+        "body": "Your order {{orderNumber}} has reached the service provider."
+      },
+      "order_cleaned": {
+        "title": "Cleaning Completed",
+        "body": "Cleaning for your order {{orderNumber}} has been completed."
+      },
+      "order_out_for_delivery": {
+        "title": "Out for Delivery",
+        "body": "Your order {{orderNumber}} is out for delivery."
+      },
+      "order_delivered": {
+        "title": "Order Delivered",
+        "body": "Your order {{orderNumber}} has been delivered successfully."
+      },
+      "order_cancelled": {
+        "title": "Order Cancelled",
+        "body": "Your order {{orderNumber}} has been cancelled."
+      }
+    }
+  },
+  "your_care": "Your Care, Our Priority",
+  "choose_language": "Choose Your Language",
+  "change_language_anytime": "You can change the language anytime from your profile settings.",
+  "continue": "Continue",
+  "terms": {
+    "title": "Terms & Conditions",
+    "subtitle": "Please read these before continuing",
+    "agreement_title": "Our Agreement With You",
+    "agree_checkbox_prefix": "I have read and agree to the",
+    "agree_checkbox_terms": "Terms & Conditions",
+    "agree_checkbox_and": "and",
+    "agree_checkbox_privacy": "Privacy Policy",
+    "agree_checkbox_suffix": ".",
+    "agree_button": "I Agree & Continue"
+  },
+  "onboarding": {
+    "mobile_title": "Add Your Mobile Number",
+    "mobile_subtitle": "We’ll use it to share order updates and help the delivery team reach you."
+  },
+  "settings_page": {
+    "title": "Settings",
+    "dark_mode": "Dark Mode",
+    "currently_on": "Currently on",
+    "currently_off": "Currently off",
+    "language": "Language",
+    "change_app_language": "Change app language",
+    "saved_addresses": "Saved Addresses",
+    "manage_addresses": "Manage your pickup and delivery addresses",
+    "logout": "Log Out",
+    "logout_confirm": "Are you sure you want to log out?",
+    "cancel": "Cancel"
+  },
+  "payment": {
+    "title": "Payment",
+    "cart_empty_title": "Cart Empty",
+    "cart_empty_message": "Please add items first",
+    "success_title": "Success",
+    "success_message": "Order placed successfully",
+    "payment_failed_title": "Payment Failed",
+    "payment_failed_message": "Unable to place your order",
+    "error_title": "Error",
+    "error_message": "Failed to place order",
+    "amount_to_pay": "Amount to Pay",
+    "includes_tax": "Includes tax, as shown on the previous screen",
+    "pay_via_upi": "Pay via UPI",
+    "fast_secure_payment": "Fast & secure payment",
+    "google_pay": "Google Pay",
+    "phonepe": "PhonePe",
+    "paytm": "Paytm",
+    "other_upi": "Other UPI",
+    "or_enter_upi": "Or enter UPI ID",
+    "upi_placeholder": "yourname@upi",
+    "secured_encryption": "Secured by 256-bit encryption",
+    "pay_amount": "Pay ₹{{amount}}"
+  },
+  "payment_success": {
+    "title": "Payment Successful!",
+    "message": "Your order has been placed successfully. We'll pick up your clothes soon.",
+    "track_order": "Track Order",
+    "back_home": "Back to Home"
+  },
+  "track_order_screen": {
+    "loading": "Loading order status…",
+    "error": "Unable to load tracking details. Please try again.",
+    "order_header": "Order #{{orderNumber}}",
+    "order_status_header": "Order Status",
+    "delivery_address": "Delivery address",
+    "estimated_delivery": "Estimated delivery",
+    "delivered_message": "Your order has been delivered successfully.",
+    "cancelled_message": "This order was cancelled.",
+    "live": "LIVE",
+    "locating_rider": "Locating rider…",
+    "active": "Active",
+    "done": "Done",
+    "connection": {
+      "connecting": "Connecting…",
+      "reconnecting": "Reconnecting…"
+    },
+    "radar": {
+      "delivered": "Order Delivered!"
+    },
+    "rider_role": {
+      "delivery": "Delivery rider",
+      "pickup": "Pickup rider"
+    },
+    "status": {
+      "pending_sp": "Waiting for service partner",
+      "sp_assigned": "Service partner assigned",
+      "sp_accepted": "Service partner accepted",
+      "rider_pickup_assigned": "Pickup rider assigned",
+      "picked_up": "Picked up",
+      "at_sp": "At service partner",
+      "cleaned": "Cleaning in progress",
+      "rider_delivery_assigned": "Delivery rider assigned",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "progress": {
+      "pending_sp": "Waiting for pickup",
+      "sp_assigned": "Preparing pickup",
+      "sp_accepted": "Pickup confirmed",
+      "rider_pickup_assigned": "Rider is on the way",
+      "picked_up": "Order in transit",
+      "at_sp": "At partner location",
+      "cleaned": "Cleaning in progress",
+      "rider_delivery_assigned": "Out for delivery",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "saved_address_page": {
+    "title": "Saved Addresses",
+    "add": "Add",
+    "loading": "Loading...",
+    "no_saved_addresses": "No saved addresses",
+    "empty_subtitle": "Add an address to speed up checkout",
+    "add_address": "Add Address",
+    "default": "DEFAULT",
+    "set_as_default": "Set as default",
+    "remove": "Remove",
+    "add_saved_address": "Add saved address",
+    "label": "Label",
+    "home": "Home",
+    "office": "Office",
+    "other": "Other",
+    "custom_label": "Custom label",
+    "custom_label_placeholder": "e.g. Friend's house",
+    "address": "Address",
+    "address_placeholder": "Type address (optional if using map)",
+    "pick_on_map": "Pick on map",
+    "save": "Save",
+    "cancel": "Cancel",
+    "missing_address_title": "Missing address",
+    "missing_address_message": "Either type an address or use Pick on map.",
+    "missing_custom_label_title": "Missing custom label",
+    "missing_custom_label_message": "Please provide a name for this address.",
+    "error": "Error",
+    "load_failed": "Failed to load saved addresses",
+    "set_default_failed": "Failed to set default address",
+    "remove_address_title": "Remove Address",
+    "remove_address_message": "Are you sure you want to remove this address?",
+    "remove_failed": "Failed to remove address",
+    "location_error": "Location error",
+    "location_permission_denied": "Location permission denied",
+    "current_location_failed": "Unable to fetch current location",
+    "location_needed_title": "Location needed",
+    "location_needed_message": "Please pick this address on the map to save coordinates.",
+    "prepare_save_failed": "Failed to prepare save",
+    "confirm_address_title": "Missing address",
+    "confirm_address_message": "Please type or confirm the address before saving.",
+    "create_failed": "Failed to create address",
+    "getting_current_location": "Getting current location...",
+    "pick_exact_location": "Pick exact location",
+    "address_text": "Address text (for saving)",
+    "address_confirm_placeholder": "Type address or confirm",
+    "back": "Back"
+  },
+  "support": {
+    "title": "Support",
+    "user_guide": "User Guide",
+    "user_guide_sub": "How to use the app — what to do and what to avoid",
+    "raise_complaint": "Raise a Complaint",
+    "raise_complaint_sub": "Report an issue with an order",
+    "my_complaints": "My Complaints",
+    "my_complaints_sub": "Track the status of complaints you've raised",
+    "rate_us": "Rate Us",
+    "rate_us_sub": "Tell us how we're doing",
+    "email_support": "Email Support",
+    "email_support_sub": "Reach our support team directly",
+    "guide_title": "User Guide",
+    "guide_intro": "A quick guide to getting the most out of Kora — what helps things go smoothly, and what to avoid.",
+    "guide": {
+      "places": {
+        "title": "Placing an Order",
+        "do_1": "Pick the correct category (Men, Women, Children, Linen) so your items get sorted properly.",
+        "do_2": "Select the exact service you want per item — Wash, Iron, or Wash+Iron.",
+        "do_3": "Double-check the quantity for each item before adding it to your cart.",
+        "do_4": "Confirm your pickup address is accurate and has a working contact number.",
+        "dont_1": "Don't place separate orders for items that can go in one pickup — it saves you time and money.",
+        "dont_2": "Don't leave delicate or high-value items unmentioned; use the complaint/notes option if you have special instructions."
+      },
+      "pickup": {
+        "title": "Pickup & Delivery",
+        "do_1": "Be available at the scheduled pickup window, or let the rider know if you'll be a few minutes late.",
+        "do_2": "Keep your items ready and packed before the rider arrives.",
+        "do_3": "Check the live tracking screen for real-time status updates on your order.",
+        "dont_1": "Don't hand over items that aren't part of the order to the rider.",
+        "dont_2": "Don't ignore rider calls — they may need help finding your address."
+      },
+      "cancellations": {
+        "title": "Cancellations",
+        "do_1": "Cancel within 2 hours of placing your order (and before pickup starts) for a free cancellation.",
+        "do_2": "Check the countdown timer on the order card to know how much time you have left.",
+        "do_3": "Refunds are processed within 3 to 7 working days and may be issued as coupons or credits at Company discretion.",
+        "dont_1": "Don't wait too long — cancelling after the free 2-hour window attracts a ₹50 cancellation fee.",
+        "dont_2": "Don't expect cancellation once the order has been picked up or is already in process at the service provider.",
+        "dont_3": "Don't expect a refund for a completed service unless damage is proven."
+      },
+      "payments": {
+        "title": "Payments & Wallet",
+        "do_1": "Choose the payment method that works best for you at checkout — cash, UPI, or card.",
+        "do_2": "Check your wallet balance before checkout; refunds from cancelled orders are credited there.",
+        "dont_1": "Don't share your OTP with anyone, including riders or people claiming to be from support — Kora will never ask for it over a call."
+      },
+      "account": {
+        "title": "Account & Profile",
+        "do_1": "Keep your mobile number and email up to date so we can reach you about your orders.",
+        "do_2": "Use a strong password if you signed up with email instead of Google.",
+        "dont_1": "Don't share your login credentials with anyone else.",
+        "dont_2": "Don't ignore verification prompts — they help keep your account secure."
+      }
+    }
+  },
+   "side_drawer": {
+    "guest": "Guest",
+    "personal_details": "Personal Details",
+    "my_services": "My Services",
+    "refer_earn": "Refer & Earn",
+    "rewards": "Rewards",
+    "settings": "Settings",
+    "support": "Support",
+    "logout": "Log Out"
+  },
+  "rewards_page": {
+    "title": "Rewards",
+    "coming_soon": "Coming Soon",
+    "description": "A rewards program for loyal Kora customers is on its way. We'll let you know the moment it launches."
+  },
+   "rate_us_page": {
+    "rate_us": "Rate Us",
+    "your_review": "Your Review",
+    "thank_you_title": "Thank you for your feedback!",
+    "already_submitted": "You have already submitted a review",
+    "experience_title": "How was your experience?",
+    "experience_subtitle": "Your feedback makes KORA better for everyone",
+    "overall_rating": "Overall Rating",
+    "category_ratings": "Category Ratings",
+    "rate_by_category": "Rate by Category",
+    "what_you_liked": "What you liked",
+    "what_did_you_like": "What did you like?",
+    "write_review": "Write a Review",
+    "optional": "optional",
+    "review_placeholder": "Share your experience with KORA laundry...",
+    "submit_review": "Submit Review",
+    "back_to_profile": "Back to Profile",
+    "edit_review": "Edit Review",
+    "rating_required_title": "Rating required",
+    "rating_required_message": "Please give at least an overall star rating.",
+    "error_title": "Error",
+    "submit_failed": "Could not submit review. Please try again.",
+    "ratings": {
+      "very_poor": "Very Poor 😞",
+      "poor": "Poor 😕",
+      "okay": "Okay 😐",
+      "good": "Good 😊",
+      "excellent": "Excellent 🤩",
+      "tap_to_rate": "Tap to rate"
+    },
+    "categories": {
+      "pickup": "Pickup",
+      "quality": "Wash Quality",
+      "delivery": "Delivery",
+      "packaging": "Packaging"
+    },
+    "tags": {
+      "on_time_delivery": "On time delivery",
+      "great_quality": "Great quality",
+      "fresh_smell": "Fresh smell",
+      "careful_handling": "Careful handling",
+      "friendly_staff": "Friendly staff",
+      "will_order_again": "Will order again"
+    }
   }
 }

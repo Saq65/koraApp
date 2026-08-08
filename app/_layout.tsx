@@ -6,11 +6,14 @@ import { Provider } from "react-redux";
 import { store } from "@/src/redux/store/store";
 import i18n from "../src/translations/i18n";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NotificationProvider } from "../src/context/NotificationContext";
 
 export default function RootLayout() {
   useEffect(() => {
     const restoreLanguage = async () => {
-      const saved = await AsyncStorage.getItem("app-language");
+      const saved =
+        (await AsyncStorage.getItem("app-language")) ||
+        (await AsyncStorage.getItem("selectedLanguage"));
       if (saved) await i18n.changeLanguage(saved);
     };
     restoreLanguage();
@@ -20,10 +23,12 @@ export default function RootLayout() {
     <Provider store={store}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <Stack
-            screenOptions={{ headerShown: false }}
-            initialRouteName="index"
-          />
+          <NotificationProvider>
+            <Stack
+              screenOptions={{ headerShown: false }}
+              initialRouteName="index"
+            />
+          </NotificationProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </Provider>

@@ -13,7 +13,8 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getToken } from "../../src/utils/storage";
 import { useTranslation } from "react-i18next";
-import i18n from "../../src/translations/i18n";
+import { useTheme } from "../../src/theme/ThemeProvider";
+import i18n, { loadLanguage } from "../../src/translations/i18n";
 const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
@@ -27,20 +28,29 @@ const LANGUAGES = [
 
 export default function LanguageScreen() {
   const { t } = useTranslation();
+  const { theme, isDarkMode } = useTheme();
   const [selected, setSelected] = useState("en");
 
+  React.useEffect(() => {
+    const restoreLanguage = async () => {
+      const saved =
+        (await AsyncStorage.getItem("selectedLanguage")) ||
+        (await AsyncStorage.getItem("app-language")) ||
+        (await i18n.language) ||
+        "en";
+      if (saved) setSelected(saved);
+    };
+    restoreLanguage();
+  }, []);
+
   async function handleContinue() {
-  await AsyncStorage.setItem("selectedLanguage", selected);
-
-  // change language instantly
-  await i18n.changeLanguage(selected);
-
-  router.replace("/(onboarding)/terms");
-}
+    await loadLanguage(selected);
+    router.replace("/(onboarding)/terms");
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f0f4f3" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}> 
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
       {/* Logo */}
       <View style={styles.logoContainer}>
@@ -48,8 +58,8 @@ export default function LanguageScreen() {
          source={require("../../assets/images/icon.png")} 
           style={styles.logo}
         /> 
-        <Text style={styles.brandName}>KORA.care</Text>
-        <Text style={styles.tagline}>
+        <Text style={[styles.brandName, { color: theme.text }]}>KORA.care</Text>
+        <Text style={[styles.tagline, { color: theme.subText }]}> 
           {t("your_care")}
         </Text>
       </View>
@@ -57,11 +67,11 @@ export default function LanguageScreen() {
       {/* Title */}
       <View style={styles.titleContainer}>
         <Text style={styles.globeIcon}>🌐</Text>
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: theme.text }]}> 
           {t("choose_language")}
         </Text>
       </View>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.subtitle, { color: theme.subText }]}> 
         {t("change_language_anytime")}
       </Text>
 
@@ -75,6 +85,7 @@ export default function LanguageScreen() {
             key={lang.code}
             style={[
               styles.languageItem,
+              { backgroundColor: theme.card, borderColor: selected === lang.code ? theme.primary : theme.border },
               selected === lang.code && styles.languageItemSelected,
             ]}
             onPress={() => setSelected(lang.code)}
@@ -83,12 +94,12 @@ export default function LanguageScreen() {
               <Text
                 style={[
                   styles.nativeText,
-                  selected === lang.code && styles.selectedText,
+                  { color: selected === lang.code ? theme.primary : theme.text },
                 ]}
               >
                 {lang.native}
               </Text>
-              <Text style={styles.englishText}>{lang.label}</Text>
+              <Text style={[styles.englishText, { color: theme.subText }]}>{lang.label}</Text>
             </View>
 
             {selected === lang.code && (
@@ -101,7 +112,7 @@ export default function LanguageScreen() {
       </ScrollView>
 
       {/* Continue Button */}
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+      <TouchableOpacity style={[styles.continueButton, { backgroundColor: theme.primary }]} onPress={handleContinue}>
         <Text style={styles.continueText}>
   {t("continue")}
 </Text>
@@ -113,7 +124,6 @@ export default function LanguageScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f4f3",
     paddingHorizontal: 20,
     // paddingTop removed — SafeAreaView handles it
   },
@@ -130,12 +140,10 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1a7a6e",
     marginTop: 8,
   },
   tagline: {
     fontSize: 13,
-    color: "#888",
     marginTop: 2,
   },
   titleContainer: {
@@ -150,11 +158,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111",
   },
   subtitle: {
     fontSize: 12,
-    color: "#999",
     marginBottom: 16,
   },
   listContainer: {
@@ -162,7 +168,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   languageItem: {
-    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
@@ -170,29 +175,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "transparent",
   },
   languageItemSelected: {
-    borderColor: "#1a7a6e",
   },
   nativeText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#111",
   },
   selectedText: {
-    color: "#1a7a6e",
   },
   englishText: {
     fontSize: 12,
-    color: "#999",
     marginTop: 2,
   },
   checkCircle: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#1a7a6e",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -202,7 +201,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   continueButton: {
-    backgroundColor: "#1a7a6e",
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",

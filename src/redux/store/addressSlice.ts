@@ -1,17 +1,19 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
+type Coordinates = [number, number]
+
 type AddressState = {
   pickupAddress: string
   dropoffAddress: string
-  pickupCoordinates: number[] | null
-  dropoffCoordinates: number[] | null
+  pickupCoordinates: Coordinates | null
+  dropoffCoordinates: Coordinates | null
 }
 
 const initialState: AddressState = {
-  pickupAddress: '123 Main Street, Mumbai, MH 400001',
-  dropoffAddress: '123 Main Street, Mumbai, MH 400001',
-  pickupCoordinates: null,   // ✅ add this
-  dropoffCoordinates: null,  // ✅ add this
+  pickupAddress: '',
+  dropoffAddress: '',
+  pickupCoordinates: null,
+  dropoffCoordinates: null,
 }
 
 const addressSlice = createSlice({
@@ -23,27 +25,47 @@ const addressSlice = createSlice({
       action: PayloadAction<{
         type: 'pickup' | 'dropoff'
         address: string
-        coordinates?: number[] | null
+        coordinates?: Coordinates | null
       }>
     ) {
-      if (action.payload.type === 'pickup') {
-        state.pickupAddress = action.payload.address
-        if (action.payload.coordinates !== undefined) {
-          state.pickupCoordinates = action.payload.coordinates
+      const { type, address, coordinates } = action.payload
+
+      if (type === 'pickup') {
+        state.pickupAddress = address
+
+        if (coordinates !== undefined) {
+          state.pickupCoordinates = coordinates
         }
       } else {
-        state.dropoffAddress = action.payload.address
-        if (action.payload.coordinates !== undefined) {
-          state.dropoffCoordinates = action.payload.coordinates
+        state.dropoffAddress = address
+
+        if (coordinates !== undefined) {
+          state.dropoffCoordinates = coordinates
         }
       }
+    },
+
+    clearAddresses(state) {
+      state.pickupAddress = ''
+      state.dropoffAddress = ''
+      state.pickupCoordinates = null
+      state.dropoffCoordinates = null
     },
   },
 })
 
-export const { setAddress } = addressSlice.actions
-export const selectPickupAddress = (state: any) => state.address.pickupAddress
-export const selectDropoffAddress = (state: any) => state.address.dropoffAddress
-export const selectPickupCoordinates = (state: any) => state.address.pickupCoordinates
-export const selectDropoffCoordinates = (state: any) => state.address.dropoffCoordinates
+export const { setAddress, clearAddresses } = addressSlice.actions
+
+export const selectPickupAddress = (state: any) =>
+  state.address.pickupAddress
+
+export const selectDropoffAddress = (state: any) =>
+  state.address.dropoffAddress
+
+export const selectPickupCoordinates = (state: any) =>
+  state.address.pickupCoordinates
+
+export const selectDropoffCoordinates = (state: any) =>
+  state.address.dropoffCoordinates
+
 export default addressSlice.reducer

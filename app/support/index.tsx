@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import AppBackground from "@/components/AppBackground";
 import { useTheme } from "../../src/theme/ThemeProvider";
@@ -15,36 +16,37 @@ type SupportRow = {
 
 export default function SupportScreen() {
   const { theme, isDarkMode } = useTheme();
+  const { t } = useTranslation();
 
   const rows: SupportRow[] = [
     {
       icon: "book-outline",
-      label: "User Guide",
-      subtitle: "How to use the app — what to do and what to avoid",
+      label: t("support.user_guide"),
+      subtitle: t("support.user_guide_sub"),
       onPress: () => router.push("/support/guide"),
     },
     {
       icon: "alert-circle-outline",
-      label: "Raise a Complaint",
-      subtitle: "Report an issue with an order",
+      label: t("support.raise_complaint"),
+      subtitle: t("support.raise_complaint_sub"),
       onPress: () => router.push("/profile-page/raiseComplaintScreen"),
     },
     {
       icon: "list-outline",
-      label: "My Complaints",
-      subtitle: "Track the status of complaints you've raised",
+      label: t("support.my_complaints"),
+      subtitle: t("support.my_complaints_sub"),
       onPress: () => router.push("/profile-page/myComplaintsScreen"),
     },
     {
       icon: "star-outline",
-      label: "Rate Us",
-      subtitle: "Tell us how we're doing",
+      label: t("support.rate_us"),
+      subtitle: t("support.rate_us_sub"),
       onPress: () => router.push("/rateus/rateus"),
     },
     {
       icon: "mail-outline",
-      label: "Email Support",
-      subtitle: "Reach our support team directly",
+      label: t("support.email_support"),
+      subtitle: t("support.email_support_sub"),
       onPress: () => Linking.openURL("mailto:support@koraapp.com"),
     },
   ];
@@ -58,7 +60,7 @@ export default function SupportScreen() {
           <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.card }]} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Support</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t("support.title")}</Text>
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

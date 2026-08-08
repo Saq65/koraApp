@@ -56,7 +56,8 @@ export default function HomeScreen() {
       case "picked_up": return t("order.status_picked_up");
       case "delivered": return t("order.status_delivered");
       case "cancelled": return t("order.status_cancelled");
-      default: return status;
+      default:
+      return t(`order.${status}`, { defaultValue: status });
     }
   };
 
@@ -326,7 +327,7 @@ function ServiceCard({ icon, label, sub, iconBg, iconColor, soon, route, theme, 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f4f6f5" },
+  container: { flex: 1 },
   cardWrap: { paddingHorizontal: PH, marginTop: vs(8) },
   orderCard: {
     borderRadius: R, padding: s(18), flexDirection: "row",

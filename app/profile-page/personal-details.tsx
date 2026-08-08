@@ -526,9 +526,9 @@ function DetailFieldWithEdit({ label, value, isEditing, onEdit, onSave, onChange
 const getStyles = (theme: any, isDarkMode: boolean) => StyleSheet.create({
     container: { flex: 1 },
     loader: { flex: 1, justifyContent: "center", alignItems: "center" },
-    header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 12 },
+    header: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12 },
     backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.card, alignItems: "center", justifyContent: "center" },
-    headerTitle: { fontSize: 18, fontWeight: "700", color: theme.text },
+    headerTitle: { fontSize: 18, fontWeight: "700", color: theme.text, marginLeft: 10, alignSelf: "center"   },
     avatarSection: { alignItems: "center", marginVertical: 20 },
     avatar: { width: 80, height: 80, borderRadius: 40, justifyContent: "center", alignItems: "center" },
     avatarText: { fontSize: 36, fontWeight: "500", color: "#FFFFFF" },

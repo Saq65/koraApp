@@ -8,7 +8,9 @@ import mr from "./locales/mr.json";
 import gu from "./locales/gu.json";
 
 const initI18n = async () => {
-  const savedLang = await AsyncStorage.getItem("app-language");
+  const savedLang =
+    (await AsyncStorage.getItem("app-language")) ||
+    (await AsyncStorage.getItem("selectedLanguage"));
 
   i18n.use(initReactI18next).init({
     compatibilityJSON: "v4",
@@ -32,6 +34,7 @@ export const loadLanguage = async (lang: string) => {
     return;
   }
   await AsyncStorage.setItem("app-language", lang);
+  await AsyncStorage.setItem("selectedLanguage", lang);
   await i18n.changeLanguage(lang);
 };
 

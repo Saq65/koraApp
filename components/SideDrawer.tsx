@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { getUser, clearAll } from "../src/utils/storage"; // adjust path
 
@@ -19,6 +20,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
   const translateX = useRef(new Animated.Value(-width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
+  const { t } = useTranslation();
   const [userName, setUserName] = useState("");
   const [userPhone, setUserPhone] = useState("");
 
@@ -103,12 +105,12 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
           </LinearGradient>
 
           {[
-            { label: "Profile Details", route: "/profile-page/personal-details" },
-            { label: "My Services", route: "/(tabs)/orders" },
-            { label: "Refer & Earn", route: "/refer" },
-            { label: "Rewards", route: "/rewards" },
-            { label: "Settings", route: "/settings" },
-            { label: "Support", route: "/support" },
+            { labelKey: "side_drawer.personal_details", route: "/profile-page/personal-details" },
+            { labelKey: "side_drawer.my_services", route: "/(tabs)/orders" },
+            { labelKey: "side_drawer.refer_earn", route: "/refer" },
+            { labelKey: "side_drawer.rewards", route: "/rewards" },
+            { labelKey: "side_drawer.settings", route: "/settings" },
+            { labelKey: "side_drawer.support", route: "/support" },
           ].map((item, i) => (
             <TouchableOpacity
               key={i}
@@ -118,13 +120,13 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
                 router.push(item.route as any);
               }}
             >
-              <Text style={{ color: theme.text }}>{item.label}</Text>
+              <Text style={{ color: theme.text }}>{t(item.labelKey)}</Text>
               <Ionicons name="chevron-forward" size={18} color={theme.subText} />
             </TouchableOpacity>
           ))}
 
           <TouchableOpacity style={styles.logout} onPress={handleLogout}>
-            <Text style={{ color: "red", fontWeight: "600" }}>Log Out</Text>
+            <Text style={{ color: "red", fontWeight: "600" }}>{t("profile.logout")}</Text>
           </TouchableOpacity>
         </SafeAreaView>
       </Animated.View>

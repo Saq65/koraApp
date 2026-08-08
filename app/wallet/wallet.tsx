@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import AppBackground from "@/components/AppBackground"
-import { useTheme } from '@react-navigation/native'
+import { useTheme } from '@/src/theme/ThemeProvider'
 import { router } from 'expo-router'
 import { getWallet, WalletTransaction } from '@/src/api/wallet'
 
@@ -38,19 +38,20 @@ const titleForTransaction = (txn: WalletTransaction) => {
 };
 
 const TransactionIcon = ({ type }: { type: string }) => {
+    const { theme } = useTheme()
     const getIconStyle = () => {
         switch (type) {
             case 'refund':
-                return { bg: '#E8F5E9', color: '#4CAF50', symbol: '↙' }
-            case 'paid':
-                return { bg: '#FFEBEE', color: '#F44336', symbol: '↗' }
+                return { bg: theme.primaryLight, color: theme.primary, symbol: '↙' }
+            case 'debit':
+                return { bg: theme.card, color: theme.subText, symbol: '↗' }
             case 'added':
             case 'credit':
-                return { bg: '#E3F2FD', color: '#2196F3', symbol: '+' }
+                return { bg: theme.primaryLight, color: theme.primary, symbol: '+' }
             case 'cashback':
-                return { bg: '#FFF8E1', color: '#FFC107', symbol: '🎁' }
+                return { bg: theme.primaryLight, color: theme.primary, symbol: '🎁' }
             default:
-                return { bg: '#F5F5F5', color: '#9E9E9E', symbol: '•' }
+                return { bg: theme.card, color: theme.subText, symbol: '•' }
         }
     }
     const icon = getIconStyle()
@@ -62,7 +63,7 @@ const TransactionIcon = ({ type }: { type: string }) => {
 }
 
 const Wallet = () => {
-    const { colors } = useTheme()
+    const { theme, isDarkMode } = useTheme()
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
     const [balance, setBalance] = useState(0)
@@ -106,66 +107,66 @@ const Wallet = () => {
     const ListHeader = () => (
         <>
             {/* Wallet Card */}
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: theme.primary, shadowColor: theme.primary }]}> 
                 <View style={styles.cardTop}>
                     <View style={styles.walletIconRow}>
                         <View style={styles.walletIconBox}>
-                            <Text style={styles.walletIconText}>💳</Text>
+                            <Text style={[styles.walletIconText, { color: theme.white }]}>💳</Text>
                         </View>
-                        <Text style={styles.walletName}>KORA Wallet</Text>
+                        <Text style={[styles.walletName, { color: theme.white }]}>KORA Wallet</Text>
                     </View>
-                    <Text style={styles.availableText}>AVAILABLE</Text>
+                    <Text style={[styles.availableText, { color: theme.white }]}>AVAILABLE</Text>
                 </View>
-                <Text style={styles.balanceLabel}>Total Balance</Text>
-                <Text style={styles.balanceAmount}>₹{balance.toLocaleString('en-IN')}</Text>
+                <Text style={[styles.balanceLabel, { color: theme.white }]}>Total Balance</Text>
+                <Text style={[styles.balanceAmount, { color: theme.white }]}>₹{balance.toLocaleString('en-IN')}</Text>
                 <View style={styles.cardActions}>
-                    <TouchableOpacity style={styles.addBtn}>
-                        <Text style={styles.addBtnText}>+ Add Money</Text>
+                    <TouchableOpacity style={[styles.addBtn, { backgroundColor: theme.white }]}> 
+                        <Text style={[styles.addBtnText, { color: theme.primary }]}>+ Add Money</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.withdrawBtn}>
-                        <Text style={styles.withdrawBtnText}>⬇  Withdraw</Text>
+                    <TouchableOpacity style={[styles.withdrawBtn, { backgroundColor: theme.white, borderColor: theme.white, opacity: 0.15 }]}> 
+                        <Text style={[styles.withdrawBtnText, { color: theme.white }]}>⬇  Withdraw</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
             {/* Refund Notice */}
-            <View style={[styles.noticeBanner, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.noticeBanner, { backgroundColor: theme.card, borderColor: theme.border }]}> 
                 <Text style={styles.noticeIcon}>🎁</Text>
-                <Text style={[styles.noticeText, { color: colors.text }]}>
+                <Text style={[styles.noticeText, { color: theme.text }]}> 
                     All refunds from cancelled or adjusted orders are credited instantly to your wallet.
                 </Text>
             </View>
 
             {/* Section Title */}
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Transactions</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Transactions</Text>
         </>
     )
 
     if (loading) {
         return (
-            <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+            <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color={colors.primary} />
+                    <ActivityIndicator size="large" color={theme.primary} />
                 </View>
             </SafeAreaView>
         )
     }
 
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
             <AppBackground>
                 <StatusBar
-                    barStyle="dark-content"
-                    backgroundColor={colors.background}
+                    barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+                    backgroundColor={theme.background}
                     translucent={false}
                 />
 
                 {/* Header */}
-                <View style={[styles.header, { backgroundColor: colors.background }]}>
-                    <TouchableOpacity onPress={()=>router.back()} style={[styles.backBtn, { backgroundColor: colors.card }]}>
-                        <Ionicons name="arrow-back" size={20} color={colors.text} />
+                <View style={[styles.header, { backgroundColor: theme.background }]}> 
+                    <TouchableOpacity onPress={()=>router.back()} style={[styles.backBtn, { backgroundColor: theme.card }]}> 
+                        <Ionicons name="arrow-back" size={20} color={theme.text} />
                     </TouchableOpacity>
-                    <Text style={[styles.headerTitle, { color: colors.text }]}>My Wallet</Text>
+                    <Text style={[styles.headerTitle, { color: theme.text }]}>My Wallet</Text>
                 </View>
 
                 {/* Single FlatList handles all scrolling — no overflow */}
@@ -177,21 +178,21 @@ const Wallet = () => {
                     showsVerticalScrollIndicator={false}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                     ListEmptyComponent={
-                        <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.6, marginTop: 20 }}>
+                        <Text style={{ textAlign: 'center', color: theme.text, opacity: 0.6, marginTop: 20 }}>
                             No transactions yet
                         </Text>
                     }
                     renderItem={({ item }) => (
-                        <View style={[styles.transactionCard, { backgroundColor: colors.card }]}>
+                        <View style={[styles.transactionCard, { backgroundColor: theme.card, shadowColor: theme.border }]}> 
                             <TransactionIcon type={item.type} />
                             <View style={styles.transactionInfo}>
-                                <Text style={[styles.transactionTitle, { color: colors.text }]}>{item.title}</Text>
-                                <Text style={styles.transactionDate}>{item.date}</Text>
+                                <Text style={[styles.transactionTitle, { color: theme.text }]}>{item.title}</Text>
+                                <Text style={[styles.transactionDate, { color: theme.subText }]}>{item.date}</Text>
                             </View>
                             <Text
                                 style={[
                                     styles.transactionAmount,
-                                    item.positive ? styles.amountPositive : styles.amountNegative,
+                                    item.positive ? { color: theme.primary } : { color: theme.secondary ?? theme.text },
                                 ]}
                             >
                                 {item.amount}
@@ -232,9 +233,7 @@ const styles = StyleSheet.create({
     card: {
         marginHorizontal: 16,
         borderRadius: 16,
-        backgroundColor: '#2E7D6B',
         padding: 20,
-        shadowColor: '#2E7D6B',
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.35,
         shadowRadius: 12,
@@ -255,7 +254,6 @@ const styles = StyleSheet.create({
         width: 34,
         height: 34,
         borderRadius: 8,
-        backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -263,24 +261,20 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     walletName: {
-        color: '#fff',
         fontSize: 15,
         fontWeight: '600',
         marginLeft: 6,
     },
     availableText: {
-        color: 'rgba(255,255,255,0.75)',
         fontSize: 11,
         fontWeight: '600',
         letterSpacing: 1,
     },
     balanceLabel: {
-        color: 'rgba(255,255,255,0.75)',
         fontSize: 13,
         marginBottom: 4,
     },
     balanceAmount: {
-        color: '#fff',
         fontSize: 36,
         fontWeight: '800',
         marginBottom: 20,
@@ -291,27 +285,25 @@ const styles = StyleSheet.create({
     },
     addBtn: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: 'transparent',
         borderRadius: 10,
         paddingVertical: 12,
         alignItems: 'center',
     },
     addBtnText: {
-        color: '#2E7D6B',
         fontWeight: '700',
         fontSize: 14,
     },
     withdrawBtn: {
         flex: 1,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        backgroundColor: 'transparent',
         borderRadius: 10,
         paddingVertical: 12,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
+        borderColor: 'transparent',
     },
     withdrawBtnText: {
-        color: '#fff',
         fontWeight: '700',
         fontSize: 14,
     },
@@ -357,7 +349,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 12,
         padding: 14,
-        shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.06,
         shadowRadius: 4,
@@ -385,16 +376,9 @@ const styles = StyleSheet.create({
     },
     transactionDate: {
         fontSize: 12,
-        color: '#9E9E9E',
     },
     transactionAmount: {
         fontSize: 15,
         fontWeight: '700',
-    },
-    amountPositive: {
-        color: '#2E7D6B',
-    },
-    amountNegative: {
-        color: '#F44336',
     },
 })
