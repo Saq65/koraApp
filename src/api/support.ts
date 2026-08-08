@@ -20,25 +20,59 @@ export const submitComplaint = async (complaintData: {
   orderId?: string;
   subject: string;
   description: string;
-  photoUri?: string | null;
+  photoUris?: string[];
 }) => {
   const formData = new FormData();
+
   formData.append("category", complaintData.category);
-  if (complaintData.orderId) formData.append("orderId", complaintData.orderId);
+
+  if (complaintData.orderId) {
+    formData.append("orderId", complaintData.orderId);
+  }
+
   formData.append("subject", complaintData.subject);
   formData.append("description", complaintData.description);
 
-  if (complaintData.photoUri) {
-    const filename = complaintData.photoUri.split("/").pop() || "photo.jpg";
-    const match = /\.(\w+)$/.exec(filename);
-    const type = match ? `image/${match[1]}` : "image/jpeg";
-    formData.append("photo", {
-      uri: complaintData.photoUri,
-      name: filename,
-      type,
-    } as any);
-  }
+  complaintData.photoUris?.slice(0, 3).forEach((uri, index) => {
+    const filename =
+      uri.split("/").pop() || `photo-${index + 1}.jpg`;
 
-  const token = (await getAuthToken()) ?? undefined; // 👈 fix here
-  return apiClient("/complaints", "POST", formData, token, true);
+    const match = /\.(\w+)$/.exec(filename);
+
+    let type = "image/jpeg";
+
+    if (match) {
+      const extension = match[1].toLowerCase();
+
+      if (extension === "png") {
+        type = "image/png";
+      } else if (
+        extension === "jpg" ||
+        extension === "jpeg"
+      ) {
+        type = "image/jpeg";
+      } else if (extension === "webp") {
+        type = "image/webp";
+      }
+    }
+
+    formData.append(
+      "photos",
+      {
+        uri,
+        name: filename,
+        type,
+      } as any
+    );
+  });
+
+  const token = (await getAuthToken()) ?? undefined;
+
+  return apiClient(
+    "/complaints",
+    "POST",
+    formData,
+    token,
+    true
+  );
 };
