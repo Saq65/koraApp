@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useTranslation } from "react-i18next";
 
 /* ─── Constants ─── */
 const TEAL = "#1A6B5A";
@@ -25,21 +26,22 @@ const TOTAL = 520;
 /* ─── UPI Options ─── */
 type UpiOption = {
     id: string;
-    label: string;
+    labelKey: string;
     icon: string;          // MaterialCommunityIcons name
     iconColor: string;
     iconBg: string;
 };
 
 const UPI_OPTIONS: UpiOption[] = [
-    { id: "gpay", label: "Google Pay", icon: "google", iconColor: "#4285F4", iconBg: "#E8F0FE" },
-    { id: "phonepe", label: "PhonePe", icon: "phone", iconColor: "#6739B7", iconBg: "#EDE7F6" },
-    { id: "paytm", label: "Paytm", icon: "wallet", iconColor: "#00BAF2", iconBg: "#E3F7FE" },
-    { id: "otherupi", label: "Other UPI", icon: "dots-grid", iconColor: GRAY_TEXT, iconBg: "#F0F0EA" },
+    { id: "gpay", labelKey: "Google Pay", icon: "google", iconColor: "#4285F4", iconBg: "#E8F0FE" },
+    { id: "phonepe", labelKey: "PhonePe", icon: "phone", iconColor: "#6739B7", iconBg: "#EDE7F6" },
+    { id: "paytm", labelKey: "Paytm", icon: "wallet", iconColor: "#00BAF2", iconBg: "#E3F7FE" },
+    { id: "otherupi", labelKey: "payment.other_upi", icon: "dots-grid", iconColor: GRAY_TEXT, iconBg: "#F0F0EA" },
 ];
 
 /* ─── Main Screen ─── */
 export default function Payment() {
+    const { t } = useTranslation();
     const [selected, setSelected] = useState<string>("gpay");
     const [upiId, setUpiId] = useState("");
 
@@ -52,7 +54,7 @@ export default function Payment() {
                 <TouchableOpacity style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Payment</Text>
+                <Text style={styles.headerTitle}>{t("payment.title")}</Text>
                 <View style={{ width: 36 }} />
             </View>
 
@@ -63,7 +65,7 @@ export default function Payment() {
             >
                 {/* ── Total Amount ── */}
                 <View style={styles.totalWrap}>
-                    <Text style={styles.totalLabel}>Total Amount</Text>
+                    <Text style={styles.totalLabel}>{t("payment.total_amount")}</Text>
                     <Text style={styles.totalAmount}>₹{TOTAL}</Text>
                 </View>
 
@@ -75,8 +77,8 @@ export default function Payment() {
                             <MaterialCommunityIcons name="cellphone" size={20} color="#fff" />
                         </View>
                         <View>
-                            <Text style={styles.upiTitle}>Pay via UPI</Text>
-                            <Text style={styles.upiSubtitle}>Fast & secure payment</Text>
+                            <Text style={styles.upiTitle}>{t("payment.pay_via_upi")}</Text>
+                            <Text style={styles.upiSubtitle}>{t("payment.fast_secure")}</Text>
                         </View>
                     </View>
 
@@ -95,7 +97,7 @@ export default function Payment() {
                                         <MaterialCommunityIcons name={opt.icon} size={18} color={opt.iconColor} />
                                     </View>
                                     <Text style={[styles.gridLabel, isActive && styles.gridLabelActive]}>
-                                        {opt.label}
+                                        {opt.labelKey.startsWith("payment.") ? t(opt.labelKey) : opt.labelKey}
                                     </Text>
                                 </TouchableOpacity>
                             );
@@ -103,7 +105,7 @@ export default function Payment() {
                     </View>
 
                     {/* OR enter UPI ID */}
-                    <Text style={styles.orText}>Or enter UPI ID</Text>
+                    <Text style={styles.orText}>{t("payment.or_enter_upi")}</Text>
                     <View style={styles.inputWrap}>
                         <TextInput
                             style={styles.input}
@@ -119,7 +121,7 @@ export default function Payment() {
                     {/* Security note */}
                     <View style={styles.secureRow}>
                         <MaterialCommunityIcons name="shield-check-outline" size={14} color={TEAL} />
-                        <Text style={styles.secureText}>Secured by 256-bit encryption</Text>
+                        <Text style={styles.secureText}>{t("payment.secure_note")}</Text>
                     </View>
                 </View>
             </ScrollView>
@@ -128,7 +130,7 @@ export default function Payment() {
             <View style={styles.footer}>
                 <TouchableOpacity onPress={() => router.push('/paymentsucces')} style={styles.payBtn} activeOpacity={0.85}>
                     <MaterialCommunityIcons name="check-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.payBtnText}>Pay ₹{TOTAL}</Text>
+                    <Text style={styles.payBtnText}>{t("payment.pay_button")} ₹{TOTAL}</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

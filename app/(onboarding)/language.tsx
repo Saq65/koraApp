@@ -18,10 +18,6 @@ const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
   { code: "mr", label: "Marathi", native: "मराठी" },
-  { code: "ta", label: "Tamil", native: "தமிழ்" },
-  { code: "te", label: "Telugu", native: "తెలుగు" },
-  { code: "bn", label: "Bengali", native: "বাংলা" },
-  { code: "kn", label: "Kannada", native: "ಕನ್ನಡ" },
   { code: "gu", label: "Gujarati", native: "ગુજરાતી" },
 ];
 
@@ -48,9 +44,9 @@ export default function LanguageScreen() {
          source={require("../../assets/images/icon.png")} 
           style={styles.logo}
         /> 
-        <Text style={styles.brandName}>KORA.care</Text>
+        <Text style={styles.brandName}>{t("app_name")}</Text>
         <Text style={styles.tagline}>
-          {t("your_care")}
+          {t("branding.your_care")}
         </Text>
       </View>
 
@@ -58,11 +54,11 @@ export default function LanguageScreen() {
       <View style={styles.titleContainer}>
         <Text style={styles.globeIcon}>🌐</Text>
         <Text style={styles.title}>
-          {t("choose_language")}
+          {t("language_screen.choose_language")}
         </Text>
       </View>
       <Text style={styles.subtitle}>
-        {t("change_language_anytime")}
+        {t("language_screen.change_language_anytime")}
       </Text>
 
       {/* Language List */}
@@ -103,7 +99,7 @@ export default function LanguageScreen() {
       {/* Continue Button */}
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
         <Text style={styles.continueText}>
-  {t("continue")}
+  {t("language_screen.continue")}
 </Text>
       </TouchableOpacity>
     </SafeAreaView>

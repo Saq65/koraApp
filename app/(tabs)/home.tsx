@@ -18,6 +18,7 @@ import SideDrawer from "../../components/SideDrawer";
 import { router } from "expo-router";
 import { getUser } from "../../src/utils/storage";
 import { getActiveOrder, getRecentOrders } from "../../src/api/order"; // adjust path if needed
+import { useTranslation } from "react-i18next";
 
 const { width: W, height: H } = Dimensions.get("window");
 const s = (n: number) => Math.round((W / 375) * n);
@@ -33,6 +34,7 @@ const PH = s(16);
 
 export default function HomeScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -50,11 +52,11 @@ export default function HomeScreen() {
   // Helper: format status text
   const getStatusText = (status: string) => {
     switch (status) {
-      case "pending_sp": return "Pending";
-      case "accepted": return "In Process";
-      case "picked_up": return "Picked Up";
-      case "delivered": return "Delivered";
-      case "cancelled": return "Cancelled";
+      case "pending_sp": return t("order_status.pending");
+      case "accepted": return t("order_status.in_process");
+      case "picked_up": return t("order_status.picked_up");
+      case "delivered": return t("order_status.delivered");
+      case "cancelled": return t("order_status.cancelled");
       default: return status;
     }
   };
@@ -71,7 +73,7 @@ export default function HomeScreen() {
       // Get user name from stored user object
       const user = await getUser();
       if (user?.name) setUserName(user.name);
-      else setUserName("Guest");
+      else setUserName(t("header.guest"));
 
       // Fetch orders in parallel
       const [activeRes, recentRes] = await Promise.all([
@@ -100,16 +102,16 @@ export default function HomeScreen() {
   // Services list (unchanged)
   const services = [
     {
-      icon: "water-outline", label: "Laundry", sub: "Wash, Iron &\nmore", iconBg: TEAL_LIGHT, iconColor: TEAL, soon: false, route: "/category",
+      icon: "water-outline", label: t("home.laundry"), sub: t("home.laundry_sub"), iconBg: TEAL_LIGHT, iconColor: TEAL, soon: false, route: "/category",
     },
-    { icon: "sparkles-outline", label: "Dry Clean", sub: "Premium care", iconBg: "#1a1a2e", iconColor: "#fff", soon: true },
-    { icon: "cube-outline", label: "Rental", sub: "Coming soon", iconBg: "#f59e0b", iconColor: "#fff", soon: true },
+    { icon: "sparkles-outline", label: t("home.dry_clean"), sub: t("home.dry_clean_sub"), iconBg: "#1a1a2e", iconColor: "#fff", soon: true },
+    { icon: "cube-outline", label: t("home.rental"), sub: t("home.rental_sub"), iconBg: "#f59e0b", iconColor: "#fff", soon: true },
   ];
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName || "Loading..."} />
+        <Header theme={theme} onMenuPress={() => setDrawerVisible(true)} userName={userName || t("common.loading")} />
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color={TEAL} />
         </View>
@@ -140,12 +142,12 @@ export default function HomeScreen() {
                 <View style={styles.circle2} />
 
                 <View style={{ flex: 1, zIndex: 1 }}>
-                  <Text style={styles.orderTag}>ACTIVE ORDER</Text>
+                  <Text style={styles.orderTag}>{t("home.active_order")}</Text>
                   <Text style={styles.orderId}>{activeOrder.orderNumber}</Text>
                   <View style={styles.orderTimeRow}>
                     <Ionicons name="time-outline" size={s(13)} color="rgba(255,255,255,0.8)" />
                     <Text style={styles.orderTime}>
-                      {getStatusText(activeOrder.status)} • {activeOrder.items?.length || 0} items
+                      {getStatusText(activeOrder.status)} • {activeOrder.items?.length || 0} {t("home.items")}
                     </Text>
                   </View>
                 </View>
@@ -160,10 +162,10 @@ export default function HomeScreen() {
           <View style={styles.cardWrap}>
             <View style={styles.noOrderCard}>
               <Ionicons name="cart-outline" size={s(32)} color={TEAL} />
-              <Text style={styles.noOrderText}>No active order</Text>
+              <Text style={styles.noOrderText}>{t("home.no_active_order")}</Text>
               <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')}>
                 <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.startOrderBtn}>
-                  <Text style={styles.startOrderBtnText}>Place first order</Text>
+                  <Text style={styles.startOrderBtnText}>{t("home.place_first_order")}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -171,7 +173,7 @@ export default function HomeScreen() {
         )}
 
         {/* SERVICES */}
-        <Text style={styles.sectionTitle}>Services</Text>
+        <Text style={styles.sectionTitle}>{t("home.services_title")}</Text>
         <View style={styles.servicesRow}>
           {services.map((svc, i) => (
             <ServiceCard key={i} {...svc} />
@@ -180,15 +182,15 @@ export default function HomeScreen() {
 
         {/* PROMO */}
         <View style={styles.promoCard}>
-          <Text style={styles.promoTag}> SPECIAL OFFER</Text>
-          <Text style={styles.promoTitle}>30% Off First Order!</Text>
-          <Text style={styles.promoSub}>Use code KORA30 at checkout</Text>
+          <Text style={styles.promoTag}> {t("home.special_offer")}</Text>
+          <Text style={styles.promoTitle}>{t("home.promo_title")}</Text>
+          <Text style={styles.promoSub}>{t("home.promo_sub")}</Text>
         </View>
 
         {/* RECENT ORDERS */}
-        <Text style={styles.sectionTitle}>Recent Orders</Text>
+        <Text style={styles.sectionTitle}>{t("home.recent_orders")}</Text>
         {recentOrders.length === 0 ? (
-          <Text style={styles.emptyText}>No orders yet</Text>
+          <Text style={styles.emptyText}>{t("home.no_orders_yet")}</Text>
         ) : (
           recentOrders.map((order) => (
             <TouchableOpacity
@@ -203,7 +205,7 @@ export default function HomeScreen() {
                 <View style={{ flex: 1, marginLeft: s(12) }}>
                   <Text style={styles.recentService}>{order.orderNumber}</Text>
                   <Text style={styles.recentMeta}>
-                    {order.items?.length || 0} items • {formatDate(order.createdAt)}
+                    {order.items?.length || 0} {t("home.items")} • {formatDate(order.createdAt)}
                   </Text>
                 </View>
                 <Text style={styles.recentStatus}>{getStatusText(order.status)}</Text>
@@ -218,7 +220,7 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => router.push('/placeorder/placeorder')} activeOpacity={0.88}>
           <LinearGradient colors={[TEAL, TEAL_DARK]} style={styles.pickupBtn}>
             <Ionicons name="car-outline" size={s(20)} color="#fff" />
-            <Text style={styles.pickupText}>Book Pickup</Text>
+            <Text style={styles.pickupText}>{t("home.book_pickup")}</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>

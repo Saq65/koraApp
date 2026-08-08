@@ -10,6 +10,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { getUserOrders, cancelOrder, Order } from '../../src/services/orderService';
+import { useTranslation } from 'react-i18next';
 
 const TEAL        = '#1A6B5A';
 const TEAL_LIGHT  = '#E8F4F1';
@@ -42,6 +43,7 @@ function formatDate(iso: string) {
 
 /* ─── Active Order Card ─────────────────────────────────────────────────────── */
 function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => void }) {
+  const { t } = useTranslation();
   const [cancelling, setCancelling] = useState(false);
 
   const minsElapsed = (Date.now() - new Date(order.createdAt).getTime()) / 60000;
@@ -49,17 +51,17 @@ function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => vo
   const canCancel   = minsLeft > 0 && !['picked_up','at_sp','cleaned','rider_delivery_assigned','delivered','cancelled'].includes(order.status);
 
   const handleCancel = () => {
-    Alert.alert('Cancel Order', 'Are you sure you want to cancel?', [
-      { text: 'No', style: 'cancel' },
+    Alert.alert(t('orders.cancel_order_title'), t('orders.cancel_order_message'), [
+      { text: t('orders.no'), style: 'cancel' },
       {
-        text: 'Yes, Cancel', style: 'destructive',
+        text: t('orders.yes_cancel'), style: 'destructive',
         onPress: async () => {
           setCancelling(true);
           try {
             await cancelOrder(String(order.id), CURRENT_CUSTOMER_ID);
             onCancel();
           } catch (err: any) {
-            Alert.alert('Cannot Cancel', err.message ?? 'Something went wrong');
+            Alert.alert(t('orders.cannot_cancel'), err.message ?? t('orders.something_went_wrong'));
           } finally {
             setCancelling(false);
           }
@@ -83,7 +85,7 @@ function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => vo
             </Text>
           </View>
           <Text style={styles.orderMeta}>
-            {order.items[0]?.service?.toUpperCase()} • {order.totalItems} items
+            {order.items[0]?.service?.toUpperCase()} • {order.totalItems} {t('orders.items')}
           </Text>
           <View style={styles.row}>
             <Text style={styles.orderDate}>{formatDate(order.createdAt)}</Text>
@@ -133,7 +135,7 @@ function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => vo
         <View style={styles.cancelNotice}>
           <MaterialCommunityIcons name="clock-outline" size={14} color={TEAL} />
           <Text style={styles.cancelNoticeText}>
-            Free cancellation — {minsLeft} mins left in 2hr window
+            {t('orders.free_cancellation', { mins: minsLeft })}
           </Text>
         </View>
       )}
@@ -144,11 +146,11 @@ function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => vo
           <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel} disabled={cancelling} activeOpacity={0.8}>
             {cancelling
               ? <ActivityIndicator color="#E53935" size="small" />
-              : <Text style={styles.cancelBtnText}>Cancel Order</Text>}
+              : <Text style={styles.cancelBtnText}>{t('orders.cancel_order_btn')}</Text>}
           </TouchableOpacity>
         )}
         <TouchableOpacity style={[styles.trackBtn, !canCancel && { flex: 1 }]} activeOpacity={0.8}>
-          <Text style={styles.trackBtnText}>Live Tracking</Text>
+          <Text style={styles.trackBtnText}>{t('orders.live_tracking')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -157,6 +159,7 @@ function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => vo
 
 /* ─── History Order Card ─────────────────────────────────────────────────────── */
 function OrderCard({ order }: { order: Order }) {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.7}>
       <View style={styles.iconWrap}>
@@ -171,7 +174,7 @@ function OrderCard({ order }: { order: Order }) {
         </View>
         <View style={styles.row}>
           <Text style={styles.orderMeta}>
-            {order.items[0]?.service?.toUpperCase()} • {order.totalItems} items
+            {order.items[0]?.service?.toUpperCase()} • {order.totalItems} {t('orders.items')}
           </Text>
           <Text style={styles.price}>₹{order.totalAmount}</Text>
         </View>
@@ -184,6 +187,7 @@ function OrderCard({ order }: { order: Order }) {
 
 /* ─── Main Screen ─────────────────────────────────────────────────────────────── */
 export default function Orders() {
+  const { t } = useTranslation();
   const [activeTab,  setActiveTab]  = useState<'active' | 'history'>('active');
   const [orders,     setOrders]     = useState<Order[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -197,7 +201,7 @@ export default function Orders() {
       const data = await getUserOrders(CURRENT_CUSTOMER_ID, activeTab);
       setOrders(data);
     } catch (err: any) {
-      setError(err.message ?? 'Failed to load orders');
+      setError(err.message ?? t('orders.failed_to_load'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -214,7 +218,7 @@ export default function Orders() {
         <TouchableOpacity style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Services</Text>
+        <Text style={styles.headerTitle}>{t('orders.title')} </Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -223,7 +227,7 @@ export default function Orders() {
           <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}
             style={activeTab === tab ? styles.tabActive : styles.tabInactive}>
             <Text style={activeTab === tab ? styles.tabActiveText : styles.tabInactiveText}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'active' ? t('orders.active') : t('orders.history')}
             </Text>
           </TouchableOpacity>
         ))}
@@ -238,7 +242,7 @@ export default function Orders() {
           <MaterialCommunityIcons name="alert-circle-outline" size={40} color={GRAY_TEXT} />
           <Text style={styles.emptyText}>{error}</Text>
           <TouchableOpacity onPress={() => fetchOrders()} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.retryText}>{t('orders.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -251,7 +255,7 @@ export default function Orders() {
             <View style={styles.emptyWrap}>
               <MaterialCommunityIcons name="package-variant" size={52} color={GRAY_TEXT} />
               <Text style={styles.emptyText}>
-                {activeTab === 'active' ? 'No active orders' : 'No past orders'}
+                {activeTab === 'active' ? t('orders.no_active_orders') : t('orders.no_past_orders')}
               </Text>
             </View>
           ) : activeTab === 'active' ? (
@@ -268,7 +272,7 @@ export default function Orders() {
 const styles = StyleSheet.create({
   safeArea:       { flex: 1, backgroundColor: GRAY_LIGHT },
   centerWrap:     { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  header:         { flexDirection: 'row', alignItems: 'center',gap:15, paddingHorizontal: 16, paddingVertical: 12 },
   backBtn:        { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4 },
   headerTitle:    { fontSize: 17, fontWeight: '700', color: TEXT_DARK },
   tabRow:         { flexDirection: 'row', marginHorizontal: 16, marginBottom: 16, backgroundColor: '#E2E2DA', borderRadius: 30, padding: 4 },

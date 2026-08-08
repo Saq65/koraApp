@@ -12,10 +12,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { getUser, clearAll } from "../src/utils/storage"; // adjust path
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get("window");
 
 export default function SideDrawer({ visible, onClose, theme }: any) {
+  const { t } = useTranslation();
   const translateX = useRef(new Animated.Value(-width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -95,7 +97,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
             <View style={styles.profile}>
               <Ionicons name="person-outline" size={24} color="#fff" />
             </View>
-            <Text style={styles.name}>{userName || "Guest"}</Text>
+            <Text style={styles.name}>{userName || t("header.guest")}</Text>
             <Text style={styles.phone}>{userPhone || ""}</Text>
             <TouchableOpacity style={styles.close} onPress={onClose}>
               <Ionicons name="close" size={20} color="#fff" />
@@ -103,12 +105,12 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
           </LinearGradient>
 
           {[
-            "Profile Details",
-            "My Services",
-            "Refer & Earn",
-            "Rewards",
-            "Settings",
-            "Support",
+            t("drawer.profile_details"),
+            t("drawer.my_services"),
+            t("drawer.refer_earn"),
+            t("drawer.rewards"),
+            t("drawer.settings"),
+            t("drawer.support"),
           ].map((item, i) => (
             <TouchableOpacity key={i} style={styles.item}>
               <Text style={{ color: theme.text }}>{item}</Text>
@@ -117,7 +119,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
           ))}
 
           <TouchableOpacity style={styles.logout} onPress={handleLogout}>
-            <Text style={{ color: "red", fontWeight: "600" }}>Log Out</Text>
+            <Text style={{ color: "red", fontWeight: "600" }}>{t("drawer.log_out")}</Text>
           </TouchableOpacity>
         </SafeAreaView>
       </Animated.View>

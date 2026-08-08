@@ -1,4 +1,6 @@
 {
+  "app_name": "KORA.care",
+
   "common": {
     "app_name": "KORA",
     "loading": "लोड होत आहे...",
@@ -15,7 +17,263 @@
     "yes": "होय",
     "no": "नाही",
     "ok": "ठीक आहे",
+    "retry": "पुन्हा प्रयत्न करा",
+    "error": "त्रुटी",
+    "success": "यश",
+    "remove": "काढा",
+    "confirm": "पुष्टी करा",
+    "view_all": "सर्व पहा",
+    "select": "निवडा",
+    "close": "बंद करा",
+    "apply": "लागू करा"
+  },
+
+  "header": {
+    "good_morning": "शुभ सकाळ",
+    "good_afternoon": "शुभ दुपार",
+    "good_evening": "शुभ संध्याकाळ",
+    "good_night": "शुभ रात्री",
+    "guest": "पाहुणे"
+  },
+
+  "drawer": {
+    "profile_details": "प्रोफाइल तपशील",
+    "my_services": "माझ्या सेवा",
+    "refer_earn": "रेफर करा आणि कमवा",
+    "rewards": "रिवॉर्ड्स",
+    "settings": "सेटिंग्ज",
+    "support": "सहाय्य",
+    "log_out": "लॉग आउट"
+  },
+
+  "tabs": {
+    "home": "होम",
+    "order_history": "ऑर्डर इतिहास",
+    "cart": "कार्ट",
+    "profile": "प्रोफाइल"
+  },
+
+  "order_status": {
+    "pending": "प्रलंबित",
+    "in_process": "प्रक्रियेत",
+    "picked_up": "पिकअप झाले",
+    "delivered": "वितरित",
+    "cancelled": "रद्द",
+    "out_for_delivery": "डिलिव्हरीसाठी निघाले",
+    "processing": "प्रक्रियेत"
+  },
+  "stub_screens": {
+    "home_screen": "होम स्क्रीन",
+    "otp_screen": "OTP स्क्रीन"
+  },
+  "orderhistory": {
+    "title": "ऑर्डर इतिहास",
+    "no_orders": "अद्याप कोणतीही ऑर्डर नाही",
+    "no_orders_sub": "तुमचा ऑर्डर इतिहास येथे दिसेल"
+  },
+  "personal_details": {
+    "title": "वैयक्तिक तपशील",
+    "full_name": "पूर्ण नाव",
+    "username": "यूजरनेम",
+    "dob": "जन्मतारीख",
+    "dob_placeholder": "MM/DD/YYYY",
+    "mobile": "मोबाइल नंबर",
+    "email": "ईमेल",
+    "default_name": "जॉन डो",
+    "default_username": "johndoe",
+    "update_success": "प्रोफाइल यशस्वीरित्या अपडेट झाली",
+    "update_failed": "प्रोफाइल अपडेट करण्यात अयशस्वी"
+  },
+  "savedaddress": {
+    "title": "जतन केलेले पत्ते",
+    "add": "जोडा",
+    "no_addresses": "कोणताही जतन केलेला पत्ता नाही",
+    "no_addresses_sub": "चेकआउट जलद करण्यासाठी पत्ता जोडा",
+    "add_address": "पत्ता जोडा",
+    "default_badge": "डीफॉल्ट",
+    "set_default": "डीफॉल्ट म्हणून सेट करा",
+    "label_placeholder": "लेबल (उदा. मित्राचे घर)",
+    "address_placeholder": "पूर्ण पत्ता",
+    "missing_info_title": "माहिती अपूर्ण आहे",
+    "missing_info_message": "कृपया लेबल आणि पूर्ण पत्ता दोन्ही प्रविष्ट करा.",
+    "remove_address_title": "पत्ता काढा",
+    "remove_address_message": "तुम्हाला खरंच हा पत्ता काढायचा आहे का?"
+  },
+
+  "trackorder": {
+    "live_tracking": "लाइव्ह ट्रॅकिंग",
+    "rider_role": "तुमचा डिलिव्हरी रायडर",
+    "order_status_title": "ऑर्डर स्थिती",
+    "delivery_address": "डिलिव्हरी पत्ता",
+    "step_picked_up_desc": "रायडरने तुमचे कपडे घेतले",
+    "step_in_process_desc": "तुमचे कपडे धुतले जात आहेत",
+    "step_out_for_delivery_desc": "रायडर मार्गावर आहे",
+    "step_delivered_desc": "तुमच्या ताज्या कपड्यांचा आनंद घ्या!",
+    "estimated": "अंदाजे"
+  },
+  "payment": {
+    "title": "पेमेंट",
+    "total_amount": "एकूण रक्कम",
+    "pay_via_upi": "UPI ने पेमेंट करा",
+    "fast_secure": "जलद आणि सुरक्षित पेमेंट",
+    "other_upi": "इतर UPI",
+    "or_enter_upi": "किंवा UPI आयडी प्रविष्ट करा",
+    "secure_note": "256-बिट एन्क्रिप्शनने सुरक्षित",
+    "pay_button": "पेमेंट करा"
+  },
+  "placeorder": {
+    "title": "ऑर्डर द्या",
+    "your_items": "तुमच्या वस्तू",
+    "pickup_drop_location": "पिकअप आणि ड्रॉप स्थान",
+    "pickup_from": "पिकअप स्थान",
+    "dropoff_at": "ड्रॉप-ऑफ स्थान",
+    "change": "बदला",
+    "schedule": "वेळापत्रक",
+    "pickup_date": "पिकअप तारीख",
+    "time_slot": "वेळ स्लॉट",
+    "today": "आज",
+    "tomorrow": "उद्या",
+    "items_label": "वस्तू",
+    "delivery": "डिलिव्हरी",
+    "free": "मोफत",
+    "total": "एकूण",
+    "agree_prefix": "मी सहमत आहे",
+    "terms_conditions": "नियम आणि अटी",
+    "agree_suffix": "KORA.care च्या.",
+    "proceed_to_pay": "पेमेंटसाठी पुढे जा",
+    "order_failed": "ऑर्डर अयशस्वी",
+    "something_went_wrong": "काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा."
+  },
+  "subcategory": {
+    "eyebrow": "लॉन्ड्री सेवा",
+    "select": "निवडा",
+    "choose_services": "सेवा आणि प्रमाण निवडा",
+    "wash": "धुलाई",
+    "iron": "इस्त्री",
+    "wash_iron": "धुलाई + इस्त्री",
+    "per_piece": "/नग",
+    "add": "जोडा",
+    "add_to_cart": "कार्टमध्ये जोडा",
+    "items": "वस्तू",
+    "basket_empty": "तुमची बास्केट रिकामी आहे",
+    "total": "एकूण",
+    "premium_care": "प्रीमियम काळजी",
+    "gentle_wash": "सौम्य धुलाई",
+    "deep_clean": "डीप क्लीन",
+    "tab_upper_wear": "अप्पर वेअर",
+    "tab_lower_wear": "लोअर वेअर",
+    "tab_garments": "गारमेंट्स",
+    "tab_winter_wear": "विंटर वेअर",
+    "tab_ethnic": "एथनिक",
+    "tab_uniforms": "गणवेश",
+    "tab_bedding": "बेडिंग",
+    "tab_bath": "बाथ",
+    "tab_home": "होम",
+    "tab_others": "इतर"
+  },
+  "category": {
+    "header_super": "लॉन्ड्री",
+    "header_title": "श्रेणी निवडा",
+    "browse": "ब्राउझ करा",
+    "men": "पुरुष",
+    "men_desc": "शर्ट, पँट, कुर्ता आणि बरेच काही",
+    "women": "महिला",
+    "women_desc": "टॉप, साडी, ड्रेस आणि बरेच काही",
+    "children": "मुले",
+    "children_desc": "मुलांचे कपडे आणि गणवेश",
+    "linen": "लिनन",
+    "linen_desc": "बेडशीट, पडदे, टॉवेल"
+  },
+  "notifications": {
+    "title": "सूचना",
+    "new_updates": "{{count}} नवीन अपडेट्स",
+    "mark_all_read": "सर्व वाचले म्हणून चिन्हांकित करा",
+    "today": "आज",
+    "yesterday": "काल",
+    "earlier": "आधी",
+    "live_tracking": "लाइव्ह ट्रॅकिंग",
+    "rider_arriving": "रायडर ~8 मिनिटांत पोहोचत आहे",
+    "order_label": "ऑर्डर"
+  },
+  "payment_success": {
+    "title": "पेमेंट यशस्वी!",
+    "subtitle": "तुमची ऑर्डर यशस्वीरित्या दिली गेली आहे. आम्ही लवकरच तुमचे कपडे घेण्यासाठी येऊ.",
+    "track_order": "ऑर्डर ट्रॅक करा",
+    "back_home": "होमवर परत जा"
+  },
+  "cart": {
+    "title": "माझी कार्ट",
+    "item": "वस्तू",
+    "items": "वस्तू",
+    "empty": "तुमची कार्ट रिकामी आहे",
+    "bill_summary": "बिल सारांश",
+    "subtotal": "उपएकूण",
+    "delivery": "डिलिव्हरी",
+    "free": "मोफत",
+    "total": "एकूण",
+    "each": "प्रत्येकी",
+    "place_order": "ऑर्डर करा"
+  },
+  "orders": {
+    "title": "माझ्या सेवा",
+    "active": "सक्रिय",
+    "history": "इतिहास",
+    "no_active_orders": "कोणतीही सक्रिय ऑर्डर नाही",
+    "no_past_orders": "कोणतीही जुनी ऑर्डर नाही",
+    "items": "वस्तू",
+    "cancel_order_title": "ऑर्डर रद्द करा",
+    "cancel_order_message": "तुम्हाला खरंच रद्द करायचे आहे का?",
+    "no": "नाही",
+    "yes_cancel": "होय, रद्द करा",
+    "cannot_cancel": "रद्द करता येत नाही",
+    "something_went_wrong": "काहीतरी चुकले",
+    "free_cancellation": "मोफत रद्दीकरण — 2 तासांच्या कालावधीत {{mins}} मिनिटे शिल्लक",
+    "cancel_order_btn": "ऑर्डर रद्द करा",
+    "live_tracking": "लाइव्ह ट्रॅकिंग",
+    "failed_to_load": "ऑर्डर लोड करण्यात अयशस्वी",
     "retry": "पुन्हा प्रयत्न करा"
+  },
+  "profile": {
+    "orders": "ऑर्डर",
+    "wallet": "वॉलेट",
+    "rating": "रेटिंग",
+    "dark_mode": "डार्क मोड",
+    "dark_mode_sub": "लाइट आणि डार्क थीममध्ये स्विच करा",
+    "personal_details": "वैयक्तिक तपशील",
+    "personal_details_sub": "नाव, जन्मतारीख, मोबाइल, ईमेल",
+    "order_history": "ऑर्डर इतिहास",
+    "order_history_sub": "{{count}} ऑर्डर",
+    "saved_addresses": "जतन केलेले पत्ते",
+    "saved_addresses_sub": "घर, ऑफिस",
+    "rate_us": "आम्हाला रेट करा",
+    "rate_us_sub": "तुमचा अभिप्राय शेअर करा",
+    "notifications": "सूचना",
+    "notifications_sub": "सूचना व्यवस्थापित करा",
+    "language": "भाषा",
+    "language_sub": "अ‍ॅपची भाषा बदला",
+    "settings": "सेटिंग्ज",
+    "settings_sub": "थीम, आवाज, परवानग्या",
+    "logout": "लॉगआउट"
+  },
+  "home": {
+    "services_title": "सेवा",
+    "laundry": "लॉन्ड्री",
+    "laundry_sub": "धुलाई, इस्त्री आणि\nबरेच काही",
+    "dry_clean": "ड्राय क्लीन",
+    "dry_clean_sub": "प्रीमियम काळजी",
+    "rental": "भाड्याने",
+    "rental_sub": "लवकरच येत आहे",
+    "soon_badge": "लवकरच",
+    "active_order": "सक्रिय ऑर्डर",
+    "no_active_order": "कोणतीही सक्रिय ऑर्डर नाही",
+    "place_first_order": "पहिली ऑर्डर द्या",
+    "special_offer": "विशेष ऑफर",
+    "promo_title": "पहिल्या ऑर्डरवर 30% सूट!",
+    "promo_sub": "चेकआउटवर कोड KORA30 वापरा",
+    "recent_orders": "अलीकडील ऑर्डर",
+    "no_orders_yet": "अद्याप कोणतीही ऑर्डर नाही",
+    "book_pickup": "पिकअप बुक करा",
+    "items": "वस्तू"
   },
 
   "branding": {
@@ -52,6 +310,9 @@
 
     "use_phone_instead": "त्याऐवजी फोन वापरा",
     "use_email_instead": "त्याऐवजी ईमेल वापरा",
+    "use_email": "त्याऐवजी ईमेल वापरा",
+    "signup_google": "Google सह साइन अप करा",
+    "create_account": "तुमचे खाते तयार करा",
 
     "dont_have_account": "खाते नाही?",
     "already_have_account": "आधीच खाते आहे?",
@@ -68,6 +329,7 @@
 
     "resend_code": "कोड पुन्हा पाठवा",
     "didnt_get_code": "कोड मिळाला नाही?",
+    "enter_complete_otp": "कृपया पूर्ण 6 अंकी OTP प्रविष्ट करा",
 
     "send_reset_code": "रीसेट कोड पाठवा",
 
@@ -103,6 +365,8 @@
     "forgot_password_description": "काळजी करू नका! तुमचा फोन नंबर प्रविष्ट करा आणि आम्ही पासवर्ड रीसेट करण्यासाठी कोड पाठवू.",
 
     "reset_password_description": "तुमचा नवीन पासवर्ड पूर्वीच्या पासवर्डपेक्षा वेगळा असावा.",
+    "password_reset_description": "तुमचा नवीन पासवर्ड पूर्वीच्या पासवर्डपेक्षा वेगळा असावा.",
+    "enter_valid_phone": "कृपया वैध 10 अंकी मोबाइल नंबर प्रविष्ट करा",
     "resend_code_in": "{{seconds}} सेकंदात कोड पुन्हा पाठवा"
   },
 
@@ -135,12 +399,34 @@
 
     "password_reset_failed": "पासवर्ड रीसेट अयशस्वी",
 
-    "verification_failed": "सत्यापन अयशस्वी",
-
-    "resend_failed": "कोड पुन्हा पाठवण्यात अयशस्वी",
-     "password_min_hint": "पासवर्ड किमान ६ अक्षरांचा असावा",
+    "password_min_hint": "पासवर्ड किमान ६ अक्षरांचा असावा",
     "reset_failed": "पासवर्ड रीसेट अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
     "verification_failed": "पडताळा अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
-"resend_failed": "कोड पुन्हा पाठविण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+    "resend_failed": "कोड पुन्हा पाठविण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+    "something_went_wrong": "काहीतरी चुकले"
+  },
+
+  "language_screen": {
+    "choose_language": "तुमची भाषा निवडा",
+    "change_language_anytime": "तुम्ही सेटिंग्जमध्ये कधीही भाषा बदलू शकता",
+    "continue": "पुढे जा",
+    "select_language": "भाषा निवडा",
+    "language_changed": "भाषा बदलली",
+    "language_changed_message": "अ‍ॅपची भाषा यशस्वीरित्या अपडेट झाली आहे",
+    "language_will_change_immediately": "भाषा त्वरित बदलेल",
+    "change_failed_title": "त्रुटी",
+    "change_failed_message": "भाषा बदलण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+  },
+
+  "terms": {
+    "title": "नियम आणि अटी",
+    "subtitle": "पुढे जाण्यापूर्वी कृपया पुनरावलोकन करा",
+    "agreement_title": "KORA.CARE करार",
+    "agree_checkbox_prefix": "मी वाचले आहे आणि सहमत आहे",
+    "agree_checkbox_terms": "नियम आणि अटी",
+    "agree_checkbox_and": "आणि",
+    "agree_checkbox_privacy": "गोपनीयता धोरण",
+    "agree_checkbox_suffix": "KORA.care च्या",
+    "agree_button": "सहमत आहे आणि पुढे जा"
   }
 }

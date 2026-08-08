@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 // ─── Responsive helpers ────────────────────────────────────────
 const { width: W, height: H } = Dimensions.get("window");
@@ -103,8 +104,16 @@ const ORDERS: Order[] = [
   },
 ];
 
+const STATUS_KEY_MAP: Record<OrderStatus, string> = {
+  Delivered: "order_status.delivered",
+  Cancelled: "order_status.cancelled",
+  Processing: "order_status.processing",
+  "Out for Delivery": "order_status.out_for_delivery",
+};
+
 // ─── Status badge ──────────────────────────────────────────────
 function StatusBadge({ status }: { status: OrderStatus }) {
+  const { t } = useTranslation();
   const isDelivered  = status === "Delivered";
   const isCancelled  = status === "Cancelled";
   const isProcessing = status === "Processing";
@@ -129,7 +138,7 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   return (
     <View style={[badgeStyles.badge, { backgroundColor: bgColor }]}>
       <Ionicons name={iconName} size={r(12)} color={iconColor} style={{ marginRight: r(3) }} />
-      <Text style={[badgeStyles.text, { color: textColor }]}>{status}</Text>
+      <Text style={[badgeStyles.text, { color: textColor }]}>{t(STATUS_KEY_MAP[status])}</Text>
     </View>
   );
 }
@@ -151,6 +160,7 @@ const badgeStyles = StyleSheet.create({
 
 // ─── Order Card ────────────────────────────────────────────────
 function OrderCard({ order }: { order: Order }) {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       style={styles.card}
@@ -179,7 +189,7 @@ function OrderCard({ order }: { order: Order }) {
       {/* Bottom row: services + amount */}
       <View style={styles.cardBottom}>
         <Text style={styles.services}>
-          {order.services} • {order.itemCount} items
+          {order.services} • {order.itemCount} {t("subcategory.items")}
         </Text>
         <Text style={styles.amount}>₹{order.amount}</Text>
       </View>
@@ -189,6 +199,7 @@ function OrderCard({ order }: { order: Order }) {
 
 // ─── Main screen ───────────────────────────────────────────────
 export default function OrderHistory() {
+  const { t } = useTranslation();
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       {/* ── HEADER ── */}
@@ -202,7 +213,7 @@ export default function OrderHistory() {
           <Ionicons name="arrow-back" size={r(20)} color={C.ink} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Order History</Text>
+        <Text style={styles.headerTitle}>{t("orderhistory.title")}</Text>
 
         {/* Spacer to balance back button */}
         <View style={{ width: r(36) }} />
@@ -222,9 +233,9 @@ export default function OrderHistory() {
                 color={C.tealLight}
               />
             </View>
-            <Text style={styles.emptyTitle}>No orders yet</Text>
+            <Text style={styles.emptyTitle}>{t("orderhistory.no_orders")}</Text>
             <Text style={styles.emptySubtitle}>
-              Your order history will appear here
+              {t("orderhistory.no_orders_sub")}
             </Text>
           </View>
         ) : (

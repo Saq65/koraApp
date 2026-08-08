@@ -142,7 +142,6 @@ export default function LoginScreen() {
       router.replace("/(tabs)/home");
     } catch (err) {
       console.log("AUTH ERROR:", err.message);
-      setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }

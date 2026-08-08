@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 // ─── Responsive helpers ────────────────────────────────────────
 const { width: W, height: H } = Dimensions.get("window");
@@ -191,20 +192,21 @@ function NotifRow({
 
 // ─── Live tracking banner ──────────────────────────────────────
 function LiveTrackingBanner() {
+  const { t } = useTranslation();
   return (
     <View style={styles.liveCard}>
       {/* LIVE TRACKING label */}
       <View style={styles.livePill}>
         <View style={styles.liveDot} />
-        <Text style={styles.livePillText}>LIVE TRACKING</Text>
+        <Text style={styles.livePillText}>{t("notifications.live_tracking")}</Text>
       </View>
 
       <View style={styles.liveRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.liveOrderId}>Order #KR-2847</Text>
+          <Text style={styles.liveOrderId}>{t("notifications.order_label")} #KR-2847</Text>
           <View style={styles.liveEtaRow}>
             <Ionicons name="time-outline" size={r(13)} color="rgba(255,255,255,0.8)" style={{ marginRight: r(4) }} />
-            <Text style={styles.liveEta}>Rider arriving in ~8 mins</Text>
+            <Text style={styles.liveEta}>{t("notifications.rider_arriving")}</Text>
           </View>
         </View>
 
@@ -228,6 +230,7 @@ function SectionHeader({ title }: { title: string }) {
 
 // ─── Main screen ───────────────────────────────────────────────
 export default function Notifications() {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>(NOTIFICATIONS);
 
   const unreadCount = notifications.filter(n => n.isUnread).length;
@@ -261,14 +264,14 @@ export default function Notifications() {
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={styles.headerTitle}>{t("notifications.title")}</Text>
           {unreadCount > 0 && (
-            <Text style={styles.headerSub}>{unreadCount} new updates</Text>
+            <Text style={styles.headerSub}>{t("notifications.new_updates", { count: unreadCount })}</Text>
           )}
         </View>
 
         <TouchableOpacity onPress={markAllRead} activeOpacity={0.7}>
-          <Text style={styles.markAllText}>Mark all read</Text>
+          <Text style={styles.markAllText}>{t("notifications.mark_all_read")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -283,7 +286,7 @@ export default function Notifications() {
         {/* TODAY */}
         {today.length > 0 && (
           <>
-            <SectionHeader title="TODAY" />
+            <SectionHeader title={t("notifications.today")} />
             {today.map(n => (
               <NotifRow key={n.id} notif={n} onMarkRead={markRead} />
             ))}
@@ -293,7 +296,7 @@ export default function Notifications() {
         {/* YESTERDAY */}
         {yesterday.length > 0 && (
           <>
-            <SectionHeader title="YESTERDAY" />
+            <SectionHeader title={t("notifications.yesterday")} />
             {yesterday.map(n => (
               <NotifRow key={n.id} notif={n} onMarkRead={markRead} />
             ))}
@@ -303,7 +306,7 @@ export default function Notifications() {
         {/* EARLIER */}
         {earlier.length > 0 && (
           <>
-            <SectionHeader title="EARLIER" />
+            <SectionHeader title={t("notifications.earlier")} />
             {earlier.map(n => (
               <NotifRow key={n.id} notif={n} onMarkRead={markRead} />
             ))}

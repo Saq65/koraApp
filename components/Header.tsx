@@ -2,18 +2,19 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
-
-function getGreeting() {
+function getGreeting(t: (key: string) => string) {
   const hour = new Date().getHours();
-  if (hour < 12) return { text: "Good Morning", emoji: "🌅" };
-  if (hour < 17) return { text: "Good Afternoon", emoji: "☀️" };
-  if (hour < 21) return { text: "Good Evening", emoji: "🌆" };
-  return { text: "Good Night", emoji: "🌙" };
+  if (hour < 12) return { text: t("header.good_morning"), emoji: "🌅" };
+  if (hour < 17) return { text: t("header.good_afternoon"), emoji: "☀️" };
+  if (hour < 21) return { text: t("header.good_evening"), emoji: "🌆" };
+  return { text: t("header.good_night"), emoji: "🌙" };
 }
 
 export default function Header({ theme, onMenuPress, userName }: any) {
-  const { text, emoji } = getGreeting();
+  const { t } = useTranslation();
+  const { text, emoji } = getGreeting(t);
 
   return (
     <View style={styles.header}>
@@ -27,7 +28,7 @@ export default function Header({ theme, onMenuPress, userName }: any) {
             {text} {emoji}
           </Text>
           <Text style={[styles.name, { color: theme.text }]}>
-            {userName || "Guest"}
+            {userName || t("header.guest")}
           </Text>
         </View>
       </View>

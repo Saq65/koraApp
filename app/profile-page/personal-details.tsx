@@ -22,8 +22,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
 import { getUser, setUser } from "../../src/utils/storage"; // add storage helpers
+import { useTranslation } from "react-i18next";
 
 export default function PersonalDetailsScreen() {
+    const { t } = useTranslation();
     const { theme, isDarkMode } = useTheme();
 
     const [loading, setLoading] = useState(true);
@@ -99,10 +101,10 @@ export default function PersonalDetailsScreen() {
             });
             
             setEditing(false);
-            Alert.alert("Success", "Profile updated successfully");
+            Alert.alert(t("common.success"), t("personal_details.update_success"));
         } catch (error) {
             console.log("UPDATE ERROR:", error);
-            Alert.alert("Error", "Failed to update profile");
+            Alert.alert(t("common.error"), t("personal_details.update_failed"));
         }
     };
 
@@ -127,11 +129,11 @@ export default function PersonalDetailsScreen() {
                             <Ionicons name="chevron-back" size={24} color={theme.text} />
                         </TouchableOpacity>
                         <Text style={[styles.headerTitle, { color: theme.text }]}>
-                            Personal Details
+                            {t("personal_details.title")}
                         </Text>
                         <TouchableOpacity onPress={() => editing ? handleUpdate() : setEditing(true)}>
                             <Text style={[styles.editText, { color: theme.primary }]}>
-                                {editing ? "Save" : "Edit"}
+                                {editing ? t("common.save") : t("common.edit")}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -146,17 +148,17 @@ export default function PersonalDetailsScreen() {
                             </View>
                         </View>
                         <Text style={[styles.name, { color: theme.text }]}>
-                            {profile.fullName || "John Doe"}
+                            {profile.fullName || t("personal_details.default_name")}
                         </Text>
                         <Text style={[styles.username, { color: theme.textSecondary || (isDarkMode ? "#9CA3AF" : "#6B7280") }]}>
-                            @{profile.fullName.toLowerCase().replace(/\s/g, '') || "johndoe"}
+                            @{profile.fullName.toLowerCase().replace(/\s/g, '') || t("personal_details.default_username")}
                         </Text>
                     </View>
 
                     {/* Form Fields */}
                     <View style={styles.form}>
                         <DetailField
-                            label="Full Name"
+                            label={t("personal_details.full_name")}
                             value={profile.fullName}
                             editable={editing}
                             theme={theme}
@@ -164,23 +166,23 @@ export default function PersonalDetailsScreen() {
                             onChangeText={(text: string) => setProfile({ ...profile, fullName: text })}
                         />
                         <DetailField
-                            label="Username"
+                            label={t("personal_details.username")}
                             value={`@${profile.fullName.toLowerCase().replace(/\s/g, '')}`}
                             editable={false}
                             theme={theme}
                             isDarkMode={isDarkMode}
                         />
                         <DetailField
-                            label="Date of Birth"
+                            label={t("personal_details.dob")}
                             value={profile.dob}
                             editable={editing}
                             theme={theme}
                             isDarkMode={isDarkMode}
                             onChangeText={(text: string) => setProfile({ ...profile, dob: text })}
-                            placeholder="MM/DD/YYYY"
+                            placeholder={t("personal_details.dob_placeholder")}
                         />
                         <DetailField
-                            label="Mobile Number"
+                            label={t("personal_details.mobile")}
                             value={profile.phone}
                             editable={editing}
                             theme={theme}
@@ -189,7 +191,7 @@ export default function PersonalDetailsScreen() {
                             keyboardType="phone-pad"
                         />
                         <DetailField
-                            label="Email"
+                            label={t("personal_details.email")}
                             value={profile.email}
                             editable={editing}
                             theme={theme}

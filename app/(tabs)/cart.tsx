@@ -20,8 +20,10 @@ import {
 } from "../../src/redux/store/hooks";
 import { addToCart, removeFromCart, deleteFromCart } from "../../src/redux/store/cartSlice";
 import type { CartItem } from "../../src/redux/store/cartSlice";
+import { useTranslation } from "react-i18next";
 
 export default function Cart() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector(selectCartItems);   
   const totalItems = useAppSelector(selectCartCount);
@@ -55,8 +57,8 @@ export default function Cart() {
           <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>My Cart</Text>
-          <Text style={styles.headerSub}>{totalItems} item{totalItems !== 1 ? "s" : ""}</Text>
+          <Text style={styles.headerTitle}>{t("cart.title")}</Text>
+          <Text style={styles.headerSub}>{totalItems} {totalItems !== 1 ? t("cart.items") : t("cart.item")}</Text>
         </View>
         <View style={{ width: 36 }} />
       </View>
@@ -68,7 +70,7 @@ export default function Cart() {
           <View style={styles.emptyContainer}>
             <View style={styles.emptyCard}>
               <MaterialIcons name="shopping-cart" size={52} color={GRAY_TEXT} />
-              <Text style={styles.emptyText}>Your cart is empty</Text>
+              <Text style={styles.emptyText}>{t("cart.empty")}</Text>
             </View>
           </View>
         ) : (
@@ -98,7 +100,7 @@ export default function Cart() {
                         <Text style={styles.itemCategory}>
                           {item.categoryName} • {item.serviceName}
                         </Text>
-                        <Text style={styles.itemPrice}>₹{item.price} each</Text>
+                        <Text style={styles.itemPrice}>₹{item.price} {t("cart.each")}</Text>
                       </View>
 
                       {/* Right: delete + qty controls */}
@@ -140,18 +142,18 @@ export default function Cart() {
 
               {/* Bill Summary */}
               <View style={styles.billCard}>
-                <Text style={styles.billTitle}>Bill Summary</Text>
+                <Text style={styles.billTitle}>{t("cart.bill_summary")}</Text>
                 <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>Subtotal ({totalItems})</Text>
+                  <Text style={styles.billLabel}>{t("cart.subtotal")} ({totalItems})</Text>
                   <Text style={styles.billValue}>₹{subtotal}</Text>
                 </View>
                 <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>Delivery</Text>
-                  <Text style={styles.billFree}>FREE</Text>
+                  <Text style={styles.billLabel}>{t("cart.delivery")}</Text>
+                  <Text style={styles.billFree}>{t("cart.free")}</Text>
                 </View>
                 <View style={styles.billDivider} />
                 <View style={styles.billRow}>
-                  <Text style={styles.billTotal}>Total</Text>
+                  <Text style={styles.billTotal}>{t("cart.total")}</Text>
                   <Text style={styles.billTotalValue}>₹{subtotal}</Text>
                 </View>
               </View>
@@ -166,7 +168,7 @@ export default function Cart() {
               >
                 <MaterialIcons name="credit-card" size={20} color="#fff" />
                 <Text style={styles.placeOrderText}>
-                  Place Order • ₹{subtotal}
+                  {t("cart.place_order")} • ₹{subtotal}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -192,7 +194,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap:16,
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: GRAY_LIGHT,

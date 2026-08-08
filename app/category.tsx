@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 const { width: W, height: H } = Dimensions.get("window");
 const s = (n: number) => Math.round((W / 375) * n);
@@ -20,40 +21,42 @@ const TEAL = "#2d7a6e";
 const TEAL_DARK = "#1f5c54";
 const TEAL_LIGHT = "#e8f5f3";
 
-const categories = [
-    {
-        id: "men",
-        label: "Men",
-        desc: "Shirts, pants, kurtas & more",
-        icon: "person-outline",
-        route: "/subcategory?category=Men",
-    },
-    {
-        id: "women",
-        label: "Women",
-        desc: "Tops, sarees, dresses & more",
-        icon: "person-outline",
-        route: "/subcategory?category=Women",
-    },
-    {
-        id: "children",
-        label: "Children",
-        desc: "Kids clothing & uniforms",
-        icon: "happy-outline",
-        route: "/subcategory?category=Children",
-
-    },
-    {
-        id: "linen",
-        label: "Linen",
-        desc: "Bedsheets, curtains, towels",
-        icon: "bed-outline",
-        route: "/subcategory?category=Linen",
-
-    },
-];
-
 export default function CategoryScreen() {
+    const { t } = useTranslation();
+
+    const categories = [
+        {
+            id: "men",
+            label: t("category.men"),
+            desc: t("category.men_desc"),
+            icon: "person-outline",
+            route: "/subcategory?category=Men",
+        },
+        {
+            id: "women",
+            label: t("category.women"),
+            desc: t("category.women_desc"),
+            icon: "person-outline",
+            route: "/subcategory?category=Women",
+        },
+        {
+            id: "children",
+            label: t("category.children"),
+            desc: t("category.children_desc"),
+            icon: "happy-outline",
+            route: "/subcategory?category=Children",
+
+        },
+        {
+            id: "linen",
+            label: t("category.linen"),
+            desc: t("category.linen_desc"),
+            icon: "bed-outline",
+            route: "/subcategory?category=Linen",
+
+        },
+    ];
+
     return (
         <SafeAreaView style={styles.container} edges={["top"]}>
             {/* ── HEADER ── */}
@@ -66,8 +69,8 @@ export default function CategoryScreen() {
                     <Ionicons name="arrow-back" size={s(20)} color="#1a1a1a" />
                 </TouchableOpacity>
                 <View style={styles.headerText}>
-                    <Text style={styles.headerSuper}>Laundry</Text>
-                    <Text style={styles.headerTitle}>Choose Category</Text>
+                    <Text style={styles.headerSuper}>{t("category.header_super")}</Text>
+                    <Text style={styles.headerTitle}>{t("category.header_title")}</Text>
                 </View>
             </View>
 
@@ -97,6 +100,7 @@ function CategoryCard({
     icon: string;
     route?: string;
 }) {
+    const { t } = useTranslation();
     const cardWidth = (W - s(16) * 2 - s(12)) / 2; // 2 columns with gap
 
     return (
@@ -116,7 +120,7 @@ function CategoryCard({
 
             {/* Browse link */}
             <View style={styles.browseRow}>
-                <Text style={styles.browseText}>Browse</Text>
+                <Text style={styles.browseText}>{t("category.browse")}</Text>
                 <Ionicons name="chevron-forward" size={s(13)} color={TEAL} />
             </View>
         </TouchableOpacity>

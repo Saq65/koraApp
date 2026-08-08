@@ -19,10 +19,6 @@ const LANGUAGES = [
     { code: "en", label: "English", native: "English" },
     { code: "hi", label: "Hindi", native: "हिन्दी" },
     { code: "mr", label: "Marathi", native: "मराठी" },
-    { code: "ta", label: "Tamil", native: "தமிழ்" },
-    { code: "te", label: "Telugu", native: "తెలుగు" },
-    { code: "bn", label: "Bengali", native: "বাংলা" },
-    { code: "kn", label: "Kannada", native: "ಕನ್ನಡ" },
     { code: "gu", label: "Gujarati", native: "ગુજરાતી" },
 ];
 
@@ -64,8 +60,8 @@ export default function LanguageScreen() {
 
             // Show success message
             Alert.alert(
-                t("language_changed") || "Language Changed",
-                t("language_changed_message") || "App language has been updated successfully",
+                t("language_screen.language_changed"),
+                t("language_screen.language_changed_message"),
                 [{ text: "OK" }]
             );
 
@@ -77,8 +73,8 @@ export default function LanguageScreen() {
         } catch (error) {
             console.log("Error changing language:", error);
             Alert.alert(
-                "Error",
-                "Failed to change language. Please try again."
+                t("language_screen.change_failed_title"),
+                t("language_screen.change_failed_message")
             );
         }
     }
@@ -93,7 +89,7 @@ export default function LanguageScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("select_language") || "Select Language"}</Text>
+        <Text style={styles.headerTitle}>{t("language_screen.select_language")}</Text>
         <View style={{ width: 40 }} />
       </View> */}
 
@@ -103,9 +99,9 @@ export default function LanguageScreen() {
                     source={require("../../assets/images/icon.png")}
                     style={styles.logo}
                 />
-                <Text style={styles.brandName}>KORA.care</Text>
+                <Text style={styles.brandName}>{t("app_name")}</Text>
                 <Text style={styles.tagline}>
-                    {t("your_care")}
+                    {t("branding.your_care")}
                 </Text>
             </View>
 
@@ -113,11 +109,11 @@ export default function LanguageScreen() {
             <View style={styles.titleContainer}>
                 <Text style={styles.globeIcon}>🌐</Text>
                 <Text style={styles.title}>
-                    {t("choose_language") || "Choose Your Language"}
+                    {t("language_screen.choose_language")}
                 </Text>
             </View>
             <Text style={styles.subtitle}>
-                {t("change_language_anytime") || "You can change language anytime in settings"}
+                {t("language_screen.change_language_anytime")}
             </Text>
 
             {/* Language List */}
@@ -159,7 +155,7 @@ export default function LanguageScreen() {
             {/* Info Text */}
             <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>
-                    {t("language_will_change_immediately") || "Language will change immediately"}
+                    {t("language_screen.language_will_change_immediately")}
                 </Text>
             </View>
         </SafeAreaView>

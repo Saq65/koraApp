@@ -17,6 +17,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 // Redux imports – adjust the path to match your project
 import {
@@ -193,11 +194,24 @@ const DATA: Record<string, { tabs: string[]; items: Record<string, Item[]> }> = 
   },
 };
 
-const CATEGORY_META: Record<string, { tag: string; label: string }> = {
-  Men: { tag: "👔", label: "Premium care" },
-  Women: { tag: "👗", label: "Premium care" },
-  Children: { tag: "🧒", label: "Gentle wash" },
-  Linen: { tag: "🛏", label: "Deep clean" },
+const CATEGORY_META: Record<string, { tag: string; labelKey: string }> = {
+  Men: { tag: "👔", labelKey: "subcategory.premium_care" },
+  Women: { tag: "👗", labelKey: "subcategory.premium_care" },
+  Children: { tag: "🧒", labelKey: "subcategory.gentle_wash" },
+  Linen: { tag: "🛏", labelKey: "subcategory.deep_clean" },
+};
+
+const TAB_KEY_MAP: Record<string, string> = {
+  "Upper Wear": "subcategory.tab_upper_wear",
+  "Lower Wear": "subcategory.tab_lower_wear",
+  "Garments": "subcategory.tab_garments",
+  "Winter Wear": "subcategory.tab_winter_wear",
+  "Ethnic": "subcategory.tab_ethnic",
+  "Uniforms": "subcategory.tab_uniforms",
+  "Bedding": "subcategory.tab_bedding",
+  "Bath": "subcategory.tab_bath",
+  "Home": "subcategory.tab_home",
+  "Others": "subcategory.tab_others",
 };
 
 // ─── Icon helper ───────────────────────────────────────────────────────────────
@@ -216,6 +230,7 @@ type ServiceModalProps = {
 };
 
 const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName, onClose }) => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [washQty, setWashQty] = useState(0);
   const [ironQty, setIronQty] = useState(0);
@@ -268,27 +283,27 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
           <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
               <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>Choose Services & Quantity</Text>
+              <Text style={styles.modalTitle}>{t("subcategory.choose_services")}</Text>
               <Text style={styles.modalSubtitle}>
                 {item.label} • {categoryName}
               </Text>
 
               <ServiceRow
-                label="Wash"
+                label={t("subcategory.wash")}
                 price={SERVICES.Wash.price}
                 quantity={washQty}
                 onIncrement={() => setWashQty(washQty + 1)}
                 onDecrement={() => washQty > 0 && setWashQty(washQty - 1)}
               />
               <ServiceRow
-                label="Iron"
+                label={t("subcategory.iron")}
                 price={SERVICES.Iron.price}
                 quantity={ironQty}
                 onIncrement={() => setIronQty(ironQty + 1)}
                 onDecrement={() => ironQty > 0 && setIronQty(ironQty - 1)}
               />
               <ServiceRow
-                label="Wash + Iron"
+                label={t("subcategory.wash_iron")}
                 price={SERVICES["Wash+Iron"].price}
                 quantity={comboQty}
                 onIncrement={() => setComboQty(comboQty + 1)}
@@ -296,7 +311,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
               />
 
               <TouchableOpacity style={styles.modalAddBtn} onPress={handleAddToCart}>
-                <Text style={styles.modalAddBtnText}>Add to Cart</Text>
+                <Text style={styles.modalAddBtnText}>{t("subcategory.add_to_cart")}</Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
@@ -315,15 +330,16 @@ type ServiceRowProps = {
 };
 
 const ServiceRow: React.FC<ServiceRowProps> = ({ label, price, quantity, onIncrement, onDecrement }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.serviceRow}>
       <View style={styles.serviceInfo}>
         <Text style={styles.serviceLabel}>{label}</Text>
-        <Text style={styles.servicePrice}>₹{price}/piece</Text>
+        <Text style={styles.servicePrice}>₹{price}{t("subcategory.per_piece")}</Text>
       </View>
       {quantity === 0 ? (
         <TouchableOpacity style={styles.addButton} onPress={onIncrement}>
-          <Text style={styles.addButtonText}>ADD</Text>
+          <Text style={styles.addButtonText}>{t("subcategory.add")}</Text>
         </TouchableOpacity>
       ) : (
         <View style={styles.stepperRow}>
@@ -348,6 +364,7 @@ type ItemCardProps = {
 };
 
 const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress }) => {
+  const { t } = useTranslation();
   const pressAnim = useRef(new Animated.Value(1)).current;
 
   const onPressIn = () =>
@@ -371,7 +388,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress }) => {
           {item.label}
         </Text>
         <View style={styles.addRow}>
-          <Text style={styles.addText}>Select</Text>
+          <Text style={styles.addText}>{t("subcategory.select")}</Text>
           <View style={styles.addIcon}>
             <Ionicons name="arrow-forward" size={r(12)} color={C.teal} />
           </View>
@@ -383,6 +400,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, cardWidth, onPress }) => {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function SubcategoryScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ category: string }>();
   const category = params.category ?? "Men";
   const data = DATA[category] ?? DATA["Men"];
@@ -420,7 +438,7 @@ export default function SubcategoryScreen() {
 
   const viewBasket = () => {
     if (cartCount === 0) {
-      alert("Your basket is empty");
+      alert(t("subcategory.basket_empty"));
       return;
     }
     // Navigate to your cart screen
@@ -438,11 +456,11 @@ export default function SubcategoryScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerText}>
-          <Text style={styles.eyebrow}>Laundry Service</Text>
+          <Text style={styles.eyebrow}>{t("subcategory.eyebrow")}</Text>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{category}</Text>
             <View style={styles.tagPill}>
-              <Text style={styles.tagText}>{meta.tag}  {meta.label}</Text>
+              <Text style={styles.tagText}>{meta.tag}  {t(meta.labelKey)}</Text>
             </View>
           </View>
         </View>
@@ -460,7 +478,7 @@ export default function SubcategoryScreen() {
             const count = data.items[tab]?.length ?? 0;
             return (
               <TouchableOpacity key={tab} onPress={() => switchTab(tab)} activeOpacity={0.75} style={[styles.tab, active && styles.tabActive]}>
-                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab}</Text>
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{t(TAB_KEY_MAP[tab] ?? tab)}</Text>
                 {active && (
                   <View style={styles.tabBubble}>
                     <Text style={styles.tabBubbleText}>{count}</Text>
@@ -475,8 +493,8 @@ export default function SubcategoryScreen() {
 
       {/* Section heading */}
       <View style={styles.sectionRow}>
-        <Text style={styles.sectionTitle}>{activeTab}</Text>
-        <Text style={styles.sectionCount}>{items.length} items</Text>
+        <Text style={styles.sectionTitle}>{t(TAB_KEY_MAP[activeTab] ?? activeTab)}</Text>
+        <Text style={styles.sectionCount}>{items.length} {t("subcategory.items")}</Text>
       </View>
 
       {/* Grid */}
@@ -503,7 +521,7 @@ export default function SubcategoryScreen() {
           <TouchableOpacity style={styles.ctaBtn} onPress={viewBasket} activeOpacity={0.85}>
             <View style={styles.ctaLeft}>
               <Ionicons name="cart-outline" size={r(18)} color="#fff" />
-              <Text style={styles.ctaText}>{cartCount} items • Total ₹{cartTotal}</Text>
+              <Text style={styles.ctaText}>{cartCount} {t("subcategory.items")} • {t("subcategory.total")} ₹{cartTotal}</Text>
             </View>
             <View style={styles.ctaArrow}>
               <Ionicons name="arrow-forward" size={r(15)} color={C.tealMid} />

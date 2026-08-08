@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 // ─── Responsive helpers ────────────────────────────────────────
 const { width: W, height: H } = Dimensions.get("window");
@@ -105,6 +106,7 @@ function AddAddressForm({
   onSave: (label: string, address: string) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [label, setLabel]     = useState("");
   const [address, setAddress] = useState("");
 
@@ -112,7 +114,7 @@ function AddAddressForm({
     const trimLabel   = label.trim();
     const trimAddress = address.trim();
     if (!trimLabel || !trimAddress) {
-      Alert.alert("Missing Info", "Please enter both a label and a full address.");
+      Alert.alert(t("savedaddress.missing_info_title"), t("savedaddress.missing_info_message"));
       return;
     }
     Keyboard.dismiss();
@@ -124,7 +126,7 @@ function AddAddressForm({
       {/* Label input */}
       <TextInput
         style={formStyles.input}
-        placeholder="Label (e.g. Friend's House)"
+        placeholder={t("savedaddress.label_placeholder")}
         placeholderTextColor={C.placeholder}
         value={label}
         onChangeText={setLabel}
@@ -135,7 +137,7 @@ function AddAddressForm({
       {/* Address input */}
       <TextInput
         style={[formStyles.input, { marginTop: rv(10) }]}
-        placeholder="Full address"
+        placeholder={t("savedaddress.address_placeholder")}
         placeholderTextColor={C.placeholder}
         value={address}
         onChangeText={setAddress}
@@ -151,7 +153,7 @@ function AddAddressForm({
           onPress={handleSave}
           activeOpacity={0.85}
         >
-          <Text style={formStyles.saveBtnText}>Save</Text>
+          <Text style={formStyles.saveBtnText}>{t("common.save")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -162,7 +164,7 @@ function AddAddressForm({
           }}
           activeOpacity={0.75}
         >
-          <Text style={formStyles.cancelBtnText}>Cancel</Text>
+          <Text style={formStyles.cancelBtnText}>{t("common.cancel")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -240,6 +242,7 @@ function AddressCard({
   onSetDefault: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.card}>
       {/* Left icon */}
@@ -254,7 +257,7 @@ function AddressCard({
           <Text style={styles.cardLabel}>{address.label}</Text>
           {address.isDefault && (
             <View style={styles.defaultBadge}>
-              <Text style={styles.defaultBadgeText}>DEFAULT</Text>
+              <Text style={styles.defaultBadgeText}>{t("savedaddress.default_badge")}</Text>
             </View>
           )}
         </View>
@@ -279,7 +282,7 @@ function AddressCard({
                 color={C.teal}
                 style={{ marginRight: r(4) }}
               />
-              <Text style={styles.defaultBtnText}>Set as default</Text>
+              <Text style={styles.defaultBtnText}>{t("savedaddress.set_default")}</Text>
             </TouchableOpacity>
           )}
 
@@ -294,7 +297,7 @@ function AddressCard({
               color={C.red}
               style={{ marginRight: r(4) }}
             />
-            <Text style={styles.removeBtnText}>Remove</Text>
+            <Text style={styles.removeBtnText}>{t("common.remove")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -304,6 +307,7 @@ function AddressCard({
 
 // ─── Main screen ───────────────────────────────────────────────
 export default function SavedAddressScreen() {
+  const { t } = useTranslation();
   const [addresses, setAddresses] = useState<Address[]>(INITIAL_ADDRESSES);
   const [showForm, setShowForm]   = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -316,12 +320,12 @@ export default function SavedAddressScreen() {
 
   const handleRemove = (id: string) => {
     Alert.alert(
-      "Remove Address",
-      "Are you sure you want to remove this address?",
+      t("savedaddress.remove_address_title"),
+      t("savedaddress.remove_address_message"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Remove",
+          text: t("common.remove"),
           style: "destructive",
           onPress: () =>
             setAddresses(prev => {
@@ -373,7 +377,7 @@ export default function SavedAddressScreen() {
           <Ionicons name="arrow-back" size={r(20)} color={C.ink} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Saved Addresses</Text>
+        <Text style={styles.headerTitle}>{t("savedaddress.title")}</Text>
 
         <TouchableOpacity
           style={[
@@ -389,7 +393,7 @@ export default function SavedAddressScreen() {
             color={showForm ? "#fff" : C.teal}
           />
           <Text style={[styles.addBtnText, showForm && { color: "#fff" }]}>
-            {showForm ? "Close" : "Add"}
+            {showForm ? t("common.close") : t("savedaddress.add")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -411,9 +415,9 @@ export default function SavedAddressScreen() {
             <View style={styles.emptyIcon}>
               <Ionicons name="location-outline" size={r(40)} color={C.tealLight} />
             </View>
-            <Text style={styles.emptyTitle}>No saved addresses</Text>
+            <Text style={styles.emptyTitle}>{t("savedaddress.no_addresses")}</Text>
             <Text style={styles.emptySubtitle}>
-              Add an address to speed up your checkout
+              {t("savedaddress.no_addresses_sub")}
             </Text>
             <TouchableOpacity
               style={styles.emptyAddBtn}
@@ -421,7 +425,7 @@ export default function SavedAddressScreen() {
               activeOpacity={0.85}
             >
               <Ionicons name="add" size={r(16)} color="#fff" />
-              <Text style={styles.emptyAddBtnText}>Add Address</Text>
+              <Text style={styles.emptyAddBtnText}>{t("savedaddress.add_address")}</Text>
             </TouchableOpacity>
           </View>
         ) : (

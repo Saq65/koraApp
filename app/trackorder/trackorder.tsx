@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useTranslation } from "react-i18next";
 
 /* ─── Constants ─── */
 const TEAL       = "#1A6B5A";
@@ -22,8 +23,8 @@ const TEXT_MID   = "#666666";
 /* ─── Tracking Steps ─── */
 interface TrackStep {
   icon: string;
-  label: string;
-  desc: string;
+  labelKey: string;
+  descKey: string;
   time: string;
   done: boolean;
   isEst?: boolean;
@@ -32,30 +33,30 @@ interface TrackStep {
 const STEPS: TrackStep[] = [
   {
     icon: "package-variant",
-    label: "Picked Up",
-    desc: "Rider collected your clothes",
+    labelKey: "order_status.picked_up",
+    descKey: "trackorder.step_picked_up_desc",
     time: "10:30 AM",
     done: true,
   },
   {
     icon: "tshirt-crew",
-    label: "In Process",
-    desc: "Your clothes are being washed",
+    labelKey: "order_status.in_process",
+    descKey: "trackorder.step_in_process_desc",
     time: "11:00 AM",
     done: true,
   },
   {
     icon: "truck-delivery",
-    label: "Out for Delivery",
-    desc: "Rider is on the way",
-    time: "Est. 4:30 PM",
+    labelKey: "order_status.out_for_delivery",
+    descKey: "trackorder.step_out_for_delivery_desc",
+    time: "4:30 PM",
     done: false,
     isEst: true,
   },
   {
     icon: "check-circle-outline",
-    label: "Delivered",
-    desc: "Enjoy your fresh clothes!",
+    labelKey: "order_status.delivered",
+    descKey: "trackorder.step_delivered_desc",
     time: "",
     done: false,
   },
@@ -63,6 +64,7 @@ const STEPS: TrackStep[] = [
 
 /* ─── Radar / Live Tracking visual ─── */
 function LiveTrackingBanner() {
+  const { t } = useTranslation();
   return (
     <View style={styles.radarCard}>
       {/* Concentric rings */}
@@ -74,13 +76,14 @@ function LiveTrackingBanner() {
       <View style={styles.radarCenter}>
         <MaterialCommunityIcons name="truck-delivery" size={26} color="#fff" />
       </View>
-      <Text style={styles.radarLabel}>Live Tracking</Text>
+      <Text style={styles.radarLabel}>{t("trackorder.live_tracking")}</Text>
     </View>
   );
 }
 
 /* ─── Rider Card ─── */
 function RiderCard() {
+  const { t } = useTranslation();
   return (
     <View style={styles.riderCard}>
       <View style={styles.riderAvatar}>
@@ -88,7 +91,7 @@ function RiderCard() {
       </View>
       <View style={styles.riderInfo}>
         <Text style={styles.riderName}>Rahul Kumar</Text>
-        <Text style={styles.riderRole}>Your delivery rider</Text>
+        <Text style={styles.riderRole}>{t("trackorder.rider_role")}</Text>
       </View>
       <View style={styles.riderActions}>
         <TouchableOpacity style={styles.riderBtn}>
@@ -104,6 +107,7 @@ function RiderCard() {
 
 /* ─── Main Screen ─── */
 export default function TrackOrder() {
+  const { t } = useTranslation();
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
@@ -114,8 +118,8 @@ export default function TrackOrder() {
           <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
         </TouchableOpacity>
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Order #KR-2847</Text>
-          <Text style={styles.headerSub}>Wash + Iron • 8 items</Text>
+          <Text style={styles.headerTitle}>{t("notifications.order_label")} #KR-2847</Text>
+          <Text style={styles.headerSub}>{t("subcategory.wash_iron")} • 8 {t("subcategory.items")}</Text>
         </View>
         <View style={{ width: 36 }} />
       </View>
@@ -131,7 +135,7 @@ export default function TrackOrder() {
         <RiderCard />
 
         {/* Order Status */}
-        <Text style={styles.sectionTitle}>Order Status</Text>
+        <Text style={styles.sectionTitle}>{t("trackorder.order_status_title")}</Text>
 
         <View style={styles.timelineCard}>
           {STEPS.map((step, idx) => {
@@ -164,15 +168,15 @@ export default function TrackOrder() {
                     styles.stepLabel,
                     !step.done && styles.stepLabelPending,
                   ]}>
-                    {step.label}
+                    {t(step.labelKey)}
                   </Text>
-                  <Text style={styles.stepDesc}>{step.desc}</Text>
+                  <Text style={styles.stepDesc}>{t(step.descKey)}</Text>
                   {step.time !== "" && (
                     <Text style={[
                       styles.stepTime,
                       step.isEst && styles.stepTimeEst,
                     ]}>
-                      {step.time}
+                      {step.isEst ? `${t("trackorder.estimated")} ${step.time}` : step.time}
                     </Text>
                   )}
                 </View>
@@ -185,7 +189,7 @@ export default function TrackOrder() {
         <View style={styles.addressCard}>
           <MaterialCommunityIcons name="map-marker" size={18} color={GRAY_TEXT} />
           <View>
-            <Text style={styles.addressLabel}>Delivery Address</Text>
+            <Text style={styles.addressLabel}>{t("trackorder.delivery_address")}</Text>
             <Text style={styles.addressValue}>123 Main Street, Mumbai</Text>
           </View>
         </View>

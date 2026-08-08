@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useTranslation } from "react-i18next";
 
 /* ─── Constants ─── */
 const TEAL       = "#1A6B5A";
@@ -18,6 +19,7 @@ const TEXT_DARK  = "#1A1A1A";
 const TEXT_MID   = "#666666";
 
 export default function PaymentSuccess() {
+  const { t } = useTranslation();
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={GRAY_LIGHT} />
@@ -31,19 +33,19 @@ export default function PaymentSuccess() {
         </View>
 
         {/* ── Text ── */}
-        <Text style={styles.title}>Payment Successful!</Text>
+        <Text style={styles.title}>{t("payment_success.title")}</Text>
         <Text style={styles.subtitle}>
-          Your order has been placed successfully. We'll{"\n"}pick up your clothes soon.
+          {t("payment_success.subtitle")}
         </Text>
 
         {/* ── Track Order Button ── */}
         <TouchableOpacity onPress={()=>router.push('/trackorder/trackorder')} style={styles.trackBtn} activeOpacity={0.85}>
-          <Text style={styles.trackBtnText}>Track Order</Text>
+          <Text style={styles.trackBtnText}>{t("payment_success.track_order")}</Text>
         </TouchableOpacity>
 
         {/* ── Back to Home ── */}
         <TouchableOpacity onPress={()=>router.push('/')} activeOpacity={0.7}>
-          <Text style={styles.backText}>Back to Home</Text>
+          <Text style={styles.backText}>{t("payment_success.back_home")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -16,6 +16,7 @@ import {
 } from '../../src/redux/store/hooks';
 import { clearCart } from '../../src/redux/store/cartSlice';
 import { createOrder, CreateOrderPayload } from '../../src/services/orderService';
+import { useTranslation } from 'react-i18next';
 
 const TEAL       = '#1A6B5A';
 const TEAL_LIGHT = '#E8F4F1';
@@ -37,6 +38,7 @@ function SectionTitle({ title }: { title: string }) {
 }
 
 function LocationRow({ label, address }: { label: string; address: string }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.locationRow}>
       <View style={styles.locationLeft}>
@@ -46,7 +48,7 @@ function LocationRow({ label, address }: { label: string; address: string }) {
             <Text style={styles.locationLabel}>{label}</Text>
             <TouchableOpacity style={styles.changeBtn}>
               <MaterialCommunityIcons name="pencil-outline" size={12} color={TEAL} />
-              <Text style={styles.changeBtnText}>Change</Text>
+              <Text style={styles.changeBtnText}>{t('placeorder.change')}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.addressRow}>
@@ -60,6 +62,7 @@ function LocationRow({ label, address }: { label: string; address: string }) {
 }
 
 export default function PlaceOrder() {
+  const { t } = useTranslation();
   const [pickupDay, setPickupDay] = useState<PickupDay>('Tomorrow');
   const [timeSlot, setTimeSlot]   = useState<TimeSlot>('10:00 AM');
   const [agreed, setAgreed]       = useState(false);
@@ -109,7 +112,7 @@ export default function PlaceOrder() {
         },
       });
     } catch (err: any) {
-      Alert.alert('Order Failed', err.message ?? 'Something went wrong. Please try again.');
+      Alert.alert(t('placeorder.order_failed'), err.message ?? t('placeorder.something_went_wrong'));
     } finally {
       setLoading(false);
     }
@@ -123,13 +126,13 @@ export default function PlaceOrder() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={TEXT_DARK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Place Order</Text>
+        <Text style={styles.headerTitle}>{t('placeorder.title')}</Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Items */}
-        <SectionTitle title={`Your Items (${totalItems})`} />
+        <SectionTitle title={`${t('placeorder.your_items')} (${totalItems})`} />
         <View style={styles.card}>
           {cartItems.map((item, idx) => (
             <View key={item.id}>
@@ -149,27 +152,27 @@ export default function PlaceOrder() {
         </View>
 
         {/* Locations */}
-        <SectionTitle title="Pickup & Drop Location" />
+        <SectionTitle title={t('placeorder.pickup_drop_location')} />
         <View style={styles.card}>
-          <LocationRow label="Pickup From" address={PICKUP_ADDRESS} />
+          <LocationRow label={t('placeorder.pickup_from')} address={PICKUP_ADDRESS} />
           <View style={styles.locationDivider} />
-          <LocationRow label="Drop-off At"  address={DROPOFF_ADDRESS} />
+          <LocationRow label={t('placeorder.dropoff_at')}  address={DROPOFF_ADDRESS} />
         </View>
 
         {/* Schedule */}
-        <SectionTitle title="Schedule" />
+        <SectionTitle title={t('placeorder.schedule')} />
         <View style={styles.card}>
           <View style={styles.scheduleRow}>
             <View style={styles.scheduleBlock}>
               <View style={styles.scheduleHeader}>
                 <MaterialCommunityIcons name="calendar-outline" size={14} color={GRAY_TEXT} />
-                <Text style={styles.scheduleHeaderText}>Pickup Date</Text>
+                <Text style={styles.scheduleHeaderText}>{t('placeorder.pickup_date')}</Text>
               </View>
               <View style={styles.pillRow}>
                 {(['Today', 'Tomorrow'] as PickupDay[]).map(day => (
                   <TouchableOpacity key={day} onPress={() => setPickupDay(day)}
                     style={[styles.pill, pickupDay === day ? styles.pillActive : styles.pillInactive]}>
-                    <Text style={[styles.pillText, pickupDay === day ? styles.pillTextActive : styles.pillTextInactive]}>{day}</Text>
+                    <Text style={[styles.pillText, pickupDay === day ? styles.pillTextActive : styles.pillTextInactive]}>{day === 'Today' ? t('placeorder.today') : t('placeorder.tomorrow')}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -177,7 +180,7 @@ export default function PlaceOrder() {
             <View style={styles.scheduleBlock}>
               <View style={styles.scheduleHeader}>
                 <MaterialCommunityIcons name="clock-outline" size={14} color={GRAY_TEXT} />
-                <Text style={styles.scheduleHeaderText}>Time Slot</Text>
+                <Text style={styles.scheduleHeaderText}>{t('placeorder.time_slot')}</Text>
               </View>
               <View style={styles.pillRow}>
                 {(['10:00 AM', '2:00 PM'] as TimeSlot[]).map(slot => (
@@ -194,16 +197,16 @@ export default function PlaceOrder() {
         {/* Bill */}
         <View style={styles.card}>
           <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Items ({totalItems})</Text>
+            <Text style={styles.billLabel}>{t('placeorder.items_label')} ({totalItems})</Text>
             <Text style={styles.billValue}>₹{itemsTotal}</Text>
           </View>
           <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Delivery</Text>
-            <Text style={styles.billFree}>FREE</Text>
+            <Text style={styles.billLabel}>{t('placeorder.delivery')}</Text>
+            <Text style={styles.billFree}>{t('placeorder.free')}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.billRow}>
-            <Text style={styles.billTotal}>Total</Text>
+            <Text style={styles.billTotal}>{t('placeorder.total')}</Text>
             <Text style={styles.billTotal}>₹{total}</Text>
           </View>
         </View>
@@ -214,7 +217,7 @@ export default function PlaceOrder() {
             {agreed && <MaterialIcons name="check" size={13} color="#fff" />}
           </View>
           <Text style={styles.tcText}>
-            I agree to the <Text style={styles.tcLink}>Terms & Conditions</Text> of KORA.care.
+            {t('placeorder.agree_prefix')} <Text style={styles.tcLink}>{t('placeorder.terms_conditions')}</Text> {t('placeorder.agree_suffix')}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -230,7 +233,7 @@ export default function PlaceOrder() {
             <>
               <MaterialCommunityIcons name="credit-card-outline" size={18} color={agreed ? '#fff' : GRAY_TEXT} />
               <Text style={[styles.payBtnText, !agreed && styles.payBtnTextDisabled]}>
-                Proceed to Pay • ₹{total}
+                {t('placeorder.proceed_to_pay')} • ₹{total}
               </Text>
             </>
           )}
@@ -242,7 +245,9 @@ export default function PlaceOrder() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: GRAY_LIGHT },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  header: { flexDirection: 'row', alignItems: 'center',
+    gap:16, paddingHorizontal: 16,
+      paddingVertical: 12 },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: TEXT_DARK },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },

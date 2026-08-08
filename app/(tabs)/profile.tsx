@@ -16,10 +16,12 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppBackground from "@/components/AppBackground";
 import { getProfile } from "../../src/services/customer";
+import { useTranslation } from "react-i18next";
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const { theme, isDarkMode, toggleTheme } = useTheme();
-  
+
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
     fullName: "",
@@ -155,15 +157,15 @@ export default function ProfileScreen() {
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{stats.orders}</Text>
-                <Text style={styles.statLabel}>Orders</Text>
+                <Text style={styles.statLabel}>{t("profile.orders")}</Text>
               </View>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{formatCurrency(stats.wallet)}</Text>
-                <Text style={styles.statLabel}>Wallet</Text>
+                <Text style={styles.statLabel}>{t("profile.wallet")}</Text>
               </View>
               <View style={styles.statBox}>
                 <Text style={styles.statNumber}>{stats.rating.toFixed(1)}</Text>
-                <Text style={styles.statLabel}>Rating</Text>
+                <Text style={styles.statLabel}>{t("profile.rating")}</Text>
               </View>
             </View>
           </View>
@@ -172,8 +174,8 @@ export default function ProfileScreen() {
           <View style={styles.menuContainer}>
             <MenuItem
               icon="moon-outline"
-              title="Dark Mode"
-              subtitle="Switch between light and dark theme"
+              title={t("profile.dark_mode")}
+              subtitle={t("profile.dark_mode_sub")}
               rightElement={
                 <Switch
                   value={isDarkMode}
@@ -186,51 +188,51 @@ export default function ProfileScreen() {
             />
             <MenuItem
               icon="person-outline"
-              title="Personal Details"
-              subtitle="Name, DOB, mobile, email"
+              title={t("profile.personal_details")}
+              subtitle={t("profile.personal_details_sub")}
               onPress={() => router.push("/profile-page/personal-details")}
             />
             <MenuItem
               icon="cube-outline"
-              title="Order History"
-              subtitle={`${stats.orders} orders`}
+              title={t("profile.order_history")}
+              subtitle={t("profile.order_history_sub", { count: stats.orders })}
               onPress={() => router.push("/profile-page/orderhistory" as any)}
             />
             <MenuItem
               icon="location-outline"
-              title="Saved Addresses"
-              subtitle="Home, Office"
+              title={t("profile.saved_addresses")}
+              subtitle={t("profile.saved_addresses_sub")}
               onPress={() => router.push("/profile-page/savedaddress" as any)}
             />
             <MenuItem
               icon="star-outline"
-              title="Rate Us"
-              subtitle="Share your feedback"
+              title={t("profile.rate_us")}
+              subtitle={t("profile.rate_us_sub")}
               onPress={() => console.log("Rate Us")}
             />
             <MenuItem
               icon="notifications-outline"
-              title="Notifications"
-              subtitle="Manage notifications"
+              title={t("profile.notifications")}
+              subtitle={t("profile.notifications_sub")}
               onPress={() => console.log("Notifications")}
             />
             <MenuItem
               icon="language-outline"
-              title="Language"
-              subtitle="Change app language"
+              title={t("profile.language")}
+              subtitle={t("profile.language_sub")}
               onPress={() => router.push("/profile-page/language")}
             />
             <MenuItem
               icon="settings-outline"
-              title="Settings"
-              subtitle="Theme, sound, permissions"
+              title={t("profile.settings")}
+              subtitle={t("profile.settings_sub")}
               onPress={() => console.log("Settings")}
             />
           </View>
 
           {/* LOGOUT BUTTON */}
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Logout</Text>
+            <Text style={styles.logoutText}>{t("profile.logout")}</Text>
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />
