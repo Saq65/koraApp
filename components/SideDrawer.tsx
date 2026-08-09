@@ -17,10 +17,10 @@ import { getUser, clearAll } from "../src/utils/storage"; // adjust path
 const { width } = Dimensions.get("window");
 
 export default function SideDrawer({ visible, onClose, theme }: any) {
+  const { t } = useTranslation();
   const translateX = useRef(new Animated.Value(-width)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
-  const { t } = useTranslation();
   const [userName, setUserName] = useState("");
   const [userPhone, setUserPhone] = useState("");
 
@@ -97,7 +97,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
             <View style={styles.profile}>
               <Ionicons name="person-outline" size={24} color="#fff" />
             </View>
-            <Text style={styles.name}>{userName || "Guest"}</Text>
+            <Text style={styles.name}>{userName || t("header.guest")}</Text>
             <Text style={styles.phone}>{userPhone || ""}</Text>
             <TouchableOpacity style={styles.close} onPress={onClose}>
               <Ionicons name="close" size={20} color="#fff" />
@@ -105,12 +105,12 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
           </LinearGradient>
 
           {[
-            { labelKey: "side_drawer.personal_details", route: "/profile-page/personal-details" },
-            { labelKey: "side_drawer.my_services", route: "/(tabs)/orders" },
-            { labelKey: "side_drawer.refer_earn", route: "/refer" },
-            { labelKey: "side_drawer.rewards", route: "/rewards" },
-            { labelKey: "side_drawer.settings", route: "/settings" },
-            { labelKey: "side_drawer.support", route: "/support" },
+            { labelKey: "drawer.profile_details", route: "/profile-page/personal-details" },
+            { labelKey: "drawer.my_services", route: "/(tabs)/orders" },
+            { labelKey: "drawer.refer_earn", route: "/refer" },
+            { labelKey: "drawer.rewards", route: "/rewards" },
+            { labelKey: "drawer.settings", route: "/settings" },
+            { labelKey: "drawer.support", route: "/support" },
           ].map((item, i) => (
             <TouchableOpacity
               key={i}
@@ -126,7 +126,7 @@ export default function SideDrawer({ visible, onClose, theme }: any) {
           ))}
 
           <TouchableOpacity style={styles.logout} onPress={handleLogout}>
-            <Text style={{ color: "red", fontWeight: "600" }}>{t("profile.logout")}</Text>
+            <Text style={{ color: "red", fontWeight: "600" }}>{t("drawer.log_out")}</Text>
           </TouchableOpacity>
         </SafeAreaView>
       </Animated.View>

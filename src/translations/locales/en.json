@@ -1,7 +1,7 @@
 {
-  "app_name": "Kora",
+  "app_name": "KORA.care",
   "branding": {
-    "your_care": "Your Care, Our Priority"
+    "your_care": "Your care is our priority"
   },
   "auth": {
     "welcome_back": "Welcome Back",
@@ -11,30 +11,30 @@
     "sign_in": "Sign In",
     "forgot_password": "Forgot Password?",
     "forgot_password_title": "Forgot Password?",
-    "forgot_password_description": "Don't worry! We'll help you reset it.",
+    "forgot_password_description": "Don't worry! Enter your phone number and we'll send you a code to reset your password.",
     "or_continue_with": "or continue with",
     "continue_google": "Continue with Google",
-    "dont_have_account": "Don't have an account?",
+    "dont_have_account": "Don't have an account? ",
     "sign_up": "Sign Up",
     "phone_number": "Phone Number",
     "send_otp": "Send OTP",
     "send_reset_code": "Send Reset Code",
     "verify_otp": "Verify OTP",
-    "please_wait": "Please Wait...",
-    "enter_complete_otp": "Please enter complete OTP",
+    "please_wait": "Please wait...",
+    "enter_complete_otp": "Please enter complete 6-digit OTP",
     "use_email": "Use Email instead",
     "email": "Email",
     "email_or_phone": "Email or mobile number",
-    "create_account": "Create Account",
+    "create_account": "Create your account",
     "full_name": "Full Name",
-    "full_name_placeholder": "Enter your full name",
+    "full_name_placeholder": "Your full name",
     "create_account_btn": "Create Account",
-    "go_back_login": "Already have an account? Login",
+    "go_back_login": "Go back to login page",
     "signup_google": "Sign up with Google",
     "email_placeholder": "your@email.com",
-    "min_6_characters": "Min. 6 characters",
+    "min_6_characters": "Min 6 characters",
     "mobile_number": "Mobile Number",
-    "dob_optional": "Date of Birth (Optional)",
+    "dob_optional": "Date of Birth (optional)",
     "select_dob": "Select date of birth",
     "registration_success_title": "Registration Successful",
     "registration_success_message": "Your account has been created. Please login to continue.",
@@ -46,20 +46,33 @@
     "send_otp_failed": "Failed to send OTP. Please try again.",
     "invalid_otp": "Invalid or expired OTP",
     "create_new_password": "Create New Password",
-    "password_reset_description": "Enter your new password below",
+    "password_reset_description": "Your new password must be different from previously used passwords.",
     "new_password": "New Password",
     "confirm_new_password": "Confirm New Password",
     "reset_password": "Reset Password",
-    "password_reset_success": "Password Reset Successful!",
-    "password_reset_success_description": "Your password has been reset successfully. Please log in with your new password.",
+    "password_reset_success": "Password Reset!",
+    "password_reset_success_description": "Your password has been changed successfully. You can now sign in with your new password.",
     "continue_signin": "Continue to Sign In",
-    "go_back": "Go Back"
+    "go_back": "Go Back",
+    "username": "Username",
+    "email_or_username": "Email or Username",
+    "use_phone_instead": "Use Phone instead",
+    "enter_valid_phone": "Please enter a valid 10-digit Indian mobile number",
+    "verification_code": "Enter Verification Code",
+    "verification_description": "We've sent a 6-digit code to",
+    "verify_code": "Verify Code",
+    "verifying": "Verifying...",
+    "resend_code": "Resend Code",
+    "didnt_get_code": "Didn't get a code?",
+    "choose_username": "Choose a username",
+    "email_optional": "Email (optional)",
+    "resend_code_in": "Resend code in {{seconds}}s"
   },
   "validation": {
     "enter_email_or_mobile_and_password": "Email/mobile and password are required",
-    "invalid_credentials": "Invalid email/mobile or password",
-    "invalid_server_response": "Invalid server response",
-    "valid_phone": "Please enter a valid 10-digit phone number",
+    "invalid_credentials": "Invalid username or password",
+    "invalid_server_response": "Invalid response from server",
+    "valid_phone": "Please enter a valid 10-digit mobile number",
     "email_required": "Email is required",
     "invalid_email": "Please enter a valid email address",
     "password_min": "Password must be at least 6 characters",
@@ -67,7 +80,12 @@
     "registration_failed": "Registration failed. Please try again.",
     "password_min_hint": "Password must be at least 6 characters",
     "passwords_not_match": "Passwords do not match",
-    "reset_failed": "Password reset failed. Please try again."
+    "reset_failed": "Password reset failed. Please try again.",
+    "enter_email_password": "Please enter both email/username and password",
+    "something_went_wrong": "Something went wrong",
+    "username_required": "Username is required",
+    "verification_failed": "Verification failed. Please try again.",
+    "resend_failed": "Failed to resend code. Please try again."
   },
   "profile": {
     "orders": "Orders",
@@ -103,16 +121,6 @@
   },
   "home": {
     "active_order": "ACTIVE ORDER",
-    "language_sub": "Change app language",
-    "settings": "Settings",
-    "settings_sub": "Theme, sound, permissions",
-    "logout": "Logout",
-    "raise-complaint": "Raise a Complaint",
-    "my_complaints": "My Complaints",
-    "my_complaints_sub": "Track the status of complaints you've raised"
-  },
-  "home": {
-    "active_order": "ACTIVE ORDER",
     "no_active_order": "No active order",
     "place_first_order": "Place first order",
     "services": "Services",
@@ -121,7 +129,17 @@
     "book_pickup": "Book Pickup",
     "special_offer": "SPECIAL OFFER",
     "promo_title": "30% Off First Order!",
-    "promo_code": "Use code KORA30 at checkout"
+    "promo_code": "Use code KORA30 at checkout",
+    "services_title": "Services",
+    "laundry": "Laundry",
+    "laundry_sub": "Wash, Iron &\nmore",
+    "dry_clean": "Dry Clean",
+    "dry_clean_sub": "Premium care",
+    "rental": "Rental",
+    "rental_sub": "Coming soon",
+    "soon_badge": "SOON",
+    "promo_sub": "Use code KORA30 at checkout",
+    "items": "items"
   },
   "services": {
     "laundry": "Laundry",
@@ -164,12 +182,39 @@
     "app_/_technical": "App / Technical",
     "other": "Other",
     "damaged_item": "Damaged Item",
-    "missing_item": "Missing Item"
+    "missing_item": "Missing Item",
+    "header_super": "Laundry",
+    "header_title": "Choose Category",
+    "browse": "Browse"
   },
   "subcategory": {
     "laundry_service": "Laundry Service",
-    "choose_services": "Choose Services",
-    "select_one": "Select at least one"
+    "choose_services": "Choose Services & Quantity",
+    "select_one": "Select at least one",
+    "eyebrow": "Laundry Service",
+    "select": "Select",
+    "wash": "Wash",
+    "iron": "Iron",
+    "wash_iron": "Wash + Iron",
+    "per_piece": "/piece",
+    "add": "ADD",
+    "add_to_cart": "Add to Cart",
+    "items": "items",
+    "basket_empty": "Your basket is empty",
+    "total": "Total",
+    "premium_care": "Premium care",
+    "gentle_wash": "Gentle wash",
+    "deep_clean": "Deep clean",
+    "tab_upper_wear": "Upper Wear",
+    "tab_lower_wear": "Lower Wear",
+    "tab_garments": "Garments",
+    "tab_winter_wear": "Winter Wear",
+    "tab_ethnic": "Ethnic",
+    "tab_uniforms": "Uniforms",
+    "tab_bedding": "Bedding",
+    "tab_bath": "Bath",
+    "tab_home": "Home",
+    "tab_others": "Others"
   },
   "common": {
     "ok": "OK",
@@ -189,13 +234,30 @@
     "no": "No",
     "retry": "Retry",
     "guest": "Guest",
-    "continue": "Continue"
+    "continue": "Continue",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "error": "Error",
+    "success": "Success",
+    "remove": "Remove",
+    "confirm": "Confirm",
+    "view_all": "View All",
+    "close": "Close",
+    "apply": "Apply"
   },
   "tabs": {
     "home": "Home",
     "orders": "Order History",
     "cart": "Cart",
-    "profile": "Profile"
+    "profile": "Profile",
+    "order_history": "Order History"
   },
   "tabs_sub": {
     "upper_wear": "Upper Wear",
@@ -289,13 +351,24 @@
     "items": "items",
     "cancel_order": "Cancel Order",
     "live_tracking": "Live Tracking",
-    "free_cancellation": "Free cancellation available",
+    "free_cancellation": "Free cancellation — {{mins}} mins left in 2hr window",
     "cancellation_closed": "Cancellation window closed",
     "cancellation_mins_left": "Free cancellation — {{mins}} mins left in 2hr window",
     "cancel_confirm_message": "Are you sure you want to cancel this order? A 25 fee applies if the free 2-hour window has passed.",
     "cancel_success_free": "Your order was cancelled free of charge. Any amount paid will be refunded to your wallet.",
     "cancel_success_fee": "Order cancelled. A ₹{{fee}} late cancellation fee was applied and ₹{{refund}} has been credited to your wallet.",
-    "cancel_failed": "We couldn't cancel this order. Please try again or contact support."
+    "cancel_failed": "We couldn't cancel this order. Please try again or contact support.",
+    "title": "My Services",
+    "no_past_orders": "No past orders",
+    "cancel_order_title": "Cancel Order",
+    "cancel_order_message": "Are you sure you want to cancel?",
+    "no": "No",
+    "yes_cancel": "Yes, Cancel",
+    "cannot_cancel": "Cannot Cancel",
+    "something_went_wrong": "Something went wrong",
+    "cancel_order_btn": "Cancel Order",
+    "failed_to_load": "Failed to load orders",
+    "retry": "Retry"
   },
   "cart": {
     "my_cart": "My Cart",
@@ -309,7 +382,10 @@
     "gst_included": "GST (included)",
     "inclusive_of_taxes": "Prices shown are inclusive of all taxes — no extra charges at checkout",
     "place_order": "Place Order",
-    "qty": "Qty: {{count}}"
+    "qty": "Qty: {{count}}",
+    "title": "My Cart",
+    "subtotal": "Subtotal",
+    "each": "each"
   },
   "location": {
     "pickup_location": "Pickup Location",
@@ -389,7 +465,7 @@
   },
   "notifications": {
     "title": "Notifications",
-    "new_updates": "new updates",
+    "new_updates": "{{count}} new updates",
     "mark_all_read": "Mark all read",
     "no_notifications": "No notifications yet",
     "no_notifications_desc": "Updates about your orders will show up here",
@@ -437,7 +513,10 @@
         "title": "Order Cancelled",
         "body": "Your order {{orderNumber}} has been cancelled."
       }
-    }
+    },
+    "live_tracking": "LIVE TRACKING",
+    "rider_arriving": "Rider arriving in ~8 mins",
+    "order_label": "Order"
   },
   "your_care": "Your Care, Our Priority",
   "choose_language": "Choose Your Language",
@@ -445,14 +524,14 @@
   "continue": "Continue",
   "terms": {
     "title": "Terms & Conditions",
-    "subtitle": "Please read these before continuing",
-    "agreement_title": "Our Agreement With You",
+    "subtitle": "Please review before continuing",
+    "agreement_title": "KORA.CARE AGREEMENT",
     "agree_checkbox_prefix": "I have read and agree to the",
     "agree_checkbox_terms": "Terms & Conditions",
     "agree_checkbox_and": "and",
     "agree_checkbox_privacy": "Privacy Policy",
-    "agree_checkbox_suffix": ".",
-    "agree_button": "I Agree & Continue"
+    "agree_checkbox_suffix": "of KORA.care",
+    "agree_button": "Agree & Continue"
   },
   "onboarding": {
     "mobile_title": "Add Your Mobile Number",
@@ -492,13 +571,18 @@
     "or_enter_upi": "Or enter UPI ID",
     "upi_placeholder": "yourname@upi",
     "secured_encryption": "Secured by 256-bit encryption",
-    "pay_amount": "Pay ₹{{amount}}"
+    "pay_amount": "Pay ₹{{amount}}",
+    "total_amount": "Total Amount",
+    "fast_secure": "Fast & secure payment",
+    "secure_note": "Secured by 256-bit encryption",
+    "pay_button": "Pay"
   },
   "payment_success": {
     "title": "Payment Successful!",
     "message": "Your order has been placed successfully. We'll pick up your clothes soon.",
     "track_order": "Track Order",
-    "back_home": "Back to Home"
+    "back_home": "Back to Home",
+    "subtitle": "Your order has been placed successfully. We'll\npick up your clothes soon."
   },
   "track_order_screen": {
     "loading": "Loading order status…",
@@ -652,7 +736,7 @@
       }
     }
   },
-   "side_drawer": {
+  "side_drawer": {
     "guest": "Guest",
     "personal_details": "Personal Details",
     "my_services": "My Services",
@@ -667,7 +751,7 @@
     "coming_soon": "Coming Soon",
     "description": "A rewards program for loyal Kora customers is on its way. We'll let you know the moment it launches."
   },
-   "rate_us_page": {
+  "rate_us_page": {
     "rate_us": "Rate Us",
     "your_review": "Your Review",
     "thank_you_title": "Thank you for your feedback!",
@@ -711,5 +795,112 @@
       "friendly_staff": "Friendly staff",
       "will_order_again": "Will order again"
     }
+  },
+  "header": {
+    "good_morning": "Good Morning",
+    "good_afternoon": "Good Afternoon",
+    "good_evening": "Good Evening",
+    "good_night": "Good Night",
+    "guest": "Guest"
+  },
+  "drawer": {
+    "profile_details": "Profile Details",
+    "my_services": "My Services",
+    "refer_earn": "Refer & Earn",
+    "rewards": "Rewards",
+    "settings": "Settings",
+    "support": "Support",
+    "log_out": "Log Out"
+  },
+  "order_status": {
+    "pending": "Pending",
+    "in_process": "In Process",
+    "picked_up": "Picked Up",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "out_for_delivery": "Out for Delivery",
+    "processing": "Processing"
+  },
+  "stub_screens": {
+    "home_screen": "Home Screen",
+    "otp_screen": "OTP Screen"
+  },
+  "orderhistory": {
+    "title": "Order History",
+    "no_orders": "No orders yet",
+    "no_orders_sub": "Your order history will appear here"
+  },
+  "personal_details": {
+    "title": "Personal Details",
+    "full_name": "Full Name",
+    "username": "Username",
+    "dob": "Date of Birth",
+    "dob_placeholder": "MM/DD/YYYY",
+    "mobile": "Mobile Number",
+    "email": "Email",
+    "default_name": "John Doe",
+    "default_username": "johndoe",
+    "update_success": "Profile updated successfully",
+    "update_failed": "Failed to update profile"
+  },
+  "savedaddress": {
+    "title": "Saved Addresses",
+    "add": "Add",
+    "no_addresses": "No saved addresses",
+    "no_addresses_sub": "Add an address to speed up your checkout",
+    "add_address": "Add Address",
+    "default_badge": "DEFAULT",
+    "set_default": "Set as default",
+    "label_placeholder": "Label (e.g. Friend's House)",
+    "address_placeholder": "Full address",
+    "missing_info_title": "Missing Info",
+    "missing_info_message": "Please enter both a label and a full address.",
+    "remove_address_title": "Remove Address",
+    "remove_address_message": "Are you sure you want to remove this address?"
+  },
+  "trackorder": {
+    "live_tracking": "Live Tracking",
+    "rider_role": "Your delivery rider",
+    "order_status_title": "Order Status",
+    "delivery_address": "Delivery Address",
+    "step_picked_up_desc": "Rider collected your clothes",
+    "step_in_process_desc": "Your clothes are being washed",
+    "step_out_for_delivery_desc": "Rider is on the way",
+    "step_delivered_desc": "Enjoy your fresh clothes!",
+    "estimated": "Est."
+  },
+  "placeorder": {
+    "title": "Place Order",
+    "your_items": "Your Items",
+    "pickup_drop_location": "Pickup & Drop Location",
+    "pickup_from": "Pickup From",
+    "dropoff_at": "Drop-off At",
+    "change": "Change",
+    "schedule": "Schedule",
+    "pickup_date": "Pickup Date",
+    "time_slot": "Time Slot",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "items_label": "Items",
+    "delivery": "Delivery",
+    "free": "FREE",
+    "total": "Total",
+    "agree_prefix": "I agree to the",
+    "terms_conditions": "Terms & Conditions",
+    "agree_suffix": "of KORA.care.",
+    "proceed_to_pay": "Proceed to Pay",
+    "order_failed": "Order Failed",
+    "something_went_wrong": "Something went wrong. Please try again."
+  },
+  "language_screen": {
+    "choose_language": "Choose Your Language",
+    "change_language_anytime": "You can change language anytime in settings",
+    "continue": "Continue",
+    "select_language": "Select Language",
+    "language_changed": "Language Changed",
+    "language_changed_message": "App language has been updated successfully",
+    "language_will_change_immediately": "Language will change immediately",
+    "change_failed_title": "Error",
+    "change_failed_message": "Failed to change language. Please try again."
   }
 }

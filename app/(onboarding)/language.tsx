@@ -19,10 +19,6 @@ const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
   { code: "hi", label: "Hindi", native: "हिन्दी" },
   { code: "mr", label: "Marathi", native: "मराठी" },
-  { code: "ta", label: "Tamil", native: "தமிழ்" },
-  { code: "te", label: "Telugu", native: "తెలుగు" },
-  { code: "bn", label: "Bengali", native: "বাংলা" },
-  { code: "kn", label: "Kannada", native: "ಕನ್ನಡ" },
   { code: "gu", label: "Gujarati", native: "ગુજરાતી" },
 ];
 
@@ -58,21 +54,21 @@ export default function LanguageScreen() {
          source={require("../../assets/images/icon.png")} 
           style={styles.logo}
         /> 
-        <Text style={[styles.brandName, { color: theme.text }]}>KORA.care</Text>
-        <Text style={[styles.tagline, { color: theme.subText }]}> 
-          {t("your_care")}
+        <Text style={[styles.brandName, { color: theme.text }]}>{t("app_name")}</Text>
+        <Text style={[styles.tagline, { color: theme.subText }]}>
+          {t("branding.your_care")}
         </Text>
       </View>
 
       {/* Title */}
       <View style={styles.titleContainer}>
         <Text style={styles.globeIcon}>🌐</Text>
-        <Text style={[styles.title, { color: theme.text }]}> 
-          {t("choose_language")}
+        <Text style={[styles.title, { color: theme.text }]}>
+          {t("language_screen.choose_language")}
         </Text>
       </View>
-      <Text style={[styles.subtitle, { color: theme.subText }]}> 
-        {t("change_language_anytime")}
+      <Text style={[styles.subtitle, { color: theme.subText }]}>
+        {t("language_screen.change_language_anytime")}
       </Text>
 
       {/* Language List */}
@@ -114,7 +110,7 @@ export default function LanguageScreen() {
       {/* Continue Button */}
       <TouchableOpacity style={[styles.continueButton, { backgroundColor: theme.primary }]} onPress={handleContinue}>
         <Text style={styles.continueText}>
-  {t("continue")}
+  {t("language_screen.continue")}
 </Text>
       </TouchableOpacity>
     </SafeAreaView>
