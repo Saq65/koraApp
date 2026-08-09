@@ -18,6 +18,7 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getUserOrders, cancelOrder, Order } from "../../src/services/orderService";
 import { getUser } from "../../src/utils/storage";
+import { translateApiServiceType } from "../../src/utils/serviceLabels";
 
 const TEAL       = "#1A6B5A";
 const TEAL_LIGHT = "#E8F4F1";
@@ -50,12 +51,6 @@ function getCancelWindow(order: Order): { canCancel: boolean; minsLeft: number }
   return { canCancel, minsLeft };
 }
 
-const SERVICE_LABEL: Record<string, string> = {
-  wash: "Wash",
-  iron: "Iron",
-  both: "Wash + Iron",
-};
-
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
@@ -65,7 +60,7 @@ function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => vo
   const { t } = useTranslation();
   const [cancelling, setCancelling] = useState(false);
   const { canCancel, minsLeft } = getCancelWindow(order);
-  const serviceLabel = SERVICE_LABEL[order.items[0]?.service] ?? order.items[0]?.productName ?? "";
+  const serviceLabel = translateApiServiceType(t, order.items[0]?.service) ?? order.items[0]?.productName ?? "";
 
   const handleCancel = () => {
     Alert.alert(t("orders.cancel_order_title"), t("orders.cancel_order_message"), [
@@ -195,7 +190,7 @@ function ActiveOrderCard({ order, onCancel }: { order: Order; onCancel: () => vo
 function OrderCard({ order }: { order: Order }) {
   const { t } = useTranslation();
   const statusColor = STATUS_COLOR[order.uiStatus];
-  const serviceLabel = SERVICE_LABEL[order.items[0]?.service] ?? order.items[0]?.productName ?? "";
+  const serviceLabel = translateApiServiceType(t, order.items[0]?.service) ?? order.items[0]?.productName ?? "";
 
   return (
     <TouchableOpacity
@@ -334,7 +329,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap:16,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },

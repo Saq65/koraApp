@@ -3,12 +3,10 @@
 import { io, Socket } from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type OrderStatus } from './orderService';
-
-// API URL from .env
-const API_URL = process.env.EXPO_PUBLIC_API_URL || '';
+import { API_BASE_URL } from '../config/api';
 
 // Socket server runs on root domain, not /api
-export const SOCKET_URL = API_URL.replace('/api', '');
+export const SOCKET_URL = (API_BASE_URL || '').replace('/api', '');
 
 export interface RiderLocation {
   lat: number;
@@ -64,7 +62,7 @@ export async function createOrderSocket(
 ): Promise<() => void> {
   const token = await AsyncStorage.getItem('token');
 
-  console.log('[Socket] API_URL:', API_URL);
+  console.log('[Socket] API_URL:', API_BASE_URL);
   console.log('[Socket] SOCKET_URL:', SOCKET_URL);
   console.log('[Socket] token found:', !!token);
   console.log('[Socket] orderNumber:', orderNumber);

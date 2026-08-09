@@ -333,6 +333,8 @@
     "time_slot": "Time Slot",
     "today": "Today",
     "tomorrow": "Tomorrow",
+    "morning": "Morning",
+    "evening": "Evening",
     "delivery": "Delivery",
     "free": "FREE",
     "gst_included": "GST (included)",

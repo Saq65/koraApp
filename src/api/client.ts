@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
 export const apiClient = async (
   endpoint: string,
@@ -9,7 +10,7 @@ export const apiClient = async (
 ) => {
   try {
     const response = await axios({
-      url: `${process.env.EXPO_PUBLIC_API_URL}${endpoint}`,
+      url: `${API_BASE_URL}${endpoint}`,
       method,
       data: body,
       timeout: 15000,

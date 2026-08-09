@@ -15,6 +15,7 @@ import {
 } from "../src/redux/store/hooks";
 import { addToCart } from "../src/redux/store/cartSlice";
 import AppBackground from "@/components/AppBackground";
+import { translateServiceName, translateCategoryName } from "../src/utils/serviceLabels";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -143,10 +144,10 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ visible, item, categoryName
             <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
               <View style={[styles.modalHandle, { backgroundColor: theme.border }]} />
               <Text style={[styles.modalTitle, { color: theme.text }]}>{t("subcategory.choose_services")}</Text>
-              <Text style={[styles.modalSubtitle, { color: theme.subText }]}>{item.label} • {categoryName}</Text>
+              <Text style={[styles.modalSubtitle, { color: theme.subText }]}>{item.label} • {translateCategoryName(t, categoryName)}</Text>
               {(["Wash", "Iron", "Wash+Iron"] as const).map(st => (
                 <ServiceRow
-                  key={st} label={st} price={SERVICES[st].price}
+                  key={st} label={translateServiceName(t, st)} price={SERVICES[st].price}
                   quantity={quantities[st]}
                   onIncrement={() => increment(st)}
                   onDecrement={() => decrement(st)}
@@ -453,6 +454,7 @@ export default function SubcategoryScreen() {
   const category = params.category ?? "Men";
   const data = DATA[category] ?? DATA["Men"];
   const meta = CATEGORY_META[category] ?? CATEGORY_META["Men"];
+  const categoryLabel = translateCategoryName(t, category);
 
   const [activeTabKey, setActiveTabKey] = useState(data.tabKeys[0]);
   const items = data.items[activeTabKey] ?? [];
@@ -493,7 +495,7 @@ export default function SubcategoryScreen() {
           <View style={styles.headerText}>
             <Text style={[styles.eyebrow, { color: theme.subText }]}>{t("subcategory.laundry_service")}</Text>
             <View style={styles.titleRow}>
-              <Text style={[styles.title, { color: theme.text }]}>{category}</Text>
+              <Text style={[styles.title, { color: theme.text }]}>{categoryLabel}</Text>
               <View style={[styles.tagPill, { backgroundColor: theme.primaryLight }]}>
                 <Text style={[styles.tagText, { color: theme.primary }]}>{meta.tag}  {meta.label}</Text>
               </View>

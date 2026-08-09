@@ -352,6 +352,8 @@
     "time_slot": "वेळ स्लॉट",
     "today": "आज",
     "tomorrow": "उद्या",
+    "morning": "सकाळ",
+    "evening": "संध्याकाळ",
     "delivery": "वितरण",
     "free": "मोफत",
     "gst_included": "GST (समाविष्ट)",

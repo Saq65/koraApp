@@ -11,6 +11,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { getOrderDetails } from "@/src/api/order";
 import AppBackground from "@/components/AppBackground";
 import { useTheme } from "../../src/theme/ThemeProvider";
+import { useTranslation } from "react-i18next";
+import { translateServiceName, translateCategoryName } from "../../src/utils/serviceLabels";
 
 const { width: W, height: H } = Dimensions.get("window");
 const r  = (n: number) => Math.round((W / 375) * n);
@@ -255,6 +257,7 @@ const headerStyles = StyleSheet.create({
 // ─── Main screen ───────────────────────────────────────────────
 export default function OrderDetailsScreen() {
   const { theme, isDarkMode } = useTheme();
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [order, setOrder] = useState<any>(null);
@@ -348,7 +351,7 @@ export default function OrderDetailsScreen() {
             </View>
 
             <View style={[gs.divider, { backgroundColor: theme.border }]} />
-            <Row label="Service"     value={order.items?.[0]?.serviceName ?? "Laundry"} theme={theme} />
+            <Row label="Service"     value={order.items?.[0]?.serviceName ? translateServiceName(t, order.items[0].serviceName) : "Laundry"} theme={theme} />
             <Row label="Total items" value={`${totalQty} items`}                         theme={theme} />
             <Row label="Payment"     value={order.paymentMethod ?? "—"}                  theme={theme} />
           </View>
@@ -358,9 +361,9 @@ export default function OrderDetailsScreen() {
             {order.items?.map((item: any, i: number) => (
               <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: r(8), paddingVertical: rv(4) }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: rm(13.5), fontWeight: "500", color: theme.text }}>{item.subCategoryName ?? item.serviceName}</Text>
+                  <Text style={{ fontSize: rm(13.5), fontWeight: "500", color: theme.text }}>{item.subCategoryName ?? translateServiceName(t, item.serviceName)}</Text>
                   <Text style={{ fontSize: rm(11.5), marginTop: rv(1), color: theme.subText }}>
-                    {item.categoryName}{item.serviceName ? ` • ${item.serviceName}` : ""}
+                    {translateCategoryName(t, item.categoryName)}{item.serviceName ? ` • ${translateServiceName(t, item.serviceName)}` : ""}
                   </Text>
                 </View>
                 <Text style={{ fontSize: rm(13), fontWeight: "500", minWidth: r(28), textAlign: "center", color: theme.subText }}>×{item.quantity}</Text>

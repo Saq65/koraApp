@@ -18,6 +18,7 @@ import {
 } from "../../src/redux/store/addressSlice";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import AppBackground from "@/components/AppBackground";
+import { translateServiceName } from "../../src/utils/serviceLabels";
 
 type PickupDay = string;
 type TimeSlot = "10:00 AM" | "6:00 PM";
@@ -40,23 +41,29 @@ function toLocalDateKey(d: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-// Friendly labels shown to the user instead of raw clock times
-const SLOT_LABEL: Record<TimeSlot, string> = {
-  "10:00 AM": "Morning",
-  "6:00 PM": "Evening",
+// Locale used for the weekday/day formatting below — kept in sync with the
+// app's i18n language codes (en, hi, mr, gu).
+const DATE_LOCALE: Record<string, string> = {
+  en: "en-IN", hi: "hi-IN", mr: "mr-IN", gu: "gu-IN",
 };
 
-function generateDates(): { key: string; label: string }[] {
+// Friendly labels shown to the user instead of raw clock times
+function getSlotLabel(t: (key: string) => string, slot: TimeSlot): string {
+  return slot === "10:00 AM" ? t("place_order.morning") : t("place_order.evening");
+}
+
+function generateDates(t: (key: string) => string, lang: string): { key: string; label: string }[] {
   const days = [];
   const today = new Date();
+  const locale = DATE_LOCALE[lang] ?? "en-IN";
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     const key = toLocalDateKey(d);
     let label: string;
-    if (i === 0) label = "Today";
-    else if (i === 1) label = "Tomorrow";
-    else label = d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric" });
+    if (i === 0) label = t("place_order.today");
+    else if (i === 1) label = t("place_order.tomorrow");
+    else label = d.toLocaleDateString(locale, { weekday: "short", day: "numeric" });
     days.push({ key, label });
   }
   return days;
@@ -140,13 +147,13 @@ const getLocationRowStyles = (theme: any) => StyleSheet.create({
 });
 
 export default function PlaceOrder() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { theme, isDarkMode } = useTheme();
 
   // Recomputed every time this screen mounts (not once per app session) —
   // otherwise "today"/"tomorrow" and the smart default slot stay frozen
   // at whatever time the app happened to first load.
-  const DATES = useMemo(() => generateDates(), []);
+  const DATES = useMemo(() => generateDates(t, i18n.language), [t, i18n.language]);
   const smartDefault = useMemo(() => getSmartDefault(), []);
 
   const defaultDate = DATES[0].key;
@@ -208,7 +215,7 @@ export default function PlaceOrder() {
                   <View style={styles.itemInfo}>
                     <Text style={[styles.itemName, { color: theme.text }]}>{item.subCategoryName}</Text>
                     <Text style={[styles.itemSub, { color: theme.subText }]}>
-                      {item.serviceName} • {item.quantity}{" "}
+                      {translateServiceName(t, item.serviceName)} • {item.quantity}{" "}
                       {item.quantity > 1 ? t("place_order.pieces") : t("place_order.piece")}
                     </Text>
                   </View>
@@ -307,7 +314,7 @@ export default function PlaceOrder() {
                         ? styles.pillTextActive
                         : [styles.pillTextInactive, { color: theme.subText }],
                     ]}>
-                      {SLOT_LABEL[slot]}
+                      {getSlotLabel(t, slot)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -370,7 +377,8 @@ export default function PlaceOrder() {
 const getGlobalStyles = (theme: any) => StyleSheet.create({
   safeArea: { flex: 1 },
   header: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    flexDirection: "row", alignItems: "center",
+    gap:16,
     paddingHorizontal: 16, paddingVertical: 12,
   },
   backBtn: {

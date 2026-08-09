@@ -15,6 +15,7 @@ import type { CartItem } from "../../src/redux/store/cartSlice";
 import AppBackground from "@/components/AppBackground";
 import { useTheme } from "../../src/theme/ThemeProvider";
 import { useTranslation } from "react-i18next";
+import { translateServiceName, translateCategoryName } from "../../src/utils/serviceLabels";
 
 export default function Cart() {
   const dispatch = useAppDispatch();
@@ -99,7 +100,7 @@ export default function Cart() {
                         <View style={styles.itemInfo}>
                           <Text style={styles.itemName}>{item.subCategoryName}</Text>
                           <Text style={styles.itemCategory}>
-                            {item.categoryName} • {item.serviceName}
+                            {translateCategoryName(t, item.categoryName)} • {translateServiceName(t, item.serviceName)}
                           </Text>
                           <Text style={styles.itemPrice}>
                             {t("cart.qty", { count: item.quantity })}

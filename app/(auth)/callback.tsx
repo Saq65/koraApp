@@ -8,6 +8,7 @@ import { useTheme } from "../../src/theme/ThemeProvider";
 import { handleSuccessfulLogin } from "../../src/utils/authHelpers";
 import { registerForPushNotificationsAsync } from "../../src/utils/pushNotifications";
 import { getUser } from "../../src/utils/storage";
+import { API_BASE_URL } from "../../src/config/api";
 
 const AUTH0_DOMAIN = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
 const AUTH0_CLIENT_ID = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
@@ -68,7 +69,7 @@ export default function Callback() {
         if (!idToken) throw new Error("No idToken received from Auth0");
 
         const res = await axios.post(
-          "https://koraapp-backend.onrender.com/api/auth/google-auth",
+          `${API_BASE_URL}/auth/google-auth`,
           { idToken }
         );
 

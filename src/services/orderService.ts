@@ -1,10 +1,9 @@
 // src/services/orderService.ts
 // All order-related API calls. Matches the real Mongoose schema.
 
-const BASE_URL = __DEV__
-  ? 'http://192.168.1.48:5000/api'          // Android emulator → host localhost
-  // ? 'http://localhost:3001/api'       // iOS simulator
-  : 'https://192.168.1.48/api';
+import { API_BASE_URL } from '../config/api';
+
+const BASE_URL = API_BASE_URL;
 
 // ─── Types mirroring the Mongoose schema ─────────────────────────────────────
 
